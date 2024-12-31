@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Store } from 'src/schemas/ecommerce/store.schema';
+import { Store, StoreProjection } from 'src/schemas/ecommerce/store.schema';
 import { CreateStoreDto } from './dtos/store.dto';
 
 @Injectable()
@@ -13,6 +13,11 @@ export class StoreRepository{
         console.log(store)
 
         return store.save()
+    }
+
+
+    async get_store_by_email(email: string, projection ?: StoreProjection){
+        return this.store_model.findOne({email}, projection).exec()
     }
 
 }
