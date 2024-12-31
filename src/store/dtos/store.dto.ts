@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 import { IsString, IsEmail, IsNotEmpty, IsOptional, IsArray, IsDateString, IsStrongPassword } from 'class-validator';
 
 export class CreateStoreDto {
@@ -23,8 +22,8 @@ export class CreateStoreDto {
   @IsNotEmpty()
   email: string;
 
-  @IsStrongPassword()
   @IsNotEmpty()
+  @IsString()
   password: string;
 
   @IsString()
