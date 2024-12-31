@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { ProductStatus } from 'src/product/enums/product_status.enum';

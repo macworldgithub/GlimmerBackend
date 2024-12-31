@@ -1,22 +1,27 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "compilerOptions": {
+        "module": "commonjs",
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2021",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "noFallthroughCasesInSwitch": false,
+
+        "strict": true /* Enable all strict type-checking options. */,
+        "noImplicitAny": true, /* Raise error on expressions and declarations with an implied 'any' type. */
+        "strictNullChecks": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true, /* Enable strict checking of function types. */
+        "strictBindCallApply": true, /* Enable strict 'bind', 'call', and 'apply' methods on functions. */
+        "noImplicitThis": true, /* Raise error on 'this' expressions with an implied 'any' type. */
+        "alwaysStrict": true
+    }
 }
