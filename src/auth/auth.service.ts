@@ -5,7 +5,9 @@ import { StoreRepository } from 'src/store/store.repository';
 import { Roles } from './enums/roles.enum';
 import { Store } from 'src/schemas/ecommerce/store.schema';
 import { StoreSignUpResponseDto } from './dtos/resonse_dtos/signup_response.dto';
-import { hashPassword } from 'src/utils/data.encryption';
+import { comparePassword, hashPassword } from 'src/utils/data.encryption';
+import { StoreSignInDto } from './dtos/request_dtos/signin_dto';
+import { AuthPayload } from './payloads/auth.payload';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +40,34 @@ export class AuthService {
             return { store: new Store(inserted_store), token }
         } catch (e) {
             throw new BadRequestException(e)
+        }
+    }
+
+    async store_signin(signin_dto: StoreSignInDto): Promise<StoreSignUpResponseDto> {
+        try {
+            const store = await this.store_repository.get_store_by_email(signin_dto.email)
+
+            if (!store?.email) {
+                throw new BadRequestException('Incorrect email or password')
+            }
+
+            const isPasswordValid = await comparePassword(signin_dto.password, store.password)
+
+            if (!isPasswordValid) {
+                throw new BadRequestException('Incorrect email or password')
+            }
+
+            const payload: AuthPayload = {
+                _id: store._id.toString(),
+                email: store.email,
+                role: Roles.STORE
+            }
+
+            const token = await this.jwt_service.signAsync(payload)
+
+            return { store: new Store(store), token }
+        } catch (e) {
+            throw new InternalServerErrorException(e)
         }
     }
 }
