@@ -8,10 +8,11 @@ import { StoreService } from './store/store.service';
 import { StoreModule } from './store/store.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { StoreRepository } from './store/store.repository';
 
 @Module({
     imports: [MongooseModule.forRoot("mongodb+srv://salman:4lanHyMRdCrtXDJ7@sign365.nglnioh.mongodb.net/"), ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', }), ProductModule, OrderModule, StoreModule, AuthModule],
     controllers: [AppController],
-    providers: [AppService, StoreService],
+    providers: [AppService, StoreService, StoreRepository],
 })
 export class AppModule { }

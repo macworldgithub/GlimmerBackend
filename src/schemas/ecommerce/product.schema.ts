@@ -6,7 +6,7 @@ import { HydratedDocument, ObjectId, Types } from 'mongoose';
 import { ProductStatus } from 'src/product/enums/product_status.enum';
 import { Store } from './store.schema';
 import * as mongoose from "mongoose"
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ApiHideProperty, PartialType } from '@nestjs/swagger';
 
 export type ProductDocument = HydratedDocument<Product>;
 
@@ -103,3 +103,5 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
 export type ProductProjection = {
     [key in keyof Product]?: 0 | 1
 };
+
+export class UpdateProductDto extends PartialType(Product) {}

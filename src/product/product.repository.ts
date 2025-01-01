@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { DEFAULT_DOCUMENTS_LIMITS } from 'src/constants/common.constants';
-import { Product, ProductProjection } from 'src/schemas/ecommerce/product.schema';
+import { Product, ProductProjection, UpdateProductDto } from 'src/schemas/ecommerce/product.schema';
 
 @Injectable()
 export class ProductRepository {
@@ -30,7 +30,7 @@ export class ProductRepository {
 
         const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS
 
-        return this.product_model
+        return await this.product_model
             .find({
                 store: store_id
             }, projection)
@@ -39,4 +39,21 @@ export class ProductRepository {
             .exec()
     }
 
+
+    async delete_product_by_store_id_product_id(_id: Types.ObjectId, store_id: Types.ObjectId) {
+        return this.product_model.deleteOne({ _id, store: store_id }).exec()
+    }
+
+
+
+
+    async update_product(id: Types.ObjectId, store_id: Types.ObjectId, product_dto: UpdateProductDto) {
+
+        return this.product_model.findByIdAndUpdate(
+            { _id: id, store: store_id },
+            product_dto,
+            { new: true, runValidators: true } // `new: true` ensures we get the updated document
+        ).exec();
+
+    }
 }

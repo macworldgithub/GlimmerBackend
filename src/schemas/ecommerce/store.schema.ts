@@ -2,6 +2,7 @@
 
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { PartialType } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { HydratedDocument } from 'mongoose';
 
@@ -61,3 +62,5 @@ export const StoreSchema = SchemaFactory.createForClass(Store);
 export type StoreProjection = {
     [key in keyof Store]?: 0 | 1
 };
+
+export class UpdateStoreDto extends PartialType(Store) {}

@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { Product, ProductProjection } from 'src/schemas/ecommerce/product.schema';
+import { Product, ProductProjection, UpdateProductDto } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
-import { Types } from 'mongoose';
+import { DeleteResult, Types } from 'mongoose';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
+import { validate } from 'class-validator';
+import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 
 @Injectable()
 export class ProductService {
@@ -41,18 +43,33 @@ export class ProductService {
     }
 
 
+    async delete_store_product_by_id(id: string, store_payload: AuthPayload): Promise<DeleteResponse> {
+        try {
+
+            const product = await this.product_repository.delete_product_by_store_id_product_id(new Types.ObjectId(id), new Types.ObjectId(store_payload._id))
+
+            if (!product.deletedCount) {
+                throw new BadRequestException("Product doesnot exist")
+            }
+
+            return { ...product, message: "success" }
+
+        } catch (e) {
+            throw new InternalServerErrorException(e)
+        }
+    }
+
+
     async get_all_store_products(store_payload: AuthPayload, page_no: number, projection?: ProductProjection): Promise<Product[]> {
         try {
 
-            const filters = new PaginatedDataDto(page_no)
+            const params = new PaginatedDataDto(page_no)
 
-            const is_valid = await validate(filters, {
+            const is_valid = await validate(params, {
                 validationError: { target: false },
             })
             if (is_valid.length) {
-                throw new BadRequestException({
-                    message: Object.values(is_valid[0]?.constraints || {})[0] || 'incorrect attributes',
-                })
+                throw new BadRequestException("Incorrect page no value")
             }
 
             const products = await this.product_repository.get_all_store_products(new Types.ObjectId(store_payload._id), page_no, projection)
@@ -61,7 +78,22 @@ export class ProductService {
                 throw new BadRequestException("Product doesnot exist")
             }
 
-            return products
+            return products.map(prod => new Product(prod))
+
+        } catch (e) {
+            throw new InternalServerErrorException(e)
+        }
+    }
+
+    async update_store_product(id: string, store_payload: AuthPayload, update_product_dto: UpdateProductDto): Promise<Product> {
+        try {
+
+            const product = await this.product_repository.update_product(new Types.ObjectId(id), new Types.ObjectId(store_payload._id), update_product_dto)
+            if (!product) {
+                throw new BadRequestException("Product doesnot exist")
+            }
+
+            return new Product(product)
 
         } catch (e) {
             throw new InternalServerErrorException(e)
