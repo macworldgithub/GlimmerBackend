@@ -1,0 +1,1 @@
+export const DEFAULT_DOCUMENTS_LIMITS = 8

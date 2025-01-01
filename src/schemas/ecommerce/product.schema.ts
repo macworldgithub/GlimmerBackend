@@ -6,6 +6,7 @@ import { HydratedDocument, ObjectId, Types } from 'mongoose';
 import { ProductStatus } from 'src/product/enums/product_status.enum';
 import { Store } from './store.schema';
 import * as mongoose from "mongoose"
+import { ApiHideProperty } from '@nestjs/swagger';
 
 export type ProductDocument = HydratedDocument<Product>;
 
@@ -23,14 +24,15 @@ export class Product {
     @Max(Infinity)
     // mongo-schema-decorators
     @Prop({ required: true })
-    quantity: string;
+    quantity: number;
 
 
     // req-dto-decorators
     @IsString()
+    @IsOptional()
     // mongo-schema-decorators
     @Prop({ required: false, default: null })
-    description: string;
+    description?: string;
 
     // req-dto-decorators
     @IsOptional()
@@ -40,7 +42,7 @@ export class Product {
     @IsString({ each: true })
     // mongo-schema-decorators
     @Prop({ required: false, default: [] })
-    images: string[];
+    images?: string[];
 
 
     // req-dto-decorators
@@ -66,17 +68,38 @@ export class Product {
     status: ProductStatus
 
     // req-dto-decorators
-    @Exclude()
+    @ApiHideProperty()
     // mongo-schema-decorators
     @Prop({ required: false, type: Date, default: new Date() })
     created_at: Date;
 
     // req-dto-decorators
-    @Exclude()
+    @ApiHideProperty()
     // mongo-schema-decorators
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Store' })
     store: Types.ObjectId;
+
+    constructor(product : Product){
+        if (!product) return
+        this._id = product._id?.toString()
+        this.name= product.name
+        this.store= product.store?.toString()
+        this.status= product.status
+        this.images= product.images
+        this.quantity= product.quantity
+        this.base_price= product.base_price
+        this.created_at= product.created_at
+        this.description= product.description
+        this.discounted_price= product.discounted_price
+    }
+
+
+
+
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
+export type ProductProjection = {
+    [key in keyof Product]?: 0 | 1
+};

@@ -4,6 +4,7 @@ import { ProductController } from './product.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
     imports: [
@@ -11,7 +12,7 @@ import { ProductRepository } from './product.repository';
             { name: Product.name, schema: ProductSchema },
         ]),
     ],
-    providers: [ProductService, ProductRepository],
+    providers: [ProductService, ProductRepository, JwtService],
     controllers: [ProductController],
     exports: [
         MongooseModule.forFeature([
