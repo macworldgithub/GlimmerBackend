@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { Product, ProductProjection, UpdateProductDto } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
-import { DeleteResult, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';

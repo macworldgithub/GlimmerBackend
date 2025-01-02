@@ -19,7 +19,7 @@ export class Customer{
     @IsEmail()
     // mongo-schema-decorators
     @Prop({ required: true })
-    email: number;
+    email: string;
 
 
     // req-dto-decorators
@@ -36,10 +36,6 @@ export class Customer{
         this.email= c.email
         this.password= c.password
     }
-
-
-
-
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);
@@ -48,5 +44,4 @@ export type CustomerProjection = {
     [key in keyof Customer]?: 0 | 1
 };
 
-export class UpdateCustomerDto extends PartialType(Customer) {}
 
