@@ -9,22 +9,14 @@ export type CustomerDocument = HydratedDocument<Customer>;
 
 @Schema()
 export class Customer{
-    // req-dto-decorators
-    @IsString()
-    // mongo-schema-decorators
+
     @Prop({ required: true })
     name: string;
 
-    // req-dto-decorators
-    @IsEmail()
-    // mongo-schema-decorators
     @Prop({ required: true })
     email: string;
 
-
-    // req-dto-decorators
     @Exclude()
-    @IsString()
     // mongo-schema-decorators
     @Prop({ required: true })
     password : string;

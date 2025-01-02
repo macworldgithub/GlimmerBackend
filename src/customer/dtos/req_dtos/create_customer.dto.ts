@@ -11,7 +11,6 @@ export class CreateCustomerDto {
     @IsEmail()
     email: string;
 
-    @Exclude()
     @IsString()
     password : string;
 

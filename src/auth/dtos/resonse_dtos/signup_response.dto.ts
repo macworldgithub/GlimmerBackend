@@ -1,4 +1,4 @@
-import { CustomerDocument } from 'src/schemas/customer.schema'
+import { Customer } from 'src/schemas/customer.schema'
 import { Store } from 'src/schemas/ecommerce/store.schema'
 
 export class StoreSignUpResponseDto {
@@ -12,7 +12,7 @@ export class StoreSignUpResponseDto {
 }
 
 export class CustomerSignUpResponseDto {
-    customer: CustomerDocument
+    customer: Customer
     token: string
 
     constructor(obj: CustomerSignUpResponseDto) {

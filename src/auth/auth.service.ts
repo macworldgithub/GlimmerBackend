@@ -9,8 +9,8 @@ import { comparePassword, hashPassword } from 'src/utils/data.encryption';
 import { CustomerSignInDto, StoreSignInDto } from './dtos/request_dtos/signin_dto';
 import { AuthPayload } from './payloads/auth.payload';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
-import { CustomerService } from 'src/customer/customer.service';
 import { CustomerRepository } from 'src/customer/customer.repository';
+import { Customer } from 'src/schemas/customer.schema';
 
 @Injectable()
 export class AuthService {
@@ -77,7 +77,7 @@ export class AuthService {
     }
 
 
-    async customer_signup(create_customer_dto: CreateCustomerDto): Promise<CustomerSignUpResponseDto> {
+    async customer_signup(create_customer_dto: CreateCustomerDto): Promise<any> {
         try {
 
             const is_email_available = (await this.customer_repository.get_customer_by_email(create_customer_dto.email))
@@ -100,8 +100,7 @@ export class AuthService {
                 role: Roles.CUSTOMER
             });
 
-
-            return { customer: inserted_customer, token }
+            return { customer: new Customer(inserted_customer), token }
         } catch (e) {
             throw new BadRequestException(e)
         }
@@ -129,7 +128,7 @@ export class AuthService {
 
             const token = await this.jwt_service.signAsync(payload)
 
-            return { customer, token }
+            return { customer: new Customer(customer), token }
         } catch (e) {
             throw new InternalServerErrorException(e)
         }

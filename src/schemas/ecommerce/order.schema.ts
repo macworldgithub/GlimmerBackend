@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Store } from './store.schema';
@@ -15,8 +15,11 @@ export class Order {
     @Prop({ type: String, required: true, default: OrderStatus.CONFIRMED })
     status: OrderStatus;
 
-    @Prop({ required: true })
-    total: number;
+    @Virtual({
+        total: function(this: Order) {
+            return `returning total`;
+        },
+    })
 
     @Prop({ type: Date, required: true, default: new Date() })
     created_at: Date;
@@ -25,7 +28,7 @@ export class Order {
     @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'OrderItem' })
     order_items: OrderItem[]
 
-    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Customer' })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
     customer: Customer
 
 }

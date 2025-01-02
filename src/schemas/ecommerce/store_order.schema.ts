@@ -19,7 +19,6 @@ export class StoreOrder{
 
     @Prop({type : Date, required: true, default: new Date() })
     created_at: Date;
-    
 
     // mongo-schema-decorators
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
