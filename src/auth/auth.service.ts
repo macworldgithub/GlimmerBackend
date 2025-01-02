@@ -18,7 +18,9 @@ export class AuthService {
 
             const is_email_available = (await this.store_repository.get_store_by_email(create_store_dto.email))
 
+            console.log(is_email_available?.email)
             if (is_email_available?.email) {
+                console.log("Ran inside")
                 throw new BadRequestException("Email Already exists!")
             }
 
@@ -30,12 +32,15 @@ export class AuthService {
                 throw new InternalServerErrorException();
             }
 
+            console.log("Ran outside", inserted_store)
 
             const token = await this.jwt_service.signAsync({
                 _id: inserted_store._id.toString(),
                 email: inserted_store.email,
                 role: Roles.STORE
             });
+            console.log("Ran outside 2", inserted_store)
+
 
             return { store: new Store(inserted_store), token }
         } catch (e) {
