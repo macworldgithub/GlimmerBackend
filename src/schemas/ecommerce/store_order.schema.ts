@@ -36,3 +36,7 @@ export class StoreOrder{
 }
 
 export const StoreOrderSchema = SchemaFactory.createForClass(StoreOrder);
+
+export type OrderProjection = {
+    [key in keyof Order]?: 0 | 1
+}

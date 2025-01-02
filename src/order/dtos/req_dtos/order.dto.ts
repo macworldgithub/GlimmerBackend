@@ -1,13 +1,12 @@
 // @ts-nocheck
 
+import { PartialType, PickType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray, IsInt, IsMongoId, Max, Min, ValidateNested } from "class-validator";
 import { Types } from "mongoose";
+import { Order } from "src/schemas/ecommerce/order.schema";
 
 export class OrderReqDto {
-
-    @IsMongoId()
-    customer: Types.ObjectId
 
     @IsArray() // Ensures it's an array
     @ValidateNested({ each: true }) // Validates each item in the array
@@ -25,3 +24,7 @@ class OrderItemDto {
     @IsMongoId()
     product: Types.ObjectId
 }
+
+
+
+export class UpdateOrderDto extends PickType(Order, ['status', 'order_items'] as const) {}

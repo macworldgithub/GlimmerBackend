@@ -24,3 +24,9 @@ export class OrderItem {
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 
+export type CreateOrderItem = {
+    order: Types.ObjectId;
+    quantity: number;
+    product: Types.ObjectId;
+}
+
