@@ -16,10 +16,10 @@ export class OrderItem {
     quantity: number;
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
-    product: Product
+    product: Product 
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
-    order: Order
+    order: Order | mongoose.Types.ObjectId
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

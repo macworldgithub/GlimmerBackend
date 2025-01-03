@@ -6,6 +6,8 @@ import { Store } from './store.schema';
 import { OrderStatus } from 'src/order/enums/order_status.enum';
 import { Product } from './product.schema';
 import { Order } from './order.schema';
+import { OrderItem } from './order_item.schema';
+import { PickType } from '@nestjs/swagger';
 
 export type StoreOrderDocument = HydratedDocument<StoreOrder>;
 
@@ -14,24 +16,18 @@ export class StoreOrder{
     @Prop({type : String, required: true, default: OrderStatus.CONFIRMED})
     status: OrderStatus;
 
-    @Prop({ required: true})
-    total: number;
-
-    @Prop({type : Date, required: true, default: new Date() })
-    created_at: Date;
-
     // mongo-schema-decorators
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
-    product: Product
+    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'OrderItem' })
+    order_items: OrderItem[] | mongoose.Types.ObjectId[]
 
 
     // mongo-schema-decorators
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
-    order: Order
+    order: Order | mongoose.Types.ObjectId
 
     // mongo-schema-decorators
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Store' })
-    store: Store
+    store: Store | mongoose.Types.ObjectId
 
 }
 
@@ -40,3 +36,6 @@ export const StoreOrderSchema = SchemaFactory.createForClass(StoreOrder);
 export type OrderProjection = {
     [key in keyof Order]?: 0 | 1
 }
+
+
+export class UpdateStoreOrder extends PickType(StoreOrder, ['status', 'order_items'] as const) {}
