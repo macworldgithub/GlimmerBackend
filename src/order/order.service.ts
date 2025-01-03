@@ -21,7 +21,13 @@ export class OrderService {
             }
             const inserted_order = await this.order_repository.create_order(order, session)
 
-            const order_items = order_dto.order_items.map(elem => ({ ...elem, order: inserted_order._id }))
+            const product_ids = order_dto.order_items.map(elem => elem.product)
+            const products = await this.product_repository.get_many_products_by_ids(product_ids, session)
+
+            const order_items = order_dto.order_items.map(elem => {
+                const product = products.filter(prod => elem.product.toString() === prod._id.toString())[0]
+                return ({ ...elem, product, order: inserted_order._id })
+            })
             const inserted_order_items = await this.order_repository.create_many_order_items(order_items, session)
 
             const inserted_order_items_ids = inserted_order_items.map(elem => (elem._id))
@@ -31,7 +37,7 @@ export class OrderService {
             const updated_order = await this.order_repository.update_order_by_id(inserted_order._id, { ...order_object, order_items: inserted_order_items_ids }, session)
 
             // @ts-ignore
-            const stores_products = await this.product_repository.get_many_products_by_ids_groupedby_store(inserted_order_items.map(elem => elem.product), session)
+            const stores_products = await this.product_repository.get_many_products_by_ids_groupedby_store(inserted_order_items.map(elem => elem.product._id), session)
 
             const store_orders_obj: any = []
 
@@ -42,15 +48,15 @@ export class OrderService {
                     store: store._id,
                     order_items: []
                 }
-                const product_ids = store.products.map(elem => elem._id.toString())
+                const store_product_ids = store.products.map(elem => elem._id.toString())
                 inserted_order_items.forEach(item => {
-                    if (product_ids.includes(item.product.toString())) {
+                    // @ts-ignore
+                    if (store_product_ids.includes(item.product._id.toString())) {
                         store_order_obj.order_items.push(item._id)
                     }
                 })
                 store_orders_obj.push(store_order_obj)
             })
-
             await this.order_repository.create_many_store_orders(store_orders_obj, session)
 
             await session.commitTransaction()

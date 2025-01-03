@@ -15,7 +15,7 @@ export class OrderItem {
     @Prop({ required: true })
     quantity: number;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Product' })
+    @Prop()
     product: Product 
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
@@ -27,6 +27,6 @@ export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
 export type CreateOrderItem = {
     order: Types.ObjectId;
     quantity: number;
-    product: Types.ObjectId;
+    product: Product
 }
 

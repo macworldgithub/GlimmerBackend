@@ -10,9 +10,10 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { StoreRepository } from './store/store.repository';
 import { CustomerModule } from './customer/customer.module';
+import { CartModule } from './cart/cart.module';
 
 @Module({
-    imports: [MongooseModule.forRoot("mongodb+srv://salman:4lanHyMRdCrtXDJ7@sign365.nglnioh.mongodb.net/"), ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', }), ProductModule, OrderModule, StoreModule, AuthModule, CustomerModule],
+    imports: [MongooseModule.forRoot("mongodb+srv://salman:4lanHyMRdCrtXDJ7@sign365.nglnioh.mongodb.net/"), ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env', }), ProductModule, OrderModule, StoreModule, AuthModule, CustomerModule, CartModule],
     controllers: [AppController],
     providers: [AppService, StoreService, StoreRepository],
 })

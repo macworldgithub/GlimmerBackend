@@ -22,10 +22,21 @@ export class Order {
 
     @Virtual({
         get: function(this: Order) {
-            return `returning total`;
+            if (!Array.isArray(this.order_items) || !this.order_items.every(item => item instanceof OrderItem) || !(this.customer instanceof Customer)) {
+                return null
+            }
+            let total = 0
+            this.order_items.forEach(item => {
+                if (item.product.discounted_price) {
+                    total += item.product.discounted_price
+                } else {
+                    total += item.product.base_price
+                }
+            })
+            return total
         },
     })
-    total: number
+    total: number | null 
 
     @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'OrderItem' })
     order_items: OrderItem[] | mongoose.Types.ObjectId[]
@@ -34,12 +45,12 @@ export class Order {
     customer: Customer | mongoose.Types.ObjectId[]
 
 
-    constructor(obj: Order){
+    constructor(obj: Order) {
         if (!obj) return
         this.status = obj.status
         this.customer = obj.customer,
-        this.created_at = obj.created_at,
-        this.order_items = obj.order_items
+            this.created_at = obj.created_at,
+            this.order_items = obj.order_items
     }
 }
 

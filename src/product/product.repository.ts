@@ -61,6 +61,7 @@ export class ProductRepository {
     async get_many_products_by_ids_groupedby_store(product_ids: Types.ObjectId[], session?: ClientSession | null): Promise<ProductsByStore[] | null> {
         if (!session) session = null
 
+            console.log(product_ids, "PRODUCT IDS")
         return this.product_model.aggregate([
             {
                 $match: { _id: { $in: product_ids } }
@@ -75,4 +76,16 @@ export class ProductRepository {
 
         ]).session(session).exec()
     }
+
+
+    async get_many_products_by_ids(product_ids: Types.ObjectId[], session?: ClientSession | null) {
+        if (!session) session = null
+
+        return this.product_model.find(
+            {
+                _id: { $in: product_ids }
+            }
+        ).session(session).exec()
+    }
+
 }
