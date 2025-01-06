@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { DEFAULT_DOCUMENTS_LIMITS } from 'src/constants/common.constants';
-import { Product, ProductProjection, UpdateProductDto } from 'src/schemas/ecommerce/product.schema';
+import { Product, ProductDocument, ProductProjection, UpdateProductDto } from 'src/schemas/ecommerce/product.schema';
+import { ProductsByStore } from './types/many_store_products.type';
 
 @Injectable()
 export class ProductRepository {
@@ -56,4 +57,35 @@ export class ProductRepository {
         ).exec();
 
     }
+
+    async get_many_products_by_ids_groupedby_store(product_ids: Types.ObjectId[], session?: ClientSession | null): Promise<ProductsByStore[] | null> {
+        if (!session) session = null
+
+            console.log(product_ids, "PRODUCT IDS")
+        return this.product_model.aggregate([
+            {
+                $match: { _id: { $in: product_ids } }
+            },
+            {
+                $group: {
+                    _id: "$store",
+                    products: { $push: "$$ROOT" }
+                }
+            },
+            { $sort: { "_id": 1 } },
+
+        ]).session(session).exec()
+    }
+
+
+    async get_many_products_by_ids(product_ids: Types.ObjectId[], session?: ClientSession | null) {
+        if (!session) session = null
+
+        return this.product_model.find(
+            {
+                _id: { $in: product_ids }
+            }
+        ).session(session).exec()
+    }
+
 }
