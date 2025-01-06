@@ -38,7 +38,7 @@ export class Product {
     @IsOptional()
     @IsArray()
     @ArrayMinSize(1)
-    @ArrayMaxSize(3)
+    @ArrayMaxSize(5)
     @IsString({ each: true })
     // mongo-schema-decorators
     @Prop({ required: false, default: [] })
