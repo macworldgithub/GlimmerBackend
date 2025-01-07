@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -33,6 +33,7 @@ export class Product {
   @IsInt()
   @Min(1)
   @Max(Infinity)
+  @Transform(({ value }) => parseInt(value, 10))
   // mongo-schema-decorators
   @Prop({ required: true })
   quantity: number;
@@ -48,7 +49,7 @@ export class Product {
   @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
-  @ArrayMaxSize(5)
+  @ArrayMaxSize(3)
   @IsString({ each: true })
   // mongo-schema-decorators
   @Prop({ required: false, default: [] })
@@ -56,6 +57,7 @@ export class Product {
 
   // req-dto-decorators
   @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
   @Min(0)
   @Max(Infinity)
   // mongo-schema-decorators
@@ -64,6 +66,7 @@ export class Product {
 
   // req-dto-decorators
   @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
   @Min(0)
   @Max(Infinity)
   // mongo-schema-decorators

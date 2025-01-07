@@ -5,12 +5,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { JwtService } from '@nestjs/jwt';
+import { S3Service } from 'src/aws/s3.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
   ],
-  providers: [ProductService, ProductRepository, JwtService],
+  providers: [ProductService, ProductRepository, JwtService, S3Service],
   controllers: [ProductController],
   exports: [
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),

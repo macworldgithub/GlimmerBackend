@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { StoreRepository } from './store/store.repository';
 import { CustomerModule } from './customer/customer.module';
 import { CartModule } from './cart/cart.module';
+import { AwsService } from './aws/aws.service';
 
 @Module({
   imports: [
@@ -26,6 +27,6 @@ import { CartModule } from './cart/cart.module';
     CartModule,
   ],
   controllers: [AppController],
-  providers: [AppService, StoreService, StoreRepository],
+  providers: [AppService, StoreService, StoreRepository, AwsService],
 })
 export class AppModule {}
