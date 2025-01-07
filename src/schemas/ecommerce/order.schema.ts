@@ -42,7 +42,7 @@ export class Order {
     order_items: OrderItem[] | mongoose.Types.ObjectId[]
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
-    customer: Customer | mongoose.Types.ObjectId[]
+    customer: Customer | mongoose.Types.ObjectId
 
 
     constructor(obj: Order) {

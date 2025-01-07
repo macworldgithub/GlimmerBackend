@@ -6,7 +6,6 @@ import { Order } from 'src/schemas/ecommerce/order.schema';
 import { CreateOrderItem, OrderItem } from 'src/schemas/ecommerce/order_item.schema';
 import { OrderProjection, StoreOrder, UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
 import { UpdateOrderDto } from './dtos/req_dtos/order.dto';
-import { UpdateStoreDto } from 'src/schemas/ecommerce/store.schema';
 
 @Injectable()
 export class OrderRepository {
