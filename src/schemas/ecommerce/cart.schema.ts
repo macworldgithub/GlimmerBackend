@@ -28,7 +28,7 @@ export class Cart {
     //    })
     //    total: number | null 
 
-    @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'CartItem' })
+    @Prop({ type: [{ quantity: Number, product: mongoose.Schema.Types.ObjectId }], default:[] })
     cart_items: CartItem[] | mongoose.Types.ObjectId[]
 
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
@@ -44,3 +44,6 @@ export class Cart {
 
 export const CartSchema = SchemaFactory.createForClass(Cart);
 
+export type CartProjection = {
+    [key in keyof Cart]?: 0 | 1
+};
