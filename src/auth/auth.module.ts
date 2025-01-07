@@ -10,20 +10,20 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Customer, CustomerSchema } from 'src/schemas/customer.schema';
 
 @Module({
-    imports: [
-        StoreModule,
-        MongooseModule.forFeature([
-            { name: Customer.name, schema: CustomerSchema },
-        ]),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET'),
-            }),
-        }),
-    ],
-    providers: [AuthService,CustomerRepository, StoreRepository],
-    controllers: [AuthController]
+  imports: [
+    StoreModule,
+    MongooseModule.forFeature([
+      { name: Customer.name, schema: CustomerSchema },
+    ]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+    }),
+  ],
+  providers: [AuthService, CustomerRepository, StoreRepository],
+  controllers: [AuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -8,32 +8,29 @@ import { PartialType } from '@nestjs/swagger';
 export type CustomerDocument = HydratedDocument<Customer>;
 
 @Schema()
-export class Customer{
+export class Customer {
+  @Prop({ required: true })
+  name: string;
 
-    @Prop({ required: true })
-    name: string;
+  @Prop({ required: true })
+  email: string;
 
-    @Prop({ required: true })
-    email: string;
+  @Exclude()
+  // mongo-schema-decorators
+  @Prop({ required: true })
+  password: string;
 
-    @Exclude()
-    // mongo-schema-decorators
-    @Prop({ required: true })
-    password : string;
-
-    constructor(c: Customer){
-        if (!c) return
-        this._id = c._id?.toString()
-        this.name= c.name
-        this.email= c.email
-        this.password= c.password
-    }
+  constructor(c: Customer) {
+    if (!c) return;
+    this._id = c._id?.toString();
+    this.name = c.name;
+    this.email = c.email;
+    this.password = c.password;
+  }
 }
 
 export const CustomerSchema = SchemaFactory.createForClass(Customer);
 
 export type CustomerProjection = {
-    [key in keyof Customer]?: 0 | 1
+  [key in keyof Customer]?: 0 | 1;
 };
-
-

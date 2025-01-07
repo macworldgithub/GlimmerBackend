@@ -1,1 +1,1 @@
-export const DEFAULT_DOCUMENTS_LIMITS = 8
+export const DEFAULT_DOCUMENTS_LIMITS = 8;

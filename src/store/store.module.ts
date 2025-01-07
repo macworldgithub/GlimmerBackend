@@ -7,11 +7,15 @@ import { StoreRepository } from './store.repository';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({
-    imports: [MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }])],
-    controllers: [StoreController],
-    providers: [StoreService, StoreRepository, JwtService],
-    exports: [MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
+  ],
+  controllers: [StoreController],
+  providers: [StoreService, StoreRepository, JwtService],
+  exports: [
+    MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
+  ],
 })
-export class StoreModule { }
+export class StoreModule {}
 
 //If you also want to use the models in another module, add MongooseModule to the exports section of CatsModule and import CatsModule in the other module.

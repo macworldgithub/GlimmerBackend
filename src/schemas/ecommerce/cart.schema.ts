@@ -9,41 +9,46 @@ export type CartDocument = HydratedDocument<Cart>;
 
 @Schema()
 export class Cart {
+  //    @Virtual({
+  //        get: function(this: Cart) {
+  //            if (!Array.isArray(this.order_items) || !this.order_items.every(item => item instanceof OrderItem) || !(this.customer instanceof Customer)) {
+  //                return null
+  //            }
+  //            let total = 0
+  //            this.order_items.forEach(item => {
+  //                if (item.product.discounted_price) {
+  //                    total += item.product.discounted_price
+  //                } else {
+  //                    total += item.product.base_price
+  //                }
+  //            })
+  //            return total
+  //        },
+  //    })
+  //    total: number | null
 
-    //    @Virtual({
-    //        get: function(this: Cart) {
-    //            if (!Array.isArray(this.order_items) || !this.order_items.every(item => item instanceof OrderItem) || !(this.customer instanceof Customer)) {
-    //                return null
-    //            }
-    //            let total = 0
-    //            this.order_items.forEach(item => {
-    //                if (item.product.discounted_price) {
-    //                    total += item.product.discounted_price
-    //                } else {
-    //                    total += item.product.base_price
-    //                }
-    //            })
-    //            return total
-    //        },
-    //    })
-    //    total: number | null 
+  @Prop({
+    type: [
+      {
+        quantity: { type: Number },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+      },
+    ],
+    default: [],
+  })
+  cart_items: CartItem[] | mongoose.Types.ObjectId[];
 
-    @Prop({ type: [{ quantity: Number, product: mongoose.Schema.Types.ObjectId }], default:[] })
-    cart_items: CartItem[] | mongoose.Types.ObjectId[]
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
+  customer: Customer | mongoose.Types.ObjectId;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
-    customer: Customer | mongoose.Types.ObjectId
-
-
-    constructor(obj: Cart) {
-        if (!obj) return
-        this.customer = obj.customer,
-            this.cart_items = obj.cart_items
-    }
+  constructor(obj: Cart) {
+    if (!obj) return;
+    (this.customer = obj.customer), (this.cart_items = obj.cart_items);
+  }
 }
 
 export const CartSchema = SchemaFactory.createForClass(Cart);
 
 export type CartProjection = {
-    [key in keyof Cart]?: 0 | 1
+  [key in keyof Cart]?: 0 | 1;
 };

@@ -1,5 +1,13 @@
 // @ts-nocheck
-import { IsString, IsEmail, IsNotEmpty, IsOptional, IsArray, IsDateString, IsStrongPassword } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  IsDateString,
+  IsStrongPassword,
+} from 'class-validator';
 
 export class CreateStoreDto {
   @IsString()
@@ -37,6 +45,4 @@ export class CreateStoreDto {
   @IsString()
   @IsOptional()
   store_image?: string;
-
 }
-

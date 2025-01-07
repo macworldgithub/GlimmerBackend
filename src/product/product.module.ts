@@ -7,17 +7,13 @@ import { ProductRepository } from './product.repository';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([
-            { name: Product.name, schema: ProductSchema },
-        ]),
-    ],
-    providers: [ProductService, ProductRepository, JwtService],
-    controllers: [ProductController],
-    exports: [
-        MongooseModule.forFeature([
-            { name: Product.name, schema: ProductSchema },
-        ]),
-    ],
+  imports: [
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
+  ],
+  providers: [ProductService, ProductRepository, JwtService],
+  controllers: [ProductController],
+  exports: [
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
+  ],
 })
-export class ProductModule { }
+export class ProductModule {}
