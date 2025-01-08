@@ -20,7 +20,7 @@ import { S3Service } from 'src/aws/s3.service';
 export class ProductService {
     constructor(private product_repository: ProductRepository, private s3_service: S3Service) { }
 
-    private static readonly GET_PRODUCT_IMAGE_PATH = ( id: string ) => {
+    private static readonly GET_PRODUCT_IMAGE_PATH = (id: string) => {
         return "glimmer/brands/" + id + "/product_images"
     }
 
@@ -32,17 +32,20 @@ export class ProductService {
         try {
 
             const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id)
-            const images_urls = await this.s3_service.upload_many_files(images, path)
+            const images_keys = await this.s3_service.upload_many_files(images, path)
 
             product_dto.store = new Types.ObjectId(store_payload._id);
-            product_dto.images = images_urls
+            product_dto.images = images_keys
             const product = await this.product_repository.create_product(product_dto);
+
+            product.images = await this.s3_service.get_image_urls(images_keys)
 
             return new Product(product);
         } catch (e) {
             throw new InternalServerErrorException(e);
         }
     }
+
 
     async get_store_product_by_id(
         id: string,
@@ -59,6 +62,10 @@ export class ProductService {
 
             if (!product) {
                 throw new BadRequestException('Product doesnot exist');
+            }
+
+            if (product.images?.length) {
+                product.images = await this.s3_service.get_image_urls(product.images)
             }
 
             return new Product(product);
@@ -103,15 +110,23 @@ export class ProductService {
                 throw new BadRequestException('Incorrect page no value');
             }
 
-            const products = await this.product_repository.get_all_store_products(
+            const products_res = await this.product_repository.get_all_store_products(
                 new Types.ObjectId(store_payload._id),
                 page_no,
                 projection,
             );
 
-            if (!products) {
+            if (!products_res) {
                 throw new BadRequestException('Product doesnot exist');
             }
+
+            const products = await Promise.all(products_res.map(async (prod) => {
+                if (prod.images?.length) {
+                    prod.images = await this.s3_service.get_image_urls(prod.images)
+                    console.log(prod.images)
+                }
+                return prod
+            }))
 
             return products.map((prod) => new Product(prod));
         } catch (e) {
@@ -132,6 +147,9 @@ export class ProductService {
             );
             if (!product) {
                 throw new BadRequestException('Product doesnot exist');
+            }
+            if (product.images?.length) {
+                product.images = await this.s3_service.get_image_urls(product.images)
             }
 
             return new Product(product);

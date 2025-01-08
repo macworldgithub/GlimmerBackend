@@ -29,6 +29,7 @@ import {
 import { ProductService } from './product.service';
 import { AuthPayloadRequest } from './interfaces/auth_payload_request.interface';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ProductStatus } from './enums/product_status.enum';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -79,8 +80,8 @@ export class ProductController {
                 },
                 status: {
                     type: 'string',
-                    enum: ['ACTIVE', 'INACTIVE'], // Replace with your actual `ProductStatus` enums
-                    example: 'ACTIVE',
+                    enum: [ProductStatus.ACTIVE, ProductStatus.INACTIVE], // Replace with your actual `ProductStatus` enums
+                    example: 'Active',
                 },
             },
             required: ['name', 'quantity', 'base_price', 'discounted_price', 'status'], // Required fields
@@ -141,12 +142,16 @@ export class ProductController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard, RolesGuard)
     @Role(Roles.STORE)
+    @UseInterceptors(FilesInterceptor('images', 3))
+    @ApiConsumes('multipart/form-data')
     @Put('update_store_product_by_id')
     update_product_by_id(
         @Query('id') id: string,
         @Req() req: AuthPayloadRequest,
         @Body() body: UpdateProductDto,
     ) {
+        console.log( body, req.file, req.files)
+        return
         return this.product_service.update_store_product(id, req.user, body);
     }
 }

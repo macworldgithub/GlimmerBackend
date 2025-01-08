@@ -47,11 +47,9 @@ export class S3Service extends AwsService {
                 Body: file.buffer,
                 ContentType: file.mimetype,
             };
-            console.log("FILEKEY", fileKey)
 
             return this.s3.upload(params).promise().then((val) => {
-                console.log(val, " file resh ")
-                return `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+                return fileKey
             });
         });
 
@@ -79,5 +77,30 @@ export class S3Service extends AwsService {
 
         await this.s3.deleteObject(params).promise();
     }
+
+    async get_image_url(key: string): Promise<string> {
+        const params = {
+            Bucket: this.bucketName,
+            Key: key,
+            Expires: 604800, // URL expires in 1 hour
+        };
+
+        return this.s3.getSignedUrlPromise('getObject', params);
+    }
+
+
+    async get_image_urls(images_keys: string[]) {
+        const image_pre_signed_urls_promises = images_keys.map((key) => {
+            return this.get_image_url(key)
+        })
+
+        const images_url = await Promise.all(image_pre_signed_urls_promises)
+
+        return images_url
+    }
+
+
+
+
 
 }
