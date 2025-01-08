@@ -15,6 +15,7 @@ import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { S3Service } from 'src/aws/s3.service';
+import { CreateProductDto } from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductService {
@@ -25,7 +26,7 @@ export class ProductService {
     }
 
     async create_product(
-        product_dto: Product,
+        product_dto: CreateProductDto,
         store_payload: AuthPayload,
         images: Array<Express.Multer.File>
     ): Promise<Product> {
@@ -34,8 +35,11 @@ export class ProductService {
             const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id)
             const images_keys = await this.s3_service.upload_many_files(images, path)
 
-            product_dto.store = new Types.ObjectId(store_payload._id);
-            product_dto.images = images_keys
+        
+            let product_temp: any = structuredClone(product_dto)
+            product_temp.store = new Types.ObjectId(store_payload._id);
+            product_temp.images = images_keys.map((k,idx) => ({id:idx, image_key: k}))
+
             const product = await this.product_repository.create_product(product_dto);
 
             product.images = await this.s3_service.get_image_urls(images_keys)

@@ -9,6 +9,7 @@ import {
   UpdateProductDto,
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductsByStore } from './types/many_store_products.type';
+import { CreateProductDto } from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -16,7 +17,7 @@ export class ProductRepository {
     @InjectModel(Product.name) private product_model: Model<Product>,
   ) {}
 
-  async create_product(product_dto: Product) {
+  async create_product(product_dto: CreateProductDto) {
     const product = new this.product_model(product_dto);
     console.log(product);
 
