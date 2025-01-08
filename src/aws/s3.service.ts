@@ -20,7 +20,7 @@ export class S3Service extends AwsService {
         this.bucketName = process.env.AWS_BUCKET_NAME || 'your-bucket-name';
     }
 
-    async upload_file(file: Express.Multer.File, path: string): Promise<string> {
+    async upload_file(file: Express.Multer.File, path: string): Promise<AWS.S3.ManagedUpload.SendData> {
         const fileKey = `${path}/${uuid()}_${file.originalname}`;
 
         const params: AWS.S3.PutObjectRequest = {
@@ -30,11 +30,20 @@ export class S3Service extends AwsService {
             ContentType: file.mimetype,
         };
 
-        console.log("FILEKEY", fileKey)
-        const d = await this.s3.upload(params).promise();
-        console.log(d, " file resh ")
+        return this.s3.upload(params).promise()
+    }
 
-        return `https://${this.bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileKey}`;
+
+    async upload_file_by_key(file: Express.Multer.File, key: string): Promise<AWS.S3.ManagedUpload.SendData> {
+
+        const params: AWS.S3.PutObjectRequest = {
+            Bucket: this.bucketName,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+        };
+
+        return this.s3.upload(params).promise()
     }
 
     async upload_many_files(files: Array<Express.Multer.File>, path: string): Promise<string[]> {

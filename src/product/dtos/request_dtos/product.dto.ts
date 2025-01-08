@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { OmitType } from "@nestjs/swagger";
+import { ApiPropertyOptional, OmitType, PartialType } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsEnum, IsIn, IsInt, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { ProductStatus } from "src/product/enums/product_status.enum";
@@ -23,19 +23,33 @@ export class CreateProductDto {
     description?: string;
 
     // req-dto-decorators
-    @IsString()
+    @ApiPropertyOptional({
+        description: 'First image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
     @IsOptional()
-    image1?: string;
+    image1?: Express.Multer.File;
 
     // req-dto-decorators
-    @IsString()
+
+    @ApiPropertyOptional({
+        description: '2nd image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
     @IsOptional()
-    image2?: string;
+    image2?: Express.Multer.File;
 
     // req-dto-decorators
-    @IsString()
+
+    @ApiPropertyOptional({
+        description: '3rd image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
     @IsOptional()
-    image3?: string;
+    image3?: Express.Multer.File;
 
     // req-dto-decorators
     @IsNumber()
@@ -57,11 +71,13 @@ export class CreateProductDto {
 
 
 
-    constructor(product: Product) {
+    constructor(product: CreateProductDto) {
         if (!product) return;
         this.name = product.name;
         this.status = product.status;
-        this.images = product.images;
+        this.image1 = product.image1
+        this.image2 = product.image2
+        this.image3 = product.image3
         this.quantity = product.quantity;
         this.base_price = product.base_price;
         this.description = product.description;
@@ -69,8 +85,31 @@ export class CreateProductDto {
     }
 }
 
-export type ImageObject = {
-    id: number
-    image: string
-}
 
+export class UpdateProductDto extends PartialType(
+    CreateProductDto
+) {
+    @ApiPropertyOptional({
+        description: 'Updated first image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
+    @IsOptional()
+    image1?: Express.Multer.File;
+
+    @ApiPropertyOptional({
+        description: 'Updated second image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
+    @IsOptional()
+    image2?: Express.Multer.File;
+
+    @ApiPropertyOptional({
+        description: 'Updated third image file of the product',
+        type: 'string',
+        format: 'binary',
+    })
+    @IsOptional()
+    image3?: Express.Multer.File;
+}

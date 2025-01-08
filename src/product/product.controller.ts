@@ -3,12 +3,10 @@ import {
     ClassSerializerInterceptor,
     Controller,
     Delete,
-    FileTypeValidator,
     Get,
     HttpCode,
     HttpStatus,
-    MaxFileSizeValidator,
-    ParseFilePipe,
+    NotImplementedException,
     Post,
     Put,
     Query,
@@ -17,19 +15,16 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth,  ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/enums/roles.enum';
 import { Role } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
-import {
-    Product,
-    UpdateProductDto,
-} from 'src/schemas/ecommerce/product.schema';
 import { ProductService } from './product.service';
 import { AuthPayloadRequest } from './interfaces/auth_payload_request.interface';
-import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ProductStatus } from './enums/product_status.enum';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { CreateProductDto, UpdateProductDto } from './dtos/request_dtos/product.dto';
+import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -47,65 +42,20 @@ export class ProductController {
         { name: 'image3', maxCount: 1 },
     ]))
     @ApiConsumes('multipart/form-data')
-    @ApiBody({
-        schema: {
-            type: 'object',
-            properties: {
-                images: {
-                    type: 'array',
-                    items: {
-                        type: 'string',
-                        format: 'binary', // For file uploads
-                    },
-                },
-                name: {
-                    type: 'string',
-                    example: 'Sample Product Name',
-                },
-                quantity: {
-                    type: 'integer',
-                    minimum: 1,
-                    example: 10,
-                },
-                description: {
-                    type: 'string',
-                    nullable: true,
-                    example: 'Optional product description',
-                },
-                base_price: {
-                    type: 'number',
-                    minimum: 0,
-                    example: 100,
-                },
-                discounted_price: {
-                    type: 'number',
-                    minimum: 0,
-                    example: 80,
-                },
-                status: {
-                    type: 'string',
-                    enum: [ProductStatus.ACTIVE, ProductStatus.INACTIVE], // Replace with your actual `ProductStatus` enums
-                    example: 'Active',
-                },
-            },
-            required: ['name', 'quantity', 'base_price', 'discounted_price', 'status'], // Required fields
-        },
-    })
     @Post('create')
     create_product(
-        @Body() product_dto: Product,
+        @Body() product_dto: CreateProductDto,
         @UploadedFiles(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 1000 * 1024 * 5 }),
-                    new FileTypeValidator({ fileType: /image\/.*/ }),
-                ],
-            }),
+            new FileSizeValidationPipe()
         )
-        files:  { avatar?: Express.Multer.File[], background?: Express.Multer.File[] },
+        files: { image1?: Express.Multer.File[], image2?: Express.Multer.File[], image3?: Express.Multer.File[] },
         @Req() req: AuthPayloadRequest,
     ) {
-        return this.product_service.create_product(product_dto, req.user, files);
+
+        product_dto.image1 = files.image1?.length ? files.image1[0] : undefined
+        product_dto.image2 = files.image2?.length ? files.image2[0] : undefined
+        product_dto.image3 = files.image3?.length ? files.image3[0] : undefined
+        return this.product_service.create_product(product_dto, req.user);
     }
 
 
@@ -146,16 +96,26 @@ export class ProductController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard, RolesGuard)
     @Role(Roles.STORE)
-    @UseInterceptors(FilesInterceptor('images', 3))
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'image1', maxCount: 1 },
+        { name: 'image2', maxCount: 1 },
+        { name: 'image3', maxCount: 1 },
+    ]))
     @ApiConsumes('multipart/form-data')
     @Put('update_store_product_by_id')
     update_product_by_id(
         @Query('id') id: string,
         @Req() req: AuthPayloadRequest,
         @Body() body: UpdateProductDto,
+        @UploadedFiles(
+            new FileSizeValidationPipe()
+        )
+        files: { image1?: Express.Multer.File[], image2?: Express.Multer.File[], image3?: Express.Multer.File[] },
     ) {
-        console.log(body, req.file, req.files)
-        return
-        return this.product_service.update_store_product(id, req.user, body);
+        throw new NotImplementedException("abhi ye wali fix krni hai wps se puri image ka structure change krne ki wajah se")
+//        body.image1 = files.image1?.length ? files.image1[0] : undefined
+//        body.image2 = files.image2?.length ? files.image2[0] : undefined
+//        body.image3 = files.image3?.length ? files.image3[0] : undefined
+//        return this.product_service.update_store_product(id, req.user, body);
     }
 }

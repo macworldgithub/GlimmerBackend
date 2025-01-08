@@ -4,12 +4,10 @@ import { ClientSession, Model, Types } from 'mongoose';
 import { DEFAULT_DOCUMENTS_LIMITS } from 'src/constants/common.constants';
 import {
   Product,
-  ProductDocument,
   ProductProjection,
-  UpdateProductDto,
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductsByStore } from './types/many_store_products.type';
-import { CreateProductDto } from './dtos/request_dtos/product.dto';
+import { CreateProductDto, UpdateProductDto } from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -17,7 +15,7 @@ export class ProductRepository {
     @InjectModel(Product.name) private product_model: Model<Product>,
   ) {}
 
-  async create_product(product_dto: CreateProductDto) {
+  async create_product(product_dto: Record<string, any>) {
     const product = new this.product_model(product_dto);
     console.log(product);
 

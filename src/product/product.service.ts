@@ -6,7 +6,6 @@ import {
 import {
     Product,
     ProductProjection,
-    UpdateProductDto,
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
@@ -15,7 +14,7 @@ import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { S3Service } from 'src/aws/s3.service';
-import { CreateProductDto } from './dtos/request_dtos/product.dto';
+import { CreateProductDto, UpdateProductDto } from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductService {
@@ -28,21 +27,36 @@ export class ProductService {
     async create_product(
         product_dto: CreateProductDto,
         store_payload: AuthPayload,
-        images: Array<Express.Multer.File>
-    ): Promise<Product> {
+    ) {
         try {
 
             const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id)
-            const images_keys = await this.s3_service.upload_many_files(images, path)
 
 
             let product_temp: any = structuredClone(product_dto)
+
+            if (product_dto.image1) {
+                product_temp.image1 = (await this.s3_service.upload_file(product_dto.image1, path)).Key
+            }
+            if (product_dto.image2) {
+                product_temp.image2 = (await this.s3_service.upload_file(product_dto.image2, path)).Key
+            }
+            if (product_dto.image3) {
+                product_temp.image3 = (await this.s3_service.upload_file(product_dto.image3, path)).Key
+            }
+
             product_temp.store = new Types.ObjectId(store_payload._id);
-            product_temp.images = images_keys.map((k, idx) => ({ id: idx, image_key: k }))
+            const product = await this.product_repository.create_product(product_temp);
 
-            const product = await this.product_repository.create_product(product_dto);
-
-            product.images = await this.s3_service.get_image_urls(images_keys)
+            if (product.image1) {
+                product.image1 = await this.s3_service.get_image_url(product.image1)
+            }
+            if (product.image2) {
+                product.image2 = await this.s3_service.get_image_url(product.image2)
+            }
+            if (product.image3) {
+                product.image3 = await this.s3_service.get_image_url(product.image3)
+            }
 
             return new Product(product);
         } catch (e) {
@@ -67,17 +81,16 @@ export class ProductService {
             if (!product) {
                 throw new BadRequestException('Product doesnot exist');
             }
-
-            if (product.images?.length) {
-                const images_res = product.images.map(async (img) => {
-                    return {
-                        id: img.id,
-                        image: await this.s3_service.get_image_url(img.image)
-                    }
-                })
-                const images = await Promise.all(images_res)
-                product.images = images
+            if (product.image1) {
+                product.image1 = await this.s3_service.get_image_url(product.image1)
             }
+            if (product.image2) {
+                product.image2 = await this.s3_service.get_image_url(product.image2)
+            }
+            if (product.image3) {
+                product.image3 = await this.s3_service.get_image_url(product.image3)
+            }
+
 
             return new Product(product);
         } catch (e) {
@@ -132,16 +145,16 @@ export class ProductService {
             }
 
             const products = await Promise.all(products_res.map(async (prod) => {
-            if (prod.images?.length) {
-                const images_res = prod.images.map(async (img) => {
-                    return {
-                        id: img.id,
-                        image: await this.s3_service.get_image_url(img.image)
-                    }
-                })
-                const images = await Promise.all(images_res)
-                product.images = images
-            }
+                if (prod.image1) {
+                    prod.image1 = await this.s3_service.get_image_url(prod.image1)
+                }
+                if (prod.image2) {
+                    prod.image2 = await this.s3_service.get_image_url(prod.image2)
+                }
+                if (prod.image3) {
+                    prod.image3 = await this.s3_service.get_image_url(prod.image3)
+                }
+
                 return prod
             }))
 
@@ -157,6 +170,11 @@ export class ProductService {
         update_product_dto: UpdateProductDto,
     ): Promise<Product> {
         try {
+    
+            const product_res = await this.get_store_product_by_id(id, store_payload, {image1 : 1,  image2: 1, image3: 1 } )
+
+
+
             const product = await this.product_repository.update_product(
                 new Types.ObjectId(id),
                 new Types.ObjectId(store_payload._id),
@@ -165,9 +183,9 @@ export class ProductService {
             if (!product) {
                 throw new BadRequestException('Product doesnot exist');
             }
-            if (product.images?.length) {
-                product.images = await this.s3_service.get_image_urls(product.images)
-            }
+            //            if (product.images?.length) {
+            //                product.images = await this.s3_service.get_image_urls(product.images)
+            //            }
 
             return new Product(product);
         } catch (e) {
