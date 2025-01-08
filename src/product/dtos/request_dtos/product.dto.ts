@@ -23,12 +23,19 @@ export class CreateProductDto {
     description?: string;
 
     // req-dto-decorators
+    @IsString()
     @IsOptional()
-    @IsArray()
-    @ArrayMinSize(1)
-    @ArrayMaxSize(3)
-    @IsString({ each: true })
-    images?: string[];
+    image1?: string;
+
+    // req-dto-decorators
+    @IsString()
+    @IsOptional()
+    image2?: string;
+
+    // req-dto-decorators
+    @IsString()
+    @IsOptional()
+    image3?: string;
 
     // req-dto-decorators
     @IsNumber()
@@ -62,11 +69,8 @@ export class CreateProductDto {
     }
 }
 
-type ImageArray = {
-    id: string
-    image: Express.Multer.File
+export type ImageObject = {
+    id: number
+    image: string
 }
 
-export class ProductTemp extends OmitType(CreateProductDto, ["images"] as const) {
-    images?: ImageArray[]
-} 

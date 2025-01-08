@@ -18,75 +18,52 @@ import { ProductStatus } from 'src/product/enums/product_status.enum';
 import { Store } from './store.schema';
 import * as mongoose from 'mongoose';
 import { ApiHideProperty, ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
+import { ImageObject } from 'src/product/dtos/request_dtos/product.dto';
 
 export type ProductDocument = HydratedDocument<Product>;
 
 @Schema()
 export class Product {
-    // req-dto-decorators
-    @IsString()
     // mongo-schema-decorators
     @Prop({ required: true })
     name: string;
 
-    // req-dto-decorators
-    @IsInt()
-    @Min(1)
-    @Max(Infinity)
-    @Transform(({ value }) => parseInt(value, 10))
     // mongo-schema-decorators
     @Prop({ required: true })
     quantity: number;
 
-    // req-dto-decorators
-    @IsString()
-    @IsOptional()
     // mongo-schema-decorators
     @Prop({ required: false, default: null })
     description?: string;
 
-    // req-dto-decorators
-    @IsOptional()
-    @IsArray()
-    @ArrayMinSize(1)
-    @ArrayMaxSize(3)
-    @IsString({ each: true })
     // mongo-schema-decorators
-    @Prop({ required: false, default: [] })
-    images?: string[];
+    @Prop({ required: false, default: "" })
+    image1?: string
 
-    // req-dto-decorators
-    @IsNumber()
-    @Transform(({ value }) => parseFloat(value))
-    @Min(0)
-    @Max(Infinity)
+    // mongo-schema-decorators
+    @Prop({ required: false, default: "" })
+    image2?: string
+
+    // mongo-schema-decorators
+    @Prop({ required: false, default: "" })
+    image3?: string
+
     // mongo-schema-decorators
     @Prop({ required: true })
     base_price: number;
 
-    // req-dto-decorators
-    @IsNumber()
-    @Transform(({ value }) => parseFloat(value))
-    @Min(0)
-    @Max(Infinity)
     // mongo-schema-decorators
     @Prop({ required: true })
     discounted_price: number;
 
-    // req-dto-decorators
-    @IsEnum(ProductStatus)
     // mongo-schema-decorators
     @Prop({ required: true, type: String })
     status: ProductStatus;
 
-    // req-dto-decorators
-    @ApiHideProperty()
     // mongo-schema-decorators
     @Prop({ required: false, type: Date, default: new Date() })
     created_at: Date;
 
-    // req-dto-decorators
-    @ApiHideProperty()
     // mongo-schema-decorators
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Store' })
     store: Types.ObjectId;

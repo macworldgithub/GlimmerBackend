@@ -35,10 +35,10 @@ export class ProductService {
             const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id)
             const images_keys = await this.s3_service.upload_many_files(images, path)
 
-        
+
             let product_temp: any = structuredClone(product_dto)
             product_temp.store = new Types.ObjectId(store_payload._id);
-            product_temp.images = images_keys.map((k,idx) => ({id:idx, image_key: k}))
+            product_temp.images = images_keys.map((k, idx) => ({ id: idx, image_key: k }))
 
             const product = await this.product_repository.create_product(product_dto);
 
@@ -69,7 +69,14 @@ export class ProductService {
             }
 
             if (product.images?.length) {
-                product.images = await this.s3_service.get_image_urls(product.images)
+                const images_res = product.images.map(async (img) => {
+                    return {
+                        id: img.id,
+                        image: await this.s3_service.get_image_url(img.image)
+                    }
+                })
+                const images = await Promise.all(images_res)
+                product.images = images
             }
 
             return new Product(product);
@@ -125,10 +132,16 @@ export class ProductService {
             }
 
             const products = await Promise.all(products_res.map(async (prod) => {
-                if (prod.images?.length) {
-                    prod.images = await this.s3_service.get_image_urls(prod.images)
-                    console.log(prod.images)
-                }
+            if (prod.images?.length) {
+                const images_res = prod.images.map(async (img) => {
+                    return {
+                        id: img.id,
+                        image: await this.s3_service.get_image_url(img.image)
+                    }
+                })
+                const images = await Promise.all(images_res)
+                product.images = images
+            }
                 return prod
             }))
 

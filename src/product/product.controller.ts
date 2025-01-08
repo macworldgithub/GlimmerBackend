@@ -28,7 +28,7 @@ import {
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductService } from './product.service';
 import { AuthPayloadRequest } from './interfaces/auth_payload_request.interface';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ProductStatus } from './enums/product_status.enum';
 
 @UseInterceptors(ClassSerializerInterceptor)
@@ -41,7 +41,11 @@ export class ProductController {
     @ApiBearerAuth()
     @UseGuards(AuthGuard, RolesGuard)
     @Role(Roles.STORE)
-    @UseInterceptors(FilesInterceptor('images', 3))
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'image1', maxCount: 1 },
+        { name: 'image2', maxCount: 1 },
+        { name: 'image3', maxCount: 1 },
+    ]))
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -98,7 +102,7 @@ export class ProductController {
                 ],
             }),
         )
-        files: Array<Express.Multer.File>,
+        files:  { avatar?: Express.Multer.File[], background?: Express.Multer.File[] },
         @Req() req: AuthPayloadRequest,
     ) {
         return this.product_service.create_product(product_dto, req.user, files);
@@ -150,7 +154,7 @@ export class ProductController {
         @Req() req: AuthPayloadRequest,
         @Body() body: UpdateProductDto,
     ) {
-        console.log( body, req.file, req.files)
+        console.log(body, req.file, req.files)
         return
         return this.product_service.update_store_product(id, req.user, body);
     }
