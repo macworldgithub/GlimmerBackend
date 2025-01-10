@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsEmail,
@@ -42,7 +43,12 @@ export class CreateStoreDto {
   @IsOptional()
   address?: string;
 
-  @IsString()
   @IsOptional()
-  store_image?: string;
+  @ApiPropertyOptional({
+    description: '3rd image file of the product',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  store_image?: Express.Multer.File;
 }

@@ -108,7 +108,7 @@ export class OrderRepository {
 
     return await this.store_order_model
       .find({}, projection)
-      .populate(['order_items', 'order', 'store'])
+      .populate(['order_items', 'order'])
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
@@ -122,7 +122,7 @@ export class OrderRepository {
     id: Types.ObjectId,
     store_order_dto: UpdateStoreOrder,
   ) {
-    return this.order_model
+    return this.store_order_model
       .findByIdAndUpdate(
         { _id: id },
         store_order_dto,
