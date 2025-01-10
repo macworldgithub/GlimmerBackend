@@ -60,7 +60,7 @@ export class OrderService {
 
       const stores_products =
         await this.product_repository.get_many_products_by_ids_groupedby_store(
-      // @ts-ignore
+          // @ts-ignore
           inserted_order_items.map((elem) => elem.product._id),
           session,
         );

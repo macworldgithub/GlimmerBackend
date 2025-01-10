@@ -7,7 +7,10 @@ import {
   ProductProjection,
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductsByStore } from './types/many_store_products.type';
-import { CreateProductDto, UpdateProductDto } from './dtos/request_dtos/product.dto';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+} from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductRepository {
