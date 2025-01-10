@@ -39,7 +39,6 @@ export class OrderController {
     return this.order_service.get_order_by_id(id);
   }
 
-
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
@@ -58,16 +57,18 @@ export class OrderController {
     return this.order_service.get_store_order_by_id(id);
   }
 
-
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
   @Put('update_store_order_by_id')
-  update_store_order_by_id(@Query('id') id: string,@Body() update_store_order_dto: UpdateStoreOrder) {
-    return this.order_service.update_store_order_by_id(id, update_store_order_dto);
+  update_store_order_by_id(
+    @Query('id') id: string,
+    @Body() update_store_order_dto: UpdateStoreOrder,
+  ) {
+    return this.order_service.update_store_order_by_id(
+      id,
+      update_store_order_dto,
+    );
   }
-
-
-
 }

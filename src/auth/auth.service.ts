@@ -21,6 +21,8 @@ import { AuthPayload } from './payloads/auth.payload';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
 import { CustomerRepository } from 'src/customer/customer.repository';
 import { Customer } from 'src/schemas/customer.schema';
+import { S3Service } from 'src/aws/s3.service';
+import { StoreService } from 'src/store/store.service';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +30,7 @@ export class AuthService {
     private store_repository: StoreRepository,
     private jwt_service: JwtService,
     private customer_repository: CustomerRepository,
+    private s3_service: S3Service,
   ) {}
 
   async store_signup(
@@ -38,16 +41,28 @@ export class AuthService {
         create_store_dto.email,
       );
 
-      console.log(is_email_available?.email);
       if (is_email_available?.email) {
-        console.log('Ran inside');
         throw new BadRequestException('Email Already exists!');
       }
 
       create_store_dto.password = await hashPassword(create_store_dto.password);
+      const store_image_temp = create_store_dto.store_image;
+      delete create_store_dto.store_image;
 
       const inserted_store =
         await this.store_repository.create_store(create_store_dto);
+
+      if (store_image_temp) {
+        const path = StoreService.GET_STORE_IMAGE_PATH(
+          inserted_store._id.toString(),
+        );
+        const store_image = (
+          await this.s3_service.upload_file_by_key(store_image_temp, path)
+        ).Key;
+        this.store_repository.update_store(inserted_store._id, { store_image });
+        inserted_store.store_image =
+          await this.s3_service.get_image_url(store_image);
+      }
 
       if (!inserted_store._id) {
         throw new InternalServerErrorException();
@@ -61,6 +76,7 @@ export class AuthService {
 
       return { store: new Store(inserted_store), token };
     } catch (e) {
+      console.log(e);
       throw new BadRequestException(e);
     }
   }

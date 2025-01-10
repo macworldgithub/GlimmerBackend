@@ -14,10 +14,18 @@ import { Types } from 'mongoose';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { validate } from 'class-validator';
+import { S3Service } from 'src/aws/s3.service';
 
 @Injectable()
 export class StoreService {
-  constructor(private store_repository: StoreRepository) {}
+  constructor(
+    private store_repository: StoreRepository,
+    private s3_service: S3Service,
+  ) {}
+
+  public static readonly GET_STORE_IMAGE_PATH = (id: string) => {
+    return 'glimmer/brands/' + id + '/store_image/image1';
+  };
 
   async get_store_by_id(
     store_payload: AuthPayload,
@@ -91,12 +99,30 @@ export class StoreService {
     update_store_dto: UpdateStoreDto,
   ): Promise<Store> {
     try {
+      const update_obj: any = structuredClone(update_store_dto);
+
+      if (update_store_dto.store_image) {
+        const path = StoreService.GET_STORE_IMAGE_PATH(store_payload._id);
+        const store_image = (
+          await this.s3_service.upload_file_by_key(
+            update_store_dto.store_image,
+            path,
+          )
+        ).Key;
+        update_obj.store_image = store_image;
+      }
+
       const store = await this.store_repository.update_store(
         new Types.ObjectId(store_payload._id),
-        update_store_dto,
+        update_obj,
       );
       if (!store) {
         throw new BadRequestException('Store coulnot be updated');
+      }
+      if (store.store_image) {
+        store.store_image = await this.s3_service.get_image_url(
+          store.store_image,
+        );
       }
 
       return new Store(store);

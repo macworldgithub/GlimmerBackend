@@ -1,9 +1,10 @@
 // @ts-nocheck
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { PartialType } from '@nestjs/swagger';
+import { OmitType, PartialType, PickType } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { HydratedDocument } from 'mongoose';
+import { CreateStoreDto } from 'src/store/dtos/store.dto';
 
 export type StoreDocument = HydratedDocument<Store>;
 
@@ -60,4 +61,6 @@ export type StoreProjection = {
   [key in keyof Store]?: 0 | 1;
 };
 
-export class UpdateStoreDto extends PartialType(Store) {}
+export class UpdateStoreDto extends PartialType(
+  OmitType(CreateStoreDto, ['password' as const]),
+) {}

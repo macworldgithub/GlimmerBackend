@@ -40,7 +40,7 @@ export class StoreRepository {
     return this.store_model.deleteOne({ _id }).exec();
   }
 
-  async update_store(id: Types.ObjectId, store_dto: UpdateStoreDto) {
+  async update_store(id: Types.ObjectId, store_dto: Record<string, any>) {
     return this.store_model
       .findByIdAndUpdate(
         { _id: id },

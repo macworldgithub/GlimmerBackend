@@ -12,6 +12,7 @@ import { StoreRepository } from './store/store.repository';
 import { CustomerModule } from './customer/customer.module';
 import { CartModule } from './cart/cart.module';
 import { AwsService } from './aws/aws.service';
+import { S3Service } from './aws/s3.service';
 
 @Module({
   imports: [
@@ -27,6 +28,6 @@ import { AwsService } from './aws/aws.service';
     CartModule,
   ],
   controllers: [AppController],
-  providers: [AppService, StoreService, StoreRepository, AwsService],
+  providers: [AppService, StoreService, StoreRepository, AwsService, S3Service],
 })
 export class AppModule {}
