@@ -19,6 +19,9 @@ export class OrderItem {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
   order: Order | mongoose.Types.ObjectId;
+
+  @Prop({ type: Date, required: true, default: new Date() })
+  created_at: Date;
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);

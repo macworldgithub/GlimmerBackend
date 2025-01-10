@@ -13,6 +13,7 @@ import { CustomerModule } from './customer/customer.module';
 import { CartModule } from './cart/cart.module';
 import { AwsService } from './aws/aws.service';
 import { S3Service } from './aws/s3.service';
+import { OrderRepository } from './order/order.repository';
 
 @Module({
   imports: [
@@ -28,6 +29,13 @@ import { S3Service } from './aws/s3.service';
     CartModule,
   ],
   controllers: [AppController],
-  providers: [AppService, StoreService, StoreRepository, AwsService, S3Service],
+  providers: [
+    AppService,
+    StoreService,
+    StoreRepository,
+    AwsService,
+    S3Service,
+    OrderRepository,
+  ],
 })
 export class AppModule {}

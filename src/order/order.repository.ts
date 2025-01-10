@@ -13,6 +13,7 @@ import {
   UpdateStoreOrder,
 } from 'src/schemas/ecommerce/store_order.schema';
 import { UpdateOrderDto } from './dtos/req_dtos/order.dto';
+import { OrderStatus } from './enums/order_status.enum';
 
 @Injectable()
 export class OrderRepository {
@@ -129,5 +130,23 @@ export class OrderRepository {
         { new: true, runValidators: true }, // `new: true` ensures we get the updated document
       )
       .exec();
+  }
+
+  async get_store_monthly_sales(store: Types.ObjectId) {
+    let year = 2025;
+    let month = 0;
+
+    let startOfMonth = new Date(Date.UTC(year, month, 1)); // Start of the month
+    let startOfNextMonth = new Date(Date.UTC(year, month + 1, 1)); // Start of the next month
+
+    return this.store_order_model
+      .find({
+        store,
+        created_at: {
+          $gte: startOfMonth,
+          $lt: startOfNextMonth,
+        },
+      })
+      .populate('store');
   }
 }

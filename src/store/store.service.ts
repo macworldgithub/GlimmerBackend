@@ -15,11 +15,13 @@ import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { validate } from 'class-validator';
 import { S3Service } from 'src/aws/s3.service';
+import { OrderRepository } from 'src/order/order.repository';
 
 @Injectable()
 export class StoreService {
   constructor(
     private store_repository: StoreRepository,
+    private order_repository: OrderRepository,
     private s3_service: S3Service,
   ) {}
 
@@ -127,6 +129,20 @@ export class StoreService {
 
       return new Store(store);
     } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
+  }
+
+  async get_sales(store_payload: AuthPayload): Promise<any> {
+    try {
+      const monthly_sales = await this.order_repository.get_store_monthly_sales(
+        new Types.ObjectId(store_payload._id),
+      );
+
+      console.log(monthly_sales);
+      return monthly_sales;
+    } catch (e) {
+      console.log(e);
       throw new InternalServerErrorException(e);
     }
   }

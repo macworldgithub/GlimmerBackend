@@ -74,7 +74,7 @@ export class AuthService {
         role: Roles.STORE,
       });
 
-      return { store: new Store(inserted_store), token };
+      return { store: new Store(inserted_store), token, role: Roles.STORE };
     } catch (e) {
       console.log(e);
       throw new BadRequestException(e);
@@ -110,7 +110,7 @@ export class AuthService {
 
       const token = await this.jwt_service.signAsync(payload);
 
-      return { store: new Store(store), token };
+      return { store: new Store(store), token, role: Roles.STORE };
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
@@ -144,7 +144,11 @@ export class AuthService {
         role: Roles.CUSTOMER,
       });
 
-      return { customer: new Customer(inserted_customer), token };
+      return {
+        customer: new Customer(inserted_customer),
+        token,
+        role: Roles.CUSTOMER,
+      };
     } catch (e) {
       throw new BadRequestException(e);
     }
@@ -179,7 +183,7 @@ export class AuthService {
 
       const token = await this.jwt_service.signAsync(payload);
 
-      return { customer: new Customer(customer), token };
+      return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
     } catch (e) {
       throw new InternalServerErrorException(e);
     }

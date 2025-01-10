@@ -65,6 +65,15 @@ export class StoreController {
     return this.store_service.update_store(req.user, body);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
+  @Get('get_monthly_sales')
+  get_monthly_sales(@Req() req: AuthPayloadRequest) {
+    return this.store_service.get_sales(req.user);
+  }
+
   // For Admin
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
