@@ -16,11 +16,15 @@ import {
   StoreOrder,
   StoreOrderSchema,
 } from 'src/schemas/ecommerce/store_order.schema';
+import { ProductService } from 'src/product/product.service';
+import { ProductRepository } from 'src/product/product.repository';
+import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema}]),
     MongooseModule.forFeature([
       { name: OrderItem.name, schema: OrderItemSchema },
     ]),
@@ -34,10 +38,13 @@ import {
     StoreRepository,
     JwtService,
     S3Service,
+    ProductService,
+    ProductRepository,
     OrderRepository,
   ],
   exports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema}]),
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     MongooseModule.forFeature([
       { name: OrderItem.name, schema: OrderItemSchema },

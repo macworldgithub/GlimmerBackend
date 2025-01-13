@@ -23,12 +23,13 @@ import { StoreService } from './store.service';
 import { UpdateStoreDto } from 'src/schemas/ecommerce/store.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
+import { ProductService } from 'src/product/product.service';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Store')
 @Controller('store')
 export class StoreController {
-  constructor(private store_service: StoreService) {}
+  constructor(private store_service: StoreService, private product_service: ProductService) {}
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -70,9 +71,20 @@ export class StoreController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
   @Get('get_monthly_sales')
-  get_monthly_sales(@Req() req: AuthPayloadRequest) {
-    return this.store_service.get_sales(req.user);
+  get_monthly_sales(@Query("month") month: number,@Query("year") year: number ,@Req() req: AuthPayloadRequest) {
+    return this.store_service.get_sales(req.user, month, year);
   }
+
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
+  @Get('get_total_products')
+  get_total_products(@Req() req: AuthPayloadRequest) {
+    return this.product_service.get_total_no_products_by_store_id(req.user._id)
+  }
+
 
   // For Admin
   @HttpCode(HttpStatus.OK)

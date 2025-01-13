@@ -8,7 +8,6 @@ import {
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductsByStore } from './types/many_store_products.type';
 import {
-  CreateProductDto,
   UpdateProductDto,
 } from './dtos/request_dtos/product.dto';
 
@@ -46,7 +45,7 @@ export class ProductRepository {
   ) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
 
-    return await this.product_model
+    return this.product_model
       .find(
         {
           store: store_id,
@@ -116,4 +115,19 @@ export class ProductRepository {
       .session(session)
       .exec();
   }
+
+  async get_total_no_products_by_store_id(
+    filters: Partial<Product>,
+    session?: ClientSession | null,
+  ) {
+    if (!session) session = null;
+
+    return this.product_model
+      .countDocuments({
+         ...filters 
+      })
+      .session(session)
+      .exec();
+  }
+
 }
