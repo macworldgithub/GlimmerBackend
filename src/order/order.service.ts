@@ -8,6 +8,7 @@ import { ProductRepository } from 'src/product/product.repository';
 import { InjectConnection } from '@nestjs/mongoose';
 import { UpdateStoreDto } from 'src/schemas/ecommerce/store.schema';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
+import { SSE } from 'src/notifications/sse.service';
 
 @Injectable()
 export class OrderService {
@@ -87,10 +88,14 @@ export class OrderService {
                 });
                 store_orders_obj.push(store_order_obj);
             });
-            await this.order_repository.create_many_store_orders(
+            const store_orders = await this.order_repository.create_many_store_orders(
                 store_orders_obj,
                 session,
             );
+            
+            store_orders.forEach(ord => {
+                SSE.send_notification_to_store(ord.store.toString(), ord)
+            })
 
             await session.commitTransaction();
 

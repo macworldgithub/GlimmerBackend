@@ -14,6 +14,7 @@ import { CartModule } from './cart/cart.module';
 import { AwsService } from './aws/aws.service';
 import { S3Service } from './aws/s3.service';
 import { OrderRepository } from './order/order.repository';
+import { SSE } from './notifications/sse.service';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { OrderRepository } from './order/order.repository';
     CustomerModule,
     CartModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, SSE],
   providers: [
     AppService,
     StoreService,
