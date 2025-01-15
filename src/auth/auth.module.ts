@@ -9,6 +9,7 @@ import { CustomerRepository } from 'src/customer/customer.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Customer, CustomerSchema } from 'src/schemas/customer.schema';
 import { S3Service } from 'src/aws/s3.service';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { S3Service } from 'src/aws/s3.service';
       }),
     }),
   ],
-  providers: [AuthService, CustomerRepository, StoreRepository, S3Service],
+  providers: [AuthService, CustomerRepository, StoreRepository, S3Service, FirebaseService],
   controllers: [AuthController],
 })
 export class AuthModule {}

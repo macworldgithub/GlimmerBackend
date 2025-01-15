@@ -15,6 +15,7 @@ import { AwsService } from './aws/aws.service';
 import { S3Service } from './aws/s3.service';
 import { OrderRepository } from './order/order.repository';
 import { SSE } from './notifications/sse.service';
+import { FirebaseService } from './firebase/firebase.service';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SSE } from './notifications/sse.service';
     AwsService,
     S3Service,
     OrderRepository,
+    FirebaseService,
   ],
 })
 export class AppModule {}

@@ -16,13 +16,14 @@ import { comparePassword, hashPassword } from 'src/utils/data.encryption';
 import {
   CustomerSignInDto,
   StoreSignInDto,
-} from './dtos/request_dtos/signin_dto';
+} from './dtos/request_dtos/signin_dto.dto';
 import { AuthPayload } from './payloads/auth.payload';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
 import { CustomerRepository } from 'src/customer/customer.repository';
 import { Customer } from 'src/schemas/customer.schema';
 import { S3Service } from 'src/aws/s3.service';
 import { StoreService } from 'src/store/store.service';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class AuthService {
@@ -31,6 +32,7 @@ export class AuthService {
     private jwt_service: JwtService,
     private customer_repository: CustomerRepository,
     private s3_service: S3Service,
+    private firebase_service: FirebaseService,
   ) {}
 
   async store_signup(
@@ -188,4 +190,19 @@ export class AuthService {
       throw new InternalServerErrorException(e);
     }
   }
+
+
+  async customer_signup_with_google(id_token: string): Promise<any> {
+    try {
+
+        const idk = this.firebase_service.login_with_google(id_token)
+
+        return idk
+
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+
 }

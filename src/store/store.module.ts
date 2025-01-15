@@ -24,7 +24,7 @@ import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
   imports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema}]),
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     MongooseModule.forFeature([
       { name: OrderItem.name, schema: OrderItemSchema },
     ]),
@@ -44,7 +44,7 @@ import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
   ],
   exports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema}]),
+    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     MongooseModule.forFeature([
       { name: OrderItem.name, schema: OrderItemSchema },

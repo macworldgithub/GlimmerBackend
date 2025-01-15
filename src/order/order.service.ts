@@ -9,6 +9,7 @@ import { InjectConnection } from '@nestjs/mongoose';
 import { UpdateStoreDto } from 'src/schemas/ecommerce/store.schema';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
 import { SSE } from 'src/notifications/sse.service';
+import { SSE_EVENTS } from 'src/commons/enums/sse_types.enum';
 
 @Injectable()
 export class OrderService {
@@ -25,6 +26,7 @@ export class OrderService {
             const order = {
                 status: OrderStatus.CONFIRMED,
                 customer: user._id,
+                payment_method: order_dto.payment_method
             };
             const inserted_order = await this.order_repository.create_order(
                 order,
@@ -92,10 +94,10 @@ export class OrderService {
                 store_orders_obj,
                 session,
             );
-            
-            store_orders.forEach(ord => {
-                SSE.send_notification_to_store(ord.store.toString(), ord)
-            })
+
+            store_orders.forEach((ord) => {
+                SSE.send_notification_to_store(ord.store.toString(), { order: ord, type: SSE_EVENTS.ORDER_PLACED });
+            });
 
             await session.commitTransaction();
 
@@ -134,8 +136,13 @@ export class OrderService {
 
     async get_all_store_orders(page_no: number, store_payload: AuthPayload) {
         try {
-            const orders = await this.order_repository.get_all_store_orders(new Types.ObjectId(store_payload._id), page_no);
-            const total = await this.order_repository.get_total_no_store_orders({ store: new Types.ObjectId(store_payload._id) })
+            const orders = await this.order_repository.get_all_store_orders(
+                new Types.ObjectId(store_payload._id),
+                page_no,
+            );
+            const total = await this.order_repository.get_total_no_store_orders({
+                store: new Types.ObjectId(store_payload._id),
+            });
 
             return { orders, total };
         } catch (e) {

@@ -44,7 +44,10 @@ export class OrderController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
   @Get('get_all_store_orders')
-  get_all_store_orders(@Query('page_no') page_no: number, @Req() req: AuthPayloadRequest) {
+  get_all_store_orders(
+    @Query('page_no') page_no: number,
+    @Req() req: AuthPayloadRequest,
+  ) {
     return this.order_service.get_all_store_orders(page_no, req.user);
   }
 

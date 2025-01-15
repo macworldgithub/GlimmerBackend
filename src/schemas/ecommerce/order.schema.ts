@@ -7,6 +7,7 @@ import { OrderStatus } from 'src/order/enums/order_status.enum';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { OrderItem } from './order_item.schema';
 import { Customer } from '../customer.schema';
+import PaymentMethod from 'src/order/enums/payment_method.enum';
 
 export type OrderDocument = HydratedDocument<Order>;
 
@@ -14,6 +15,9 @@ export type OrderDocument = HydratedDocument<Order>;
 export class Order {
   @Prop({ type: String, required: true, default: OrderStatus.CONFIRMED })
   status: OrderStatus;
+
+  @Prop({ type: String, required: true })
+  payment_method: PaymentMethod;
 
   @Prop({ type: Date, required: true, default: new Date() })
   created_at: Date;
@@ -49,6 +53,7 @@ export class Order {
   constructor(obj: Order) {
     if (!obj) return;
     this.status = obj.status;
+    this.payment_method= obj.payment_method;
     (this.customer = obj.customer),
       (this.created_at = obj.created_at),
       (this.order_items = obj.order_items);

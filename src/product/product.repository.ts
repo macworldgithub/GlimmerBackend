@@ -7,9 +7,7 @@ import {
   ProductProjection,
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductsByStore } from './types/many_store_products.type';
-import {
-  UpdateProductDto,
-} from './dtos/request_dtos/product.dto';
+import { UpdateProductDto } from './dtos/request_dtos/product.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -124,10 +122,9 @@ export class ProductRepository {
 
     return this.product_model
       .countDocuments({
-         ...filters 
+        ...filters,
       })
       .session(session)
       .exec();
   }
-
 }

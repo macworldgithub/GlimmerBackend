@@ -4,6 +4,7 @@ import { PartialType, PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsEnum,
   IsInt,
   IsMongoId,
   Max,
@@ -11,6 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Types } from 'mongoose';
+import PaymentMethod from 'src/order/enums/payment_method.enum';
 import { Order } from 'src/schemas/ecommerce/order.schema';
 
 export class OrderReqDto {
@@ -18,6 +20,11 @@ export class OrderReqDto {
   @ValidateNested({ each: true }) // Validates each item in the array
   @Type(() => OrderItemDto) // Specifies the type for transformation
   order_items: OrderItemDto[];
+
+  // req-dto-decorators
+  @IsEnum(PaymentMethod)
+  payment_method: PaymentMethod;
+
 }
 
 class OrderItemDto {
