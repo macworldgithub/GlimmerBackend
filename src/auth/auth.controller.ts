@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { CreateStoreDto } from 'src/store/dtos/store.dto';
 import {
-    CustomerGoogleSignInDto,
+  CustomerGoogleSignInDto,
   CustomerSignInDto,
   StoreSignInDto,
 } from './dtos/request_dtos/signin_dto.dto';
@@ -23,7 +23,7 @@ import { ApiConsumes } from '@nestjs/swagger';
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
 export class AuthController {
-  constructor(private auth_service: AuthService ) {}
+  constructor(private auth_service: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('store_image'))
@@ -50,17 +50,15 @@ export class AuthController {
     return this.auth_service.customer_signup(create_customer_dto);
   }
 
-
-  @HttpCode(HttpStatus.OK)
-  @Post('signup/customer/google')
-  signup_with_google(@Body() body: CustomerGoogleSignInDto) {
-    return this.auth_service.customer_signup_with_google(body.id_token)
-  }
-
-
   @HttpCode(HttpStatus.OK)
   @Post('signin/customer')
   customer_sign_in(@Body() customer_signin_dto: CustomerSignInDto) {
     return this.auth_service.customer_signin(customer_signin_dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('login/customer/google')
+  signup_with_google(@Body() body: CustomerGoogleSignInDto) {
+    return this.auth_service.customer_signup_with_google(body.id_token);
   }
 }

@@ -24,7 +24,6 @@ export class OrderReqDto {
   // req-dto-decorators
   @IsEnum(PaymentMethod)
   payment_method: PaymentMethod;
-
 }
 
 class OrderItemDto {

@@ -168,13 +168,15 @@ export class AuthService {
         throw new BadRequestException('Incorrect email or password');
       }
 
-      const isPasswordValid = await comparePassword(
-        customer_signin_dto.password,
-        customer.password,
-      );
+      if (customer.password) {
+        const isPasswordValid = await comparePassword(
+          customer_signin_dto.password,
+          customer.password,
+        );
 
-      if (!isPasswordValid) {
-        throw new BadRequestException('Incorrect email or password');
+        if (!isPasswordValid) {
+          throw new BadRequestException('Incorrect email or password');
+        }
       }
 
       const payload: AuthPayload = {
@@ -191,18 +193,81 @@ export class AuthService {
     }
   }
 
-
-  async customer_signup_with_google(id_token: string): Promise<any> {
+  async oauth_customer_signup(
+    customer: Omit<CreateCustomerDto, 'password'>,
+  ): Promise<any> {
     try {
+      const inserted_customer =
+        await this.customer_repository.create_customer(customer);
 
-        const idk = this.firebase_service.login_with_google(id_token)
+      if (!inserted_customer._id) {
+        throw new InternalServerErrorException();
+      }
 
-        return idk
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_customer._id.toString(),
+        email: inserted_customer.email,
+        role: Roles.CUSTOMER,
+      });
 
+      return {
+        customer: new Customer(inserted_customer),
+        token,
+        role: Roles.CUSTOMER,
+      };
     } catch (e) {
       throw new BadRequestException(e);
     }
   }
 
+  async oauth_customer_signin(
+    customer_dto: Omit<CustomerSignInDto, 'password'>,
+  ): Promise<any> {
+    try {
+      const customer = await this.customer_repository.get_customer_by_email(
+        customer_dto.email,
+      );
 
+      if (!customer?.email) {
+        throw new BadRequestException('Incorrect email or password');
+      }
+
+      const payload: AuthPayload = {
+        _id: customer._id.toString(),
+        email: customer.email,
+        role: Roles.CUSTOMER,
+      };
+
+      const token = await this.jwt_service.signAsync(payload);
+
+      return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
+
+  async customer_signup_with_google(id_token: string): Promise<any> {
+    try {
+      const credentials =
+        await this.firebase_service.login_with_google(id_token);
+
+      if (!credentials.user.email || !credentials.user.displayName) {
+        throw new InternalServerErrorException('could not login with google');
+      }
+      const email_already_exist =
+        await this.customer_repository.get_customer_by_email(
+          credentials.user.email,
+        );
+
+      if (!email_already_exist) {
+        return this.oauth_customer_signup({
+          email: credentials.user.email,
+          name: credentials.user.displayName,
+        });
+      }
+      return this.oauth_customer_signin({ email: credentials.user.email });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
+  }
 }

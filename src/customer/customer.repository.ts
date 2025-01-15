@@ -12,9 +12,10 @@ export class CustomerRepository {
     @InjectModel(Customer.name) private customer_model: Model<Customer>,
   ) {}
 
-  async create_customer(customer_dto: CreateCustomerDto) {
+  async create_customer(
+    customer_dto: CreateCustomerDto | Omit<CreateCustomerDto, 'password'>,
+  ) {
     const customer = new this.customer_model(customer_dto);
-    console.log(customer);
 
     return customer.save();
   }

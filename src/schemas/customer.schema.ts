@@ -17,8 +17,8 @@ export class Customer {
 
   @Exclude()
   // mongo-schema-decorators
-  @Prop({ required: true })
-  password: string;
+  @Prop({ required: false })
+  password?: string;
 
   constructor(c: Customer) {
     if (!c) return;

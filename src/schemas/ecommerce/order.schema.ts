@@ -53,7 +53,7 @@ export class Order {
   constructor(obj: Order) {
     if (!obj) return;
     this.status = obj.status;
-    this.payment_method= obj.payment_method;
+    this.payment_method = obj.payment_method;
     (this.customer = obj.customer),
       (this.created_at = obj.created_at),
       (this.order_items = obj.order_items);

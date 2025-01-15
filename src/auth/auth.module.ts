@@ -25,7 +25,13 @@ import { FirebaseService } from 'src/firebase/firebase.service';
       }),
     }),
   ],
-  providers: [AuthService, CustomerRepository, StoreRepository, S3Service, FirebaseService],
+  providers: [
+    AuthService,
+    CustomerRepository,
+    StoreRepository,
+    S3Service,
+    FirebaseService,
+  ],
   controllers: [AuthController],
 })
 export class AuthModule {}
