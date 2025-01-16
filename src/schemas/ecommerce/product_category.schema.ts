@@ -9,7 +9,7 @@ export class ProductCategory {
   @Prop()
   name: string;
 
-  @Prop()
+  @Prop({default : new Date()})
   created_at: string;
 
   @Prop()

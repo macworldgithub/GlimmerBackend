@@ -17,6 +17,8 @@ import { OrderRepository } from './order/order.repository';
 import { SSE } from './notifications/sse.service';
 import { FirebaseService } from './firebase/firebase.service';
 import { ProductCategoryModule } from './product_category/product_category.module';
+import { SubProductCategoryModule } from './sub_product_category/sub_product_category.module';
+import { ProductSubCategoryModule } from './product_sub_category/product_sub_category.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ProductCategoryModule } from './product_category/product_category.modul
     CustomerModule,
     CartModule,
     ProductCategoryModule,
+    SubProductCategoryModule,
+    ProductSubCategoryModule,
   ],
   controllers: [AppController, SSE],
   providers: [

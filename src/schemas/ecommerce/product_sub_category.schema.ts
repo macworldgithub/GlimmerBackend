@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { ProductCategory } from './product_category.schema';
 
 export type ProductSubCategorySchema = HydratedDocument<ProductSubCategory>;
@@ -10,8 +10,8 @@ export class ProductSubCategory{
   @Prop()
   name: string;
 
-  @Prop()
-  created_at: string;
+  @Prop({default : new Date()})
+  created_at: Date;
 
   @Prop()
   description?: string;

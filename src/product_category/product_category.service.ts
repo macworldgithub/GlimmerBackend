@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ProductCategoryRepository } from './product_category.repository';
-import { CreateProductCategoryDto } from './dtos/req_dtos/product_category.dto';
+import { CreateProductCategoryDto, UpdateProductCategoryDto } from './dtos/req_dtos/product_category.dto';
+import { Types } from "mongoose"
 
 @Injectable()
 export class ProductCategoryService {
@@ -14,4 +15,25 @@ export class ProductCategoryService {
             throw new InternalServerErrorException(e)
         }
     }
+
+
+    async update_product_cateogry(update_cat: UpdateProductCategoryDto, id: string) {
+        try {
+            return this.product_category_repository.update_product_category(update_cat, new Types.ObjectId(id))
+        } catch (e) {
+            console.log(e)
+            throw new InternalServerErrorException(e)
+        }
+    }
+
+
+    async get_all_categories() {
+        try {
+            return this.product_category_repository.get_all_categories()
+        } catch (e) {
+            console.log(e)
+            throw new InternalServerErrorException(e)
+        }
+    }
+
 }
