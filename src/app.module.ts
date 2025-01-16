@@ -16,6 +16,7 @@ import { S3Service } from './aws/s3.service';
 import { OrderRepository } from './order/order.repository';
 import { SSE } from './notifications/sse.service';
 import { FirebaseService } from './firebase/firebase.service';
+import { ProductCategoryModule } from './product_category/product_category.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { FirebaseService } from './firebase/firebase.service';
     AuthModule,
     CustomerModule,
     CartModule,
+    ProductCategoryModule,
   ],
   controllers: [AppController, SSE],
   providers: [

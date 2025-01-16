@@ -13,10 +13,8 @@ export class ProductCategory {
   created_at: string;
 
   @Prop()
-  description: string;
+  description?: string;
 
-  @Prop()
-  image: string;
 }
 
 export const ProductCategorySchema =
