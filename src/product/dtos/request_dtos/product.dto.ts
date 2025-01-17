@@ -84,7 +84,8 @@ export class CreateProductDto {
   sub_category: string;
 
   @IsString()
-  item: string;
+  @IsOptional()
+  item?: string;
 
   constructor(product: CreateProductDto) {
     if (!product) return;

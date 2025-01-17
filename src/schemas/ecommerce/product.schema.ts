@@ -62,8 +62,8 @@ export class Product {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
   sub_category: Types.ObjectId;
 
-  @Prop({ required: true })
-  item : string;
+  @Prop({ required: false})
+  item ?: string;
 
   constructor(product: Product) {
     if (!product) return;
