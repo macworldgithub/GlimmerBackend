@@ -343,20 +343,20 @@ export class ProductService {
         throw new BadRequestException('Incorrect page no value');
       }
 
-      if (
-        category &&
-        sub_category &&
-        (!isMongoId(category) || !isMongoId(sub_category))
-      )
-        throw new BadRequestException('invalid category or sub category!');
+//      if (
+//        category &&
+//        sub_category &&
+//        (!isMongoId(category) || !isMongoId(sub_category))
+//      )
+//        throw new BadRequestException('invalid category or sub category!');
       let filters: Partial<Product> = {};
 
-      if (category) {
-        filters.category = new Types.ObjectId(category);
-      }
-      if (sub_category) {
-        filters.sub_category = new Types.ObjectId(sub_category);
-      }
+//      if (category) {
+//        filters.category = new Types.ObjectId(category);
+//      }
+//      if (sub_category) {
+//        filters.sub_category = new Types.ObjectId(sub_category);
+//      }
       if (item && item !== "all"){
           filters.item = item
       }
