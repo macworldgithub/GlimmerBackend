@@ -9,12 +9,11 @@ export class ProductCategory {
   @Prop()
   name: string;
 
-  @Prop({default : new Date()})
+  @Prop({ default: new Date() })
   created_at: string;
 
   @Prop()
   description?: string;
-
 }
 
 export const ProductCategorySchema =

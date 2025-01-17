@@ -6,11 +6,11 @@ import { ProductCategory } from './product_category.schema';
 export type ProductSubCategorySchema = HydratedDocument<ProductSubCategory>;
 
 @Schema()
-export class ProductSubCategory{
+export class ProductSubCategory {
   @Prop()
   name: string;
 
-  @Prop({default : new Date()})
+  @Prop({ default: new Date() })
   created_at: Date;
 
   @Prop()

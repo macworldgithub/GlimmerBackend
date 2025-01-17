@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   Controller,
@@ -29,6 +30,8 @@ import {
 } from './dtos/request_dtos/product.dto';
 import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ProductFiles } from './types/update_product.type';
+import { Types } from 'mongoose';
+import { isMongoId } from 'class-validator';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -82,8 +85,15 @@ export class ProductController {
   async get_all_store_products(
     @Req() req: AuthPayloadRequest,
     @Query('page_no') page_no: number,
+    @Query('category') category?: string,
+    @Query('sub_category') sub_category?: string,
   ) {
-    return this.product_service.get_all_store_products(req.user, page_no);
+    return this.product_service.get_all_store_products(
+      req.user,
+      page_no,
+      category,
+      sub_category,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
@@ -119,5 +129,19 @@ export class ProductController {
     files: ProductFiles,
   ) {
     return this.product_service.update_store_product(id, req.user, body, files);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('get_all_products')
+  async get_all_products(
+    @Query('page_no') page_no: number,
+    @Query('category') category?: string,
+    @Query('sub_category') sub_category?: string,
+  ) {
+    return this.product_service.get_all_products(
+      page_no,
+      category,
+      sub_category,
+    );
   }
 }

@@ -40,6 +40,7 @@ export class ProductRepository {
     store_id: Types.ObjectId,
     page_no: number,
     projection?: ProductProjection,
+    filters: Partial<Product> = {},
   ) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
 
@@ -47,6 +48,26 @@ export class ProductRepository {
       .find(
         {
           store: store_id,
+          ...filters,
+        },
+        projection,
+      )
+      .skip(skip)
+      .limit(DEFAULT_DOCUMENTS_LIMITS)
+      .exec();
+  }
+
+  async get_all_products(
+    page_no: number,
+    projection?: ProductProjection,
+    filters: Partial<Product> = {},
+  ) {
+    const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
+
+    return this.product_model
+      .find(
+        {
+          ...filters,
         },
         projection,
       )

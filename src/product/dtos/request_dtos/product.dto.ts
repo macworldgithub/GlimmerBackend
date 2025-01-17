@@ -4,6 +4,7 @@ import { Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
+  IsMongoId,
   IsNumber,
   IsOptional,
   IsString,
@@ -76,6 +77,12 @@ export class CreateProductDto {
   @IsEnum(ProductStatus)
   status: ProductStatus;
 
+  @IsMongoId()
+  category: string;
+
+  @IsMongoId()
+  sub_category: string;
+
   constructor(product: CreateProductDto) {
     if (!product) return;
     this.name = product.name;
@@ -87,6 +94,8 @@ export class CreateProductDto {
     this.base_price = product.base_price;
     this.description = product.description;
     this.discounted_price = product.discounted_price;
+    this.category = product.category;
+    this.sub_category = product.sub_category;
   }
 }
 

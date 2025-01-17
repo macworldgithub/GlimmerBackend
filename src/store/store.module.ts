@@ -19,11 +19,19 @@ import {
 import { ProductService } from 'src/product/product.service';
 import { ProductRepository } from 'src/product/product.repository';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
+import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
+import {
+  ProductSubCategory,
+  ProductSubCategorySchema,
+} from 'src/schemas/ecommerce/product_sub_category.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
+    MongooseModule.forFeature([
+      { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
+    ]),
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     MongooseModule.forFeature([
       { name: OrderItem.name, schema: OrderItemSchema },
@@ -41,6 +49,7 @@ import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
     ProductService,
     ProductRepository,
     OrderRepository,
+    ProductSubCategoryRepository,
   ],
   exports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),

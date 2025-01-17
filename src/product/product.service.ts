@@ -11,7 +11,7 @@ import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { Types } from 'mongoose';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
-import { validate } from 'class-validator';
+import { isMongoId, validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { S3Service } from 'src/aws/s3.service';
 import {
@@ -19,11 +19,13 @@ import {
   UpdateProductDto,
 } from './dtos/request_dtos/product.dto';
 import { ProductFiles } from './types/update_product.type';
+import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
 
 @Injectable()
 export class ProductService {
   constructor(
     private product_repository: ProductRepository,
+    private sub_category_repository: ProductSubCategoryRepository,
     private s3_service: S3Service,
   ) {}
 
@@ -36,6 +38,17 @@ export class ProductService {
     store_payload: AuthPayload,
   ) {
     try {
+      const are_categories_valid =
+        await this.sub_category_repository.get_sub_category_by_ids(
+          new Types.ObjectId(product_dto.category),
+          new Types.ObjectId(product_dto.sub_category),
+        );
+
+      if (!are_categories_valid)
+        throw new BadRequestException(
+          `The selected sub-category does not belong to the specified category. Please ensure your selection is correct`,
+        );
+
       const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
       let product_temp: any = structuredClone(product_dto);
 
@@ -56,6 +69,9 @@ export class ProductService {
       }
 
       product_temp.store = new Types.ObjectId(store_payload._id);
+      product_temp.category = new Types.ObjectId(product_dto.category);
+      product_temp.sub_category = new Types.ObjectId(product_dto.sub_category);
+
       const product =
         await this.product_repository.create_product(product_temp);
 
@@ -131,6 +147,8 @@ export class ProductService {
   async get_all_store_products(
     store_payload: AuthPayload,
     page_no: number,
+    category?: string,
+    sub_category?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -143,10 +161,26 @@ export class ProductService {
         throw new BadRequestException('Incorrect page no value');
       }
 
+      if (
+        category &&
+        sub_category &&
+        (!isMongoId(category) || !isMongoId(sub_category))
+      )
+        throw new BadRequestException('invalid category or sub category!');
+      let filters: Partial<Product> = {};
+
+      if (category) {
+        filters.category = new Types.ObjectId(category);
+      }
+      if (sub_category) {
+        filters.sub_category = new Types.ObjectId(sub_category);
+      }
+
       const products_res = await this.product_repository.get_all_store_products(
         new Types.ObjectId(store_payload._id),
         page_no,
         projection,
+        filters,
       );
 
       if (!products_res) {
@@ -172,10 +206,12 @@ export class ProductService {
       const total =
         await this.product_repository.get_total_no_products_by_store_id({
           store: new Types.ObjectId(store_payload._id),
+          ...filters,
         });
 
       return { products: products.map((prod) => new Product(prod)), total };
     } catch (e) {
+      console.log(e);
       throw new InternalServerErrorException(e);
     }
   }
@@ -280,6 +316,71 @@ export class ProductService {
           store: new Types.ObjectId(store),
         });
       return total;
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
+
+  async get_all_products(
+    page_no: number,
+    category?: string,
+    sub_category?: string,
+    projection?: ProductProjection,
+  ): Promise<{ products: Product[]; total: number }> {
+    try {
+      const params = new PaginatedDataDto(page_no);
+
+      const is_valid = await validate(params, {
+        validationError: { target: false },
+      });
+      if (is_valid.length) {
+        throw new BadRequestException('Incorrect page no value');
+      }
+
+      if (
+        category &&
+        sub_category &&
+        (!isMongoId(category) || !isMongoId(sub_category))
+      )
+        throw new BadRequestException('invalid category or sub category!');
+      let filters: Partial<Product> = {};
+
+      if (category) {
+        filters.category = new Types.ObjectId(category);
+      }
+      if (sub_category) {
+        filters.sub_category = new Types.ObjectId(sub_category);
+      }
+
+      const products_res = await this.product_repository.get_all_products(
+        page_no,
+        projection,
+        filters,
+      );
+
+      const products = await Promise.all(
+        products_res.map(async (prod) => {
+          if (prod.image1) {
+            prod.image1 = await this.s3_service.get_image_url(prod.image1);
+          }
+          if (prod.image2) {
+            prod.image2 = await this.s3_service.get_image_url(prod.image2);
+          }
+          if (prod.image3) {
+            prod.image3 = await this.s3_service.get_image_url(prod.image3);
+          }
+
+          return prod;
+        }),
+      );
+
+      const total =
+        await this.product_repository.get_total_no_products_by_store_id({
+          ...filters,
+        });
+
+      return { products: products.map((prod) => new Product(prod)), total };
     } catch (e) {
       console.log(e);
       throw new InternalServerErrorException(e);

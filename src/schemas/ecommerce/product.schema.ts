@@ -54,6 +54,14 @@ export class Product {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Store' })
   store: Types.ObjectId;
 
+  // mongo-schema-decorators
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
+  category: Types.ObjectId;
+
+  // mongo-schema-decorators
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
+  sub_category: Types.ObjectId;
+
   constructor(product: Product) {
     if (!product) return;
     this._id = product._id?.toString();
@@ -68,6 +76,8 @@ export class Product {
     this.created_at = product.created_at;
     this.description = product.description;
     this.discounted_price = product.discounted_price;
+    this.category = product.category?.toString();
+    this.sub_category = product.sub_category?.toString();
   }
 }
 
