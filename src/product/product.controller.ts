@@ -30,8 +30,6 @@ import {
 } from './dtos/request_dtos/product.dto';
 import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ProductFiles } from './types/update_product.type';
-import { Types } from 'mongoose';
-import { isMongoId } from 'class-validator';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -137,11 +135,13 @@ export class ProductController {
     @Query('page_no') page_no: number,
     @Query('category') category?: string,
     @Query('sub_category') sub_category?: string,
+    @Query('item') item?: string,
   ) {
     return this.product_service.get_all_products(
       page_no,
       category,
       sub_category,
+      item
     );
   }
 }

@@ -62,6 +62,9 @@ export class Product {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
   sub_category: Types.ObjectId;
 
+  @Prop({ required: true })
+  item : string;
+
   constructor(product: Product) {
     if (!product) return;
     this._id = product._id?.toString();
@@ -78,6 +81,7 @@ export class Product {
     this.discounted_price = product.discounted_price;
     this.category = product.category?.toString();
     this.sub_category = product.sub_category?.toString();
+    this.item = product.item
   }
 }
 

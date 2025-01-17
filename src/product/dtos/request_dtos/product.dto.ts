@@ -83,6 +83,9 @@ export class CreateProductDto {
   @IsMongoId()
   sub_category: string;
 
+  @IsString()
+  item: string;
+
   constructor(product: CreateProductDto) {
     if (!product) return;
     this.name = product.name;
@@ -96,6 +99,7 @@ export class CreateProductDto {
     this.discounted_price = product.discounted_price;
     this.category = product.category;
     this.sub_category = product.sub_category;
+    this.item= product.item
   }
 }
 
