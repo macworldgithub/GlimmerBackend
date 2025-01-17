@@ -85,12 +85,14 @@ export class ProductController {
     @Query('page_no') page_no: number,
     @Query('category') category?: string,
     @Query('sub_category') sub_category?: string,
+    @Query('item') item?: string,
   ) {
     return this.product_service.get_all_store_products(
       req.user,
       page_no,
       category,
       sub_category,
+      item
     );
   }
 

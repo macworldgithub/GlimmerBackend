@@ -149,6 +149,7 @@ export class ProductService {
     page_no: number,
     category?: string,
     sub_category?: string,
+    item?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -174,6 +175,9 @@ export class ProductService {
       }
       if (sub_category) {
         filters.sub_category = new Types.ObjectId(sub_category);
+      }
+      if (item && item !== "all"){
+          filters.item = item
       }
 
       const products_res = await this.product_repository.get_all_store_products(
