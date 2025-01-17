@@ -71,7 +71,7 @@ export class ProductController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
   @Get('get_store_product_by_id')
-  get_product_by_id(@Query('id') id: string, @Req() req: AuthPayloadRequest) {
+  get_store_product_by_id(@Query('id') id: string, @Req() req: AuthPayloadRequest) {
     return this.product_service.get_store_product_by_id(id, req.user);
   }
 
@@ -146,4 +146,12 @@ export class ProductController {
       item
     );
   }
+
+
+  @HttpCode(HttpStatus.OK)
+  @Get('get_product_by_id')
+  get_product_by_id(@Query('id') id: string) {
+    return this.product_service.get_product_by_id(id);
+  }
+
 }

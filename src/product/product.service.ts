@@ -394,4 +394,36 @@ export class ProductService {
       throw new InternalServerErrorException(e);
     }
   }
+
+
+  async get_product_by_id(
+    id: string,
+    projection?: ProductProjection,
+  ): Promise<Product> {
+    try {
+      const product =
+        await this.product_repository.get_product_by_id(
+          new Types.ObjectId(id),
+          projection,
+        );
+
+      if (!product) {
+        throw new BadRequestException('Product doesnot exist');
+      }
+      if (product.image1) {
+        product.image1 = await this.s3_service.get_image_url(product.image1);
+      }
+      if (product.image2) {
+        product.image2 = await this.s3_service.get_image_url(product.image2);
+      }
+      if (product.image3) {
+        product.image3 = await this.s3_service.get_image_url(product.image3);
+      }
+
+      return new Product(product);
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
+  }
+
 }
