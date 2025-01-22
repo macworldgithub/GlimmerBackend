@@ -238,7 +238,7 @@ export class ProductService {
       const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
 
       let product_temp: any = structuredClone(update_product_dto);
-      console.log(files);
+      console.log(files, "files", update_product_dto);
 
       if (files?.image1?.length) {
         if (store_product.image1) {
