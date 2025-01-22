@@ -9,6 +9,7 @@ import {
 } from 'src/schemas/ecommerce/product_sub_category.schema';
 import { ProductItemRepository } from 'src/product_item/product_item.repository';
 import { ProductItem, ProductItemSchema } from 'src/schemas/ecommerce/product_item.schema';
+import { ProductCategory, ProductCategorySchema } from 'src/schemas/ecommerce/product_category.schema';
 
 @Module({
   imports: [
@@ -17,6 +18,9 @@ import { ProductItem, ProductItemSchema } from 'src/schemas/ecommerce/product_it
     ]),
     MongooseModule.forFeature([
       { name: ProductItem.name, schema: ProductItemSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: ProductCategory.name, schema: ProductCategorySchema},
     ]),
   ],
   controllers: [ProductSubCategoryController],
