@@ -177,7 +177,7 @@ export class ProductService {
         filters.sub_category = new Types.ObjectId(sub_category);
       }
       if (item && item !== "all"){
-          filters.item = item
+          filters.item = new Types.ObjectId(item)
       }
 
       const products_res = await this.product_repository.get_all_store_products(
@@ -349,6 +349,11 @@ export class ProductService {
         (!isMongoId(category) || !isMongoId(sub_category))
       )
         throw new BadRequestException('invalid category or sub category!');
+      if (
+        item &&
+        (!isMongoId(item)) 
+      )
+        throw new BadRequestException('invalid item!');
       let filters: Partial<Product> = {};
 
       if (category) {
@@ -358,7 +363,7 @@ export class ProductService {
         filters.sub_category = new Types.ObjectId(sub_category);
       }
       if (item && item !== "all"){
-          filters.item = item
+          filters.item = new Types.ObjectId(item)
       }
 
       console.log(filters)
