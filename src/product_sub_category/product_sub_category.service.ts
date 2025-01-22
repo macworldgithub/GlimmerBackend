@@ -4,12 +4,16 @@ import {
   CreateProductSubCategoryDto,
   UpdateProductSubCategoryDto,
 } from './dtos/req_dtos/product_sub_category.dto';
-import { Types } from 'mongoose';
+import { Connection, Types } from 'mongoose';
+import { ProductItemRepository } from 'src/product_item/product_item.repository';
+import { InjectConnection } from '@nestjs/mongoose';
 
 @Injectable()
 export class ProductSubCategoryService {
   constructor(
     private product_sub_category_repository: ProductSubCategoryRepository,
+    private product_item_repository: ProductItemRepository,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async create_product_sub_cateogry(
@@ -50,10 +54,20 @@ export class ProductSubCategoryService {
   }
 
   async delete_sub_category(id: string) {
+    const session = await this.connection.startSession();
     try {
-      return this.product_sub_category_repository.delete_sub_category(
+      session.startTransaction();
+      const res = this.product_sub_category_repository.delete_sub_category(
         new Types.ObjectId(id),
       );
+      await this.product_item_repository.delete_item_by_sub_category_id(
+        new Types.ObjectId(id),
+        session,
+      );
+
+      await session.commitTransaction();
+
+      return res;
     } catch (e) {
       console.log(e);
       throw new InternalServerErrorException(e);

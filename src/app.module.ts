@@ -19,6 +19,7 @@ import { FirebaseService } from './firebase/firebase.service';
 import { ProductCategoryModule } from './product_category/product_category.module';
 import { SubProductCategoryModule } from './sub_product_category/sub_product_category.module';
 import { ProductSubCategoryModule } from './product_sub_category/product_sub_category.module';
+import { ProductItemModule } from './product_item/product_item.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ProductSubCategoryModule } from './product_sub_category/product_sub_cat
     ProductCategoryModule,
     SubProductCategoryModule,
     ProductSubCategoryModule,
+    ProductItemModule,
   ],
   controllers: [AppController, SSE],
   providers: [
