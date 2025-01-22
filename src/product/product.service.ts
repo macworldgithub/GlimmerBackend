@@ -240,7 +240,7 @@ export class ProductService {
       let product_temp: any = structuredClone(update_product_dto);
       console.log(files);
 
-      if (files.image1?.length) {
+      if (files?.image1?.length) {
         if (store_product.image1) {
           product_temp.image1 = (
             await this.s3_service.upload_file_by_key(
@@ -256,7 +256,7 @@ export class ProductService {
       } else {
         delete product_temp.image1;
       }
-      if (files.image2?.length) {
+      if (files?.image2?.length) {
         if (store_product.image2) {
           product_temp.image2 = (
             await this.s3_service.upload_file_by_key(
@@ -272,7 +272,7 @@ export class ProductService {
       } else {
         delete product_temp.image2;
       }
-      if (files.image3?.length) {
+      if (files?.image3?.length) {
         if (store_product.image3) {
           product_temp.image3 = (
             await this.s3_service.upload_file_by_key(
@@ -309,6 +309,7 @@ export class ProductService {
       }
       return new Product(product);
     } catch (e) {
+        console.log(e,"udpate")
       throw new InternalServerErrorException(e);
     }
   }
