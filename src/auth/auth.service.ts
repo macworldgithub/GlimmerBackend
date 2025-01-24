@@ -344,7 +344,7 @@ export class AuthService {
 
             const token = await this.jwt_service.signAsync(payload);
 
-            return { admin: new Admin(admin), token, role: Roles.CUSTOMER };
+            return { admin: new Admin(admin), token, role: Roles.SUPERADMIN};
         } catch (e) {
             throw new InternalServerErrorException(e);
         }
