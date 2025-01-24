@@ -19,6 +19,7 @@ import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dt
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ApiConsumes } from '@nestjs/swagger';
+import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')
@@ -61,4 +62,19 @@ export class AuthController {
   signup_with_google(@Body() body: CustomerGoogleSignInDto) {
     return this.auth_service.customer_signup_with_google(body.id_token);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('signup/admin')
+  sign_up_admin(
+    @Body() create_admin_dto: CreateAdminDto
+  ) {
+    return this.auth_service.admin_signup(create_admin_dto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('signin/admin')
+  sign_in_admin(@Body() signin_dto: StoreSignInDto) {
+    return this.auth_service.admin_signin(signin_dto);
+  }
+
 }

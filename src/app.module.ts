@@ -20,6 +20,8 @@ import { ProductCategoryModule } from './product_category/product_category.modul
 import { SubProductCategoryModule } from './sub_product_category/sub_product_category.module';
 import { ProductSubCategoryModule } from './product_sub_category/product_sub_category.module';
 import { ProductItemModule } from './product_item/product_item.module';
+import { AdminController } from './admin/admin.controller';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -37,8 +39,9 @@ import { ProductItemModule } from './product_item/product_item.module';
     SubProductCategoryModule,
     ProductSubCategoryModule,
     ProductItemModule,
+    AdminModule,
   ],
-  controllers: [AppController, SSE],
+  controllers: [AppController, SSE, AdminController],
   providers: [
     AppService,
     StoreService,

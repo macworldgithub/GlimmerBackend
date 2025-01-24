@@ -10,12 +10,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Customer, CustomerSchema } from 'src/schemas/customer.schema';
 import { S3Service } from 'src/aws/s3.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { AdminRepository } from 'src/admin/admin.repository';
+import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
 
 @Module({
   imports: [
     StoreModule,
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },
+      { name: Admin.name, schema: AdminSchema},
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -31,6 +34,7 @@ import { FirebaseService } from 'src/firebase/firebase.service';
     StoreRepository,
     S3Service,
     FirebaseService,
+    AdminRepository,
   ],
   controllers: [AuthController],
 })

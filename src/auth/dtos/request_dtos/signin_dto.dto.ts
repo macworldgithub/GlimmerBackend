@@ -1,5 +1,6 @@
 import { PickType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
 import { CreateStoreDto } from 'src/store/dtos/store.dto';
 
@@ -9,6 +10,11 @@ export class StoreSignInDto extends PickType(CreateStoreDto, [
 ] as const) {}
 
 export class CustomerSignInDto extends PickType(CreateCustomerDto, [
+  'email',
+  'password',
+] as const) {}
+
+export class AdminSigninDto extends PickType(CreateAdminDto, [
   'email',
   'password',
 ] as const) {}
