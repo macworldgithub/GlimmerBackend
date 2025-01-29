@@ -120,7 +120,8 @@ export class AuthService {
 
             return { store: new Store(store), token, role: Roles.STORE };
         } catch (e) {
-            throw new InternalServerErrorException(e);
+            console.log(e)
+            throw new BadRequestException(e);
         }
     }
 
