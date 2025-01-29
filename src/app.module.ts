@@ -17,11 +17,11 @@ import { OrderRepository } from './order/order.repository';
 import { SSE } from './notifications/sse.service';
 import { FirebaseService } from './firebase/firebase.service';
 import { ProductCategoryModule } from './product_category/product_category.module';
-import { SubProductCategoryModule } from './sub_product_category/sub_product_category.module';
 import { ProductSubCategoryModule } from './product_sub_category/product_sub_category.module';
 import { ProductItemModule } from './product_item/product_item.module';
 import { AdminController } from './admin/admin.controller';
 import { AdminModule } from './admin/admin.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -36,10 +36,10 @@ import { AdminModule } from './admin/admin.module';
     CustomerModule,
     CartModule,
     ProductCategoryModule,
-    SubProductCategoryModule,
     ProductSubCategoryModule,
     ProductItemModule,
     AdminModule,
+    NotificationsModule,
   ],
   controllers: [AppController, SSE, AdminController],
   providers: [
