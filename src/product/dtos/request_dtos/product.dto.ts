@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -10,6 +10,9 @@ import {
   IsString,
   Max,
   Min,
+  IsArray,
+  ValidateNested,
+  IsObject,
 } from 'class-validator';
 import { ProductStatus } from 'src/product/enums/product_status.enum';
 
@@ -87,6 +90,14 @@ export class CreateProductDto {
   @IsOptional()
   item?: string;
 
+  @IsArray()
+  @IsOptional()
+  size?: any[];
+
+  @IsArray()
+  @IsOptional()
+  type?: any[];
+
   constructor(product: CreateProductDto) {
     if (!product) return;
     this.name = product.name;
@@ -100,7 +111,10 @@ export class CreateProductDto {
     this.discounted_price = product.discounted_price;
     this.category = product.category;
     this.sub_category = product.sub_category;
-    this.item= product.item
+    this.item = product.item;
+
+    this.type = product.type;
+    this.size = product.size;
   }
 }
 
@@ -132,4 +146,31 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   })
   @IsOptional()
   image3?: Express.Multer.File;
+
+  @ApiPropertyOptional({
+    description: 'Updated category ID of the product',
+    type: 'string',
+    example: '60d5ec49d2a3e209c8a5f6b7',
+  })
+  @IsOptional()
+  @IsMongoId()
+  category?: Types.ObjectId | string;
+
+  @ApiPropertyOptional({
+    description: 'Updated sub-category ID of the product',
+    type: 'string',
+    example: '60d5ec49d2a3e209c8a5f6b8',
+  })
+  @IsOptional()
+  @IsMongoId()
+  sub_category?: Types.ObjectId | string;
+
+  @ApiPropertyOptional({
+    description: 'Updated item ID of the product',
+    type: 'string',
+    example: '60d5ec49d2a3e209c8a5f6b9',
+  })
+  @IsOptional()
+  @IsMongoId()
+  item?: Types.ObjectId | string;
 }

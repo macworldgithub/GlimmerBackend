@@ -63,7 +63,32 @@ export class ProductController {
     product_dto.image1 = files.image1?.length ? files.image1[0] : undefined;
     product_dto.image2 = files.image2?.length ? files.image2[0] : undefined;
     product_dto.image3 = files.image3?.length ? files.image3[0] : undefined;
-    return this.product_service.create_product(product_dto, req.user);
+
+    // product_dto.size = Object.keys(req.body)
+    //   .filter((key) => key.startsWith('size'))
+    //   .map((key) => {
+    //     try {
+    //       return JSON.parse(req.body[key]); // Convert string to object
+    //     } catch (e) {
+    //       console.error(`Invalid size format for key ${key}:`, req.body[key]);
+    //       return null;
+    //     }
+    //   })
+    //   .filter(Boolean); // Remove null values
+
+    // product_dto.type = Object.keys(req.body)
+    //   .filter((key) => key.startsWith('type'))
+    //   .map((key) => {
+    //     try {
+    //       return JSON.parse(req.body[key]);
+    //     } catch (e) {
+    //       console.error(`Invalid type format for key ${key}:`, req.body[key]);
+    //       return null;
+    //     }
+    //   })
+    //   .filter(Boolean);
+
+    return this.product_service.create_product(product_dto, req.body,  req.user);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -71,7 +96,10 @@ export class ProductController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
   @Get('get_store_product_by_id')
-  get_store_product_by_id(@Query('id') id: string, @Req() req: AuthPayloadRequest) {
+  get_store_product_by_id(
+    @Query('id') id: string,
+    @Req() req: AuthPayloadRequest,
+  ) {
     return this.product_service.get_store_product_by_id(id, req.user);
   }
 
@@ -92,7 +120,7 @@ export class ProductController {
       page_no,
       category,
       sub_category,
-      item
+      item,
     );
   }
 
@@ -143,15 +171,13 @@ export class ProductController {
       page_no,
       category,
       sub_category,
-      item
+      item,
     );
   }
-
 
   @HttpCode(HttpStatus.OK)
   @Get('get_product_by_id')
   get_product_by_id(@Query('id') id: string) {
     return this.product_service.get_product_by_id(id);
   }
-
 }

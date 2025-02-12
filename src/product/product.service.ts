@@ -21,6 +21,8 @@ import {
 import { ProductFiles } from './types/update_product.type';
 import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
 
+import { v4 as uuidv4 } from 'uuid';
+
 @Injectable()
 export class ProductService {
   constructor(
@@ -33,11 +35,35 @@ export class ProductService {
     return 'glimmer/brands/' + id + '/product_images';
   };
 
+  private extractDynamicFields(data: any, prefix: string): any[] {
+    const result = [];
+
+    for (const key in data) {
+      if (key.startsWith(prefix)) {
+        try {
+          const parsedObject = JSON.parse(data[key]); // Convert string to object
+          parsedObject.id = uuidv4(); // Assign a unique UUID
+          result.push(parsedObject);
+        } catch (e) {
+          console.error(`Invalid format for key ${key}:`, data[key]);
+        }
+      }
+    }
+
+    return result;
+  }
+
   async create_product(
     product_dto: CreateProductDto,
+    requestBody: any,
     store_payload: AuthPayload,
   ) {
     try {
+      console.log(product_dto, 'c');
+      // Extract and parse size and type fields dynamically
+      product_dto.size = this.extractDynamicFields(requestBody, 'size');
+      product_dto.type = this.extractDynamicFields(requestBody, 'type');
+
       const are_categories_valid =
         await this.sub_category_repository.get_sub_category_by_ids(
           new Types.ObjectId(product_dto.category),
@@ -87,6 +113,7 @@ export class ProductService {
 
       return new Product(product);
     } catch (e) {
+      console.log('le bhai dekh ', product_dto, e);
       throw new InternalServerErrorException(e);
     }
   }
@@ -176,8 +203,8 @@ export class ProductService {
       if (sub_category) {
         filters.sub_category = new Types.ObjectId(sub_category);
       }
-      if (item && item !== "all"){
-          filters.item = new Types.ObjectId(item)
+      if (item && item !== 'all') {
+        filters.item = new Types.ObjectId(item);
       }
 
       const products_res = await this.product_repository.get_all_store_products(
@@ -238,7 +265,7 @@ export class ProductService {
       const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
 
       let product_temp: any = structuredClone(update_product_dto);
-      console.log(files, "files", update_product_dto);
+      console.log(files, 'files', update_product_dto);
 
       if (files?.image1?.length) {
         if (store_product.image1) {
@@ -309,7 +336,7 @@ export class ProductService {
       }
       return new Product(product);
     } catch (e) {
-        console.log(e,"udpate")
+      console.log(e, 'udpate');
       throw new InternalServerErrorException(e);
     }
   }
@@ -350,10 +377,7 @@ export class ProductService {
         (!isMongoId(category) || !isMongoId(sub_category))
       )
         throw new BadRequestException('invalid category or sub category!');
-      if (
-        item &&
-        (!isMongoId(item)) 
-      )
+      if (item && !isMongoId(item))
         throw new BadRequestException('invalid item!');
       let filters: Partial<Product> = {};
 
@@ -363,11 +387,11 @@ export class ProductService {
       if (sub_category) {
         filters.sub_category = new Types.ObjectId(sub_category);
       }
-      if (item && item !== "all"){
-          filters.item = new Types.ObjectId(item)
+      if (item && item !== 'all') {
+        filters.item = new Types.ObjectId(item);
       }
 
-      console.log(filters)
+      console.log(filters);
       const products_res = await this.product_repository.get_all_products(
         page_no,
         projection,
@@ -402,17 +426,15 @@ export class ProductService {
     }
   }
 
-
   async get_product_by_id(
     id: string,
     projection?: ProductProjection,
   ): Promise<Product> {
     try {
-      const product =
-        await this.product_repository.get_product_by_id(
-          new Types.ObjectId(id),
-          projection,
-        );
+      const product = await this.product_repository.get_product_by_id(
+        new Types.ObjectId(id),
+        projection,
+      );
 
       if (!product) {
         throw new BadRequestException('Product doesnot exist');
@@ -432,5 +454,4 @@ export class ProductService {
       throw new InternalServerErrorException(e);
     }
   }
-
 }

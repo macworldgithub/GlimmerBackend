@@ -63,7 +63,19 @@ export class Product {
   sub_category: Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductItem' })
-  item ?: Types.ObjectId;
+  item?: Types.ObjectId;
+
+  // ✅ Updated type field: Array of objects
+  @Prop({
+    default: [],
+  })
+  type?: [];
+
+  // ✅ Updated size field: Array of objects with unit
+  @Prop({
+    default: [],
+  })
+  size?: [];
 
   constructor(product: Product) {
     if (!product) return;
@@ -81,7 +93,10 @@ export class Product {
     this.discounted_price = product.discounted_price;
     this.category = product.category?.toString();
     this.sub_category = product.sub_category?.toString();
-    this.item = product.item?.toString()
+    this.item = product.item?.toString();
+
+    this.type = product.type ?? null;
+    this.size = product.size ?? null;
   }
 }
 
