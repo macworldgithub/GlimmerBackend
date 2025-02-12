@@ -64,29 +64,7 @@ export class ProductController {
     product_dto.image2 = files.image2?.length ? files.image2[0] : undefined;
     product_dto.image3 = files.image3?.length ? files.image3[0] : undefined;
 
-    // product_dto.size = Object.keys(req.body)
-    //   .filter((key) => key.startsWith('size'))
-    //   .map((key) => {
-    //     try {
-    //       return JSON.parse(req.body[key]); // Convert string to object
-    //     } catch (e) {
-    //       console.error(`Invalid size format for key ${key}:`, req.body[key]);
-    //       return null;
-    //     }
-    //   })
-    //   .filter(Boolean); // Remove null values
-
-    // product_dto.type = Object.keys(req.body)
-    //   .filter((key) => key.startsWith('type'))
-    //   .map((key) => {
-    //     try {
-    //       return JSON.parse(req.body[key]);
-    //     } catch (e) {
-    //       console.error(`Invalid type format for key ${key}:`, req.body[key]);
-    //       return null;
-    //     }
-    //   })
-    //   .filter(Boolean);
+   
 
     return this.product_service.create_product(product_dto, req.body,  req.user);
   }
@@ -156,7 +134,7 @@ export class ProductController {
     @UploadedFiles(new FileSizeValidationPipe())
     files: ProductFiles,
   ) {
-    return this.product_service.update_store_product(id, req.user, body, files);
+    return this.product_service.update_store_product(id, req.user, body, files ,req.body);
   }
 
   @HttpCode(HttpStatus.OK)

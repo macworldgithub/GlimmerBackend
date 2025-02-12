@@ -173,4 +173,12 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @IsOptional()
   @IsMongoId()
   item?: Types.ObjectId | string;
+
+  @IsArray()
+  @IsOptional()
+  size?: any[];
+
+  @IsArray()
+  @IsOptional()
+  type?: any[];
 }

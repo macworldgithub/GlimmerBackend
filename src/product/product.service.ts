@@ -59,7 +59,6 @@ export class ProductService {
     store_payload: AuthPayload,
   ) {
     try {
-      console.log(product_dto, 'c');
       // Extract and parse size and type fields dynamically
       product_dto.size = this.extractDynamicFields(requestBody, 'size');
       product_dto.type = this.extractDynamicFields(requestBody, 'type');
@@ -252,8 +251,12 @@ export class ProductService {
     store_payload: AuthPayload,
     update_product_dto: UpdateProductDto,
     files: ProductFiles,
+    requestBody: any,
   ): Promise<Product> {
     try {
+      update_product_dto.size = this.extractDynamicFields(requestBody, 'size');
+      update_product_dto.type = this.extractDynamicFields(requestBody, 'type');
+
       const store_product =
         await this.product_repository.get_product_by_store_id_product_id(
           new Types.ObjectId(id),
