@@ -1,63 +1,104 @@
-// @ts-nocheck
-import { Prop, Schema, SchemaFactory, Virtual } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import * as mongoose from 'mongoose';
-import { Store } from './store.schema';
-import { OrderStatus } from 'src/order/enums/order_status.enum';
-import { ApiHideProperty } from '@nestjs/swagger';
-import { OrderItem } from './order_item.schema';
-import { Customer } from '../customer.schema';
-import PaymentMethod from 'src/order/enums/payment_method.enum';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
-export type OrderDocument = HydratedDocument<Order>;
+export type OrderDocument = Order & Document;
 
-@Schema()
+@Schema({ _id: false })
+class Type {
+  @Prop({})
+  id!: string; // ✅ Fix applied
+
+  @Prop({ required: true })
+  value!: string;
+}
+export const TypeSchema = SchemaFactory.createForClass(Type);
+
+@Schema({ _id: false })
+class Size {
+  @Prop({})
+  id!: string;
+
+  @Prop({})
+  value!: string;
+
+  @Prop({})
+  unit!: string;
+}
+export const SizeSchema = SchemaFactory.createForClass(Size);
+
+@Schema({ _id: false })
+class Product {
+  @Prop({ required: true })
+  _id!: string;
+
+  @Prop({ required: true })
+  name!: string;
+
+  @Prop({ required: true })
+  base_price!: number;
+
+  @Prop({ required: true })
+  discounted_price!: number;
+
+  @Prop({ required: true })
+  description!: string;
+
+  @Prop()
+  image1?: string;
+
+  @Prop()
+  image2?: string;
+
+  @Prop()
+  image3?: string;
+
+  @Prop({ required: true })
+  status!: string;
+
+  @Prop({ required: true })
+  store!: string;
+
+  @Prop({ type: [TypeSchema], required: true }) // ✅ Accepts an array of Type
+  type!: Type[];
+
+  @Prop({ type: [SizeSchema], required: true }) // ✅ Accepts an array of Size
+  size!: Size[];
+}
+export const ProductSchema = SchemaFactory.createForClass(Product);
+
+@Schema({ _id: false })
+class CompleteOrder {
+  @Prop({ type: ProductSchema, required: true })
+  product!: Product;
+
+  @Prop({ required: true })
+  quantity!: number;
+}
+export const CompleteOrderSchema = SchemaFactory.createForClass(CompleteOrder);
+
+@Schema({ timestamps: true })
 export class Order {
-  @Prop({ type: String, required: true, default: OrderStatus.CONFIRMED })
-  status: OrderStatus;
+  @Prop({ required: true })
+  customerId!: string;
 
-  @Prop({ type: String, required: true })
-  payment_method: PaymentMethod;
+  @Prop({ required: true })
+  customerEmail!: string;
 
-  @Prop({ type: Date, required: true, default: new Date() })
-  created_at: Date;
+  @Prop({ type: [CompleteOrderSchema], required: true })
+  productList!: CompleteOrder[];
 
-  @Virtual({
-    get: function (this: Order) {
-      if (
-        !Array.isArray(this.order_items) ||
-        !this.order_items.every((item) => item instanceof OrderItem) ||
-        !(this.customer instanceof Customer)
-      ) {
-        return null;
-      }
-      let total = 0;
-      this.order_items.forEach((item) => {
-        if (item.product.discounted_price) {
-          total += item.product.discounted_price;
-        } else {
-          total += item.product.base_price;
-        }
-      });
-      return total;
-    },
+  @Prop({ required: true })
+  total!: number;
+
+  @Prop({ required: true })
+  discountedTotal!: number;
+
+  @Prop({
+    required: true,
+    enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'],
+    default: 'Pending',
   })
-  total: number | null;
-
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'OrderItem' })
-  order_items: OrderItem[] | mongoose.Types.ObjectId[];
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' })
-  customer: Customer | mongoose.Types.ObjectId;
-
-  constructor(obj: Order) {
-    if (!obj) return;
-    this.status = obj.status;
-    this.payment_method = obj.payment_method;
-    (this.customer = obj.customer),
-      (this.created_at = obj.created_at),
-      (this.order_items = obj.order_items);
-  }
+  status!: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

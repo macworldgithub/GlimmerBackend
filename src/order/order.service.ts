@@ -5,111 +5,131 @@ import { OrderStatus } from './enums/order_status.enum';
 import { OrderRepository } from './order.repository';
 import { Connection, Types } from 'mongoose';
 import { ProductRepository } from 'src/product/product.repository';
-import { InjectConnection } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
 import { SSE } from 'src/notifications/sse.service';
 import { SSE_EVENTS } from 'src/commons/enums/sse_types.enum';
+
+import { Order, OrderDocument } from 'src/schemas/ecommerce/order.schema';
+import { Model } from 'mongoose';
+import { OrderDTO } from './dtos/req_dtos/order';
 
 @Injectable()
 export class OrderService {
   constructor(
     private order_repository: OrderRepository,
     private product_repository: ProductRepository,
-    @InjectConnection() private readonly connection: Connection,
+
+    @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
+
+    // @InjectConnection() private readonly connection: Connection
   ) {}
 
-  async create_order(order_dto: OrderReqDto, user: AuthPayload) {
-    const session = await this.connection.startSession();
-    try {
-      session.startTransaction();
-      const order = {
-        status: OrderStatus.CONFIRMED,
-        customer: user._id,
-        payment_method: order_dto.payment_method,
-      };
-      const inserted_order = await this.order_repository.create_order(
-        order,
-        session,
-      );
+  // async create_order(order_dto: OrderReqDto, user: AuthPayload) {
+  //   const session = await this.connection.startSession();
+  //   try {
+  //     session.startTransaction();
+  //     const order = {
+  //       status: OrderStatus.CONFIRMED,
+  //       customer: user._id,
+  //       payment_method: order_dto.payment_method,
+  //     };
+  //     const inserted_order = await this.order_repository.create_order(
+  //       order,
+  //       session,
+  //     );
 
-      const product_ids = order_dto.order_items.map((elem) => elem.product);
-      const products = await this.product_repository.get_many_products_by_ids(
-        product_ids,
-        session,
-      );
+  //     const product_ids = order_dto.order_items.map((elem) => elem.product);
+  //     const products = await this.product_repository.get_many_products_by_ids(
+  //       product_ids,
+  //       session,
+  //     );
 
-      const order_items = order_dto.order_items.map((elem) => {
-        const product = products.filter(
-          (prod) => elem.product.toString() === prod._id.toString(),
-        )[0];
-        return { ...elem, product, order: inserted_order._id };
-      });
-      const inserted_order_items =
-        await this.order_repository.create_many_order_items(
-          order_items,
-          session,
-        );
+  //     const order_items = order_dto.order_items.map((elem) => {
+  //       const product = products.filter(
+  //         (prod) => elem.product.toString() === prod._id.toString(),
+  //       )[0];
+  //       return { ...elem, product, order: inserted_order._id };
+  //     });
+  //     const inserted_order_items =
+  //       await this.order_repository.create_many_order_items(
+  //         order_items,
+  //         session,
+  //       );
 
-      const inserted_order_items_ids = inserted_order_items.map(
-        (elem) => elem._id,
-      );
+  //     const inserted_order_items_ids = inserted_order_items.map(
+  //       (elem) => elem._id,
+  //     );
 
-      const order_object = inserted_order.toObject();
+  //     const order_object = inserted_order.toObject();
 
-      const updated_order = await this.order_repository.update_order_by_id(
-        inserted_order._id,
-        { ...order_object, order_items: inserted_order_items_ids },
-        session,
-      );
+  //     const updated_order = await this.order_repository.update_order_by_id(
+  //       inserted_order._id,
+  //       { ...order_object, order_items: inserted_order_items_ids },
+  //       session,
+  //     );
 
-      const stores_products =
-        await this.product_repository.get_many_products_by_ids_groupedby_store(
-          // @ts-ignore
-          inserted_order_items.map((elem) => elem.product._id),
-          session,
-        );
+  //     const stores_products =
+  //       await this.product_repository.get_many_products_by_ids_groupedby_store(
+  //         // @ts-ignore
+  //         inserted_order_items.map((elem) => elem.product._id),
+  //         session,
+  //       );
 
-      const store_orders_obj: any = [];
+  //     const store_orders_obj: any = [];
 
-      stores_products?.forEach((store) => {
-        const store_order_obj: any = {
-          status: OrderStatus.CONFIRMED,
-          order: inserted_order._id,
-          store: store._id,
-          order_items: [],
-        };
-        const store_product_ids = store.products.map((elem) =>
-          elem._id.toString(),
-        );
-        inserted_order_items.forEach((item) => {
-          // @ts-ignore
-          if (store_product_ids.includes(item.product._id.toString())) {
-            store_order_obj.order_items.push(item._id);
-          }
-        });
-        store_orders_obj.push(store_order_obj);
-      });
-      const store_orders = await this.order_repository.create_many_store_orders(
-        store_orders_obj,
-        session,
-      );
+  //     stores_products?.forEach((store) => {
+  //       const store_order_obj: any = {
+  //         status: OrderStatus.CONFIRMED,
+  //         order: inserted_order._id,
+  //         store: store._id,
+  //         order_items: [],
+  //       };
+  //       const store_product_ids = store.products.map((elem) =>
+  //         elem._id.toString(),
+  //       );
+  //       inserted_order_items.forEach((item) => {
+  //         // @ts-ignore
+  //         if (store_product_ids.includes(item.product._id.toString())) {
+  //           store_order_obj.order_items.push(item._id);
+  //         }
+  //       });
+  //       store_orders_obj.push(store_order_obj);
+  //     });
+  //     const store_orders = await this.order_repository.create_many_store_orders(
+  //       store_orders_obj,
+  //       session,
+  //     );
 
-      store_orders.forEach((ord) => {
-        SSE.send_notification_to_store(ord.store.toString(), {
-          order: ord,
-          type: SSE_EVENTS.ORDER_PLACED,
-        });
-      });
+  //     store_orders.forEach((ord) => {
+  //       SSE.send_notification_to_store(ord.store.toString(), {
+  //         order: ord,
+  //         type: SSE_EVENTS.ORDER_PLACED,
+  //       });
+  //     });
 
-      await session.commitTransaction();
+  //     await session.commitTransaction();
 
-      return updated_order;
-    } catch (e) {
-      await session.endSession();
-      throw new InternalServerErrorException(e);
-    } finally {
-      await session.endSession();
-    }
+  //     return updated_order;
+  //   } catch (e) {
+  //     await session.endSession();
+  //     throw new InternalServerErrorException(e);
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
+
+  async create_order(order_dto: OrderDTO, user: AuthPayload): Promise<Order> {
+    const newOrder = new this.orderModel({
+      customerId: user._id, // Assigning customerId
+      customerEmail: user.email, // Assigning customerEmail
+      productList: order_dto.ProductList, // Copying products from DTO
+      total: order_dto.total,
+      discountedTotal: order_dto.discountedTotal,
+      status: order_dto.status,
+    });
+
+    return await newOrder.save();
   }
 
   async get_orders(user: AuthPayload) {

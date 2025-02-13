@@ -19,6 +19,7 @@ import { OrderReqDto } from './dtos/req_dtos/order.dto';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 import { OrderService } from './order.service';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
+import { OrderDTO } from './dtos/req_dtos/order';
 
 @Controller('order')
 export class OrderController {
@@ -29,7 +30,8 @@ export class OrderController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.CUSTOMER)
   @Post('create')
-  create_order(@Body() order_dto: OrderReqDto, @Req() req: AuthPayloadRequest) {
+  create_order(@Body() order_dto: OrderDTO, @Req() req: AuthPayloadRequest) {
+    console.log('lele', order_dto);
     return this.order_service.create_order(order_dto, req.user);
   }
 
