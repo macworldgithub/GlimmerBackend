@@ -40,7 +40,7 @@ class Product {
   @Prop({ required: true })
   discounted_price!: number;
 
-  @Prop({ required: true })
+  @Prop({})
   description!: string;
 
   @Prop()
