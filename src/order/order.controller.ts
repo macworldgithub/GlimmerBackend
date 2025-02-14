@@ -57,6 +57,20 @@ export class OrderController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
+  @Get('getOrdersByStore')
+  //@ts-ignore
+  getOrdersByStore(
+    // @Query('page_no') page_no: number,
+    @Req() req: AuthPayloadRequest,
+  ) {
+    //@ts-ignore
+    return this.order_service.getOrdersByStore(req.user);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
   @Get('get_store_order_by_id')
   get_store_order_by_id(@Query('id') id: string) {
     return this.order_service.get_store_order_by_id(id);

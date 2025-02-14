@@ -1,23 +1,34 @@
-import { IsString, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  IsOptional,
+} from 'class-validator';
 import { Type as TransformType } from 'class-transformer';
 
 class TypeDTO {
+  @IsOptional()
   @IsString()
-  id!: string;
+  id?: string;
 
+  @IsOptional()
   @IsString()
-  value!: string;
+  value?: string;
 }
 
 class SizeDTO {
+  @IsOptional()
   @IsString()
-  id!: string;
+  id?: string;
 
+  @IsOptional()
   @IsString()
-  value!: string;
+  value?: string;
 
+  @IsOptional()
   @IsString()
-  unit!: string;
+  unit?: string;
 }
 
 class ProductDTO {
@@ -51,13 +62,9 @@ class ProductDTO {
   @IsString()
   store!: string;
 
-  @ValidateNested()
-  @TransformType(() => SizeDTO)
-  size!: SizeDTO;
+  size!: any;
 
-  @ValidateNested()
-  @TransformType(() => TypeDTO)
-  type!: TypeDTO;
+  type!: any;
 }
 
 class CompleteOrderDTO {

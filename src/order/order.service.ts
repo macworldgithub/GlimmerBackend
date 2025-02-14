@@ -202,4 +202,25 @@ export class OrderService {
       throw new InternalServerErrorException(e);
     }
   }
+
+  async getOrdersByStore(store_payload: AuthPayload): Promise<any[]> {
+    const orders: any[] = await this.orderModel.find().lean();
+
+    const filteredOrders: any[] = orders
+    .map((order) => {
+      const { productList, ...rest } = order; // Exclude `productList` and keep the rest
+      const items = productList.filter(
+        (item:any) => item.product.store === store_payload._id,
+      );
+
+      return {
+        ...rest, // Include all other fields from the original order
+        items, // Add the filtered items
+      };
+    })
+    .filter((order) => order.items.length > 0); // Remove empty orders
+
+
+    return filteredOrders;
+  }
 }

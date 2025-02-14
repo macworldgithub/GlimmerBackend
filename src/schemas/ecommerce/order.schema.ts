@@ -58,11 +58,11 @@ class Product {
   @Prop({ required: true })
   store!: string;
 
-  @Prop({ type: [TypeSchema], required: true }) // ✅ Accepts an array of Type
-  type!: Type[];
+  @Prop({ type: [TypeSchema] }) // ✅ Accepts an array of Type
+  type!: any[];
 
-  @Prop({ type: [SizeSchema], required: true }) // ✅ Accepts an array of Size
-  size!: Size[];
+  @Prop({ type: [SizeSchema] }) // ✅ Accepts an array of Size
+  size!: any[];
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
