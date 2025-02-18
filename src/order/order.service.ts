@@ -132,6 +132,28 @@ export class OrderService {
     return await newOrder.save();
   }
 
+  async update_product_status_of_order_provided(
+    orderId: string,
+    productId: string,
+    user: AuthPayload,
+  ): Promise<any> {
+    const result = await this.orderModel.updateOne(
+      {
+        _id: orderId,
+        'productList.product._id': productId,
+        'productList.product.store': user._id,
+      },
+      { $set: { 'productList.$.status': 'Confirmed' } },
+    );
+
+
+    if (result.modifiedCount === 0) {
+      throw new Error('Order or product not found');
+    }
+
+    return { message: 'Product status updated successfully' };
+  }
+
   async get_orders(user: AuthPayload) {
     try {
       const order = await this.order_repository.get_order_by_customer_id(
@@ -203,24 +225,52 @@ export class OrderService {
     }
   }
 
-  async getOrdersByStore(store_payload: AuthPayload): Promise<any[]> {
+  async getOrdersByStore(
+    status: string,
+    store_payload: AuthPayload,
+    page: string = '1', // Default to page 1
+    limit: string = '8', // Limit of 8 orders per page
+  ): Promise<{ orders: any[]; totalPages: number }> {
+    // Fetch all orders from the database (can be optimized with pagination in DB query)
     const orders: any[] = await this.orderModel.find().lean();
 
+    // Filter orders based on the status
     const filteredOrders: any[] = orders
-    .map((order) => {
-      const { productList, ...rest } = order; // Exclude `productList` and keep the rest
-      const items = productList.filter(
-        (item:any) => item.product.store === store_payload._id,
-      );
+      .filter((order) => {
+        if (status === 'Pending') {
+          return order.status === 'Pending';
+        }
+        if (status === '') {
+          return order.status !== 'Pending';
+        }
+        return order.status === status;
+      })
+      .map((order) => {
+        const { productList, ...rest } = order;
+        const items = productList.filter(
+          (item: any) => item.product.store === store_payload._id,
+        );
+        return {
+          ...rest,
+          items,
+        };
+      })
+      .filter((order) => order.items.length > 0); // Remove orders with no matching items
 
-      return {
-        ...rest, // Include all other fields from the original order
-        items, // Add the filtered items
-      };
-    })
-    .filter((order) => order.items.length > 0); // Remove empty orders
+    // Calculate total number of pages
+    const totalOrders = filteredOrders.length;
+    const totalPages = Math.ceil(totalOrders / parseInt(limit));
 
+    // Implement pagination
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const paginatedOrders = filteredOrders.slice(
+      startIndex,
+      startIndex + parseInt(limit),
+    );
 
-    return filteredOrders;
+    return {
+      orders: paginatedOrders,
+      totalPages,
+    };
   }
 }
