@@ -38,16 +38,17 @@ export class OrderController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.CUSTOMER)
-  @Post('updatePrdoutStatus')
+  @Role(Roles.STORE)
+  @Post('updateProductStatus')
   update_product_status_of_order_provided(
-    orderId: string,
-    productId: string,
+    // orderId: string,
+    // productId: string,
+    // status: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled',
+    @Body() Order: any,
     @Req() req: AuthPayloadRequest,
   ) {
     return this.order_service.update_product_status_of_order_provided(
-      orderId,
-      productId,
+      Order,
       req.user,
     );
   }
@@ -102,6 +103,7 @@ export class OrderController {
     @Query('status') status: string,
     @Req() req: AuthPayloadRequest,
   ) {
+    
     //@ts-ignore
     return this.order_service.getOrdersByStore(status, req.user, page, limit);
   }

@@ -52,8 +52,11 @@ class Product {
   @Prop()
   image3?: string;
 
-  @Prop({ required: true, default: 'Pending' })
+  @Prop({ required: true })
   status!: string;
+
+  @Prop({ required: true, default: 'Pending' })
+  orderProductStatus!: string;
 
   @Prop({ required: true })
   store!: string;
@@ -98,7 +101,7 @@ export class Order {
     enum: ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'],
     default: 'COD',
   })
-  paymentMethod!: number;
+  paymentMethod!: string;
 
   @Prop({
     required: true,

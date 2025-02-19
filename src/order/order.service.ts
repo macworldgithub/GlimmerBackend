@@ -13,6 +13,7 @@ import { SSE_EVENTS } from 'src/commons/enums/sse_types.enum';
 import { Order, OrderDocument } from 'src/schemas/ecommerce/order.schema';
 import { Model } from 'mongoose';
 import { OrderDTO } from './dtos/req_dtos/order';
+import { stat } from 'fs';
 
 @Injectable()
 export class OrderService {
@@ -133,25 +134,56 @@ export class OrderService {
   }
 
   async update_product_status_of_order_provided(
-    orderId: string,
-    productId: string,
+    Order: any,
     user: AuthPayload,
   ): Promise<any> {
     const result = await this.orderModel.updateOne(
       {
-        _id: orderId,
-        'productList.product._id': productId,
+        _id: Order.orderId,
+        'productList.product._id': Order.productId,
         'productList.product.store': user._id,
       },
-      { $set: { 'productList.$.status': 'Confirmed' } },
+      { $set: { 'productList.$.product.status': Order.status } },
     );
 
-
     if (result.modifiedCount === 0) {
-      throw new Error('Order or product not found');
+      throw new Error(
+        'Order or product not found or you are not authorized to update it.',
+      );
     }
 
-    return { message: 'Product status updated successfully' };
+    let message = '';
+
+    switch (Order.status) {
+      case 'Pending':
+        message =
+          'The product status has been set to Pending. Awaiting further processing.';
+        break;
+      case 'Confirmed':
+        message =
+          'The product has been confirmed and is now being prepared for shipment.';
+        break;
+      case 'Shipped':
+        message =
+          'The product has been shipped. Tracking details may be available soon.';
+        break;
+      case 'Delivered':
+        message =
+          'The product has been successfully delivered to the customer.';
+        break;
+      case 'Cancelled':
+        message = 'The product order has been cancelled as per the request.';
+        break;
+      default:
+        message = 'Product status updated successfully.';
+    }
+
+    return {
+      message,
+      status: Order.status,
+      orderId: Order.orderId,
+      productId: Order.productId,
+    };
   }
 
   async get_orders(user: AuthPayload) {
@@ -232,29 +264,37 @@ export class OrderService {
     limit: string = '8', // Limit of 8 orders per page
   ): Promise<{ orders: any[]; totalPages: number }> {
     // Fetch all orders from the database (can be optimized with pagination in DB query)
+
     const orders: any[] = await this.orderModel.find().lean();
 
     // Filter orders based on the status
     const filteredOrders: any[] = orders
-      .filter((order) => {
-        if (status === 'Pending') {
-          return order.status === 'Pending';
-        }
-        if (status === '') {
-          return order.status !== 'Pending';
-        }
-        return order.status === status;
-      })
+      // .filter((order) => {
+      //   if (status === 'Pending') {
+      //     return order.status === 'Pending';
+      //   }
+      //   if (status === '') {
+      //     return order.status !== 'Pending';
+      //   }
+      //   return order.status === status;
+      // })
       .map((order) => {
         const { productList, ...rest } = order;
-        const items = productList.filter(
-          (item: any) => item.product.store === store_payload._id,
-        );
-        return {
-          ...rest,
-          items,
-        };
+        const items = productList.filter((item: any) => {
+          const isFromStore = item.product.store === store_payload._id;
+
+          if (!status) {
+            // If status is empty, show all except "Pending"
+            return isFromStore && item.product.status !== 'Pending';
+          }
+
+          // Otherwise, show only the specific status
+          return isFromStore && item.product.status === status;
+        });
+
+        return { ...rest, items };
       })
+
       .filter((order) => order.items.length > 0); // Remove orders with no matching items
 
     // Calculate total number of pages

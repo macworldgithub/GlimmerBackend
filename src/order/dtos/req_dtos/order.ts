@@ -57,8 +57,15 @@ class ProductDTO {
   image3!: string;
 
   @IsString()
-  status: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled' =
-    'Pending';
+  status!: string;
+
+  @IsString()
+  orderProductStatus:
+    | 'Pending'
+    | 'Confirmed'
+    | 'Shipped'
+    | 'Delivered'
+    | 'Cancelled' = 'Pending';
 
   @IsString()
   store!: string;
@@ -86,12 +93,12 @@ export class OrderDTO {
   @IsNumber()
   total!: number;
 
-  paymentMethod!:
+  paymentMethod:
     | 'Credit Card'
     | 'Debit Card'
     | 'PayPal'
     | 'Bank Transfer'
-    | 'COD';
+    | 'COD' = 'COD';
 
   @IsNumber()
   discountedTotal!: number;
