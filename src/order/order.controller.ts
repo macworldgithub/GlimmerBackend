@@ -27,8 +27,6 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.CUSTOMER)
   @Post('create')
   create_order(@Body() order_dto: OrderDTO, @Req() req: AuthPayloadRequest) {
     console.log('lele', order_dto);
@@ -103,7 +101,6 @@ export class OrderController {
     @Query('status') status: string,
     @Req() req: AuthPayloadRequest,
   ) {
-    
     //@ts-ignore
     return this.order_service.getOrdersByStore(status, req.user, page, limit);
   }

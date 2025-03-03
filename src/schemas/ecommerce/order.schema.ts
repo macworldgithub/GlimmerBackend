@@ -55,7 +55,10 @@ class Product {
   @Prop({ required: true })
   status!: string;
 
-  @Prop({ required: true, default: 'Pending' })
+  @Prop({
+    enum: ['Accept', 'Reject', 'Pending'],
+    default: 'Pending',
+  })
   orderProductStatus!: string;
 
   @Prop({ required: true })

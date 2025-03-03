@@ -122,8 +122,7 @@ export class OrderService {
 
   async create_order(order_dto: OrderDTO, user: AuthPayload): Promise<Order> {
     const newOrder = new this.orderModel({
-      customerId: user._id, // Assigning customerId
-      customerEmail: user.email, // Assigning customerEmail
+      shippingInfo: order_dto.shippingInfo,
       productList: order_dto.ProductList, // Copying products from DTO
       total: order_dto.total,
       discountedTotal: order_dto.discountedTotal,

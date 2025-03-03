@@ -4,32 +4,12 @@ import {
   IsArray,
   ValidateNested,
   IsOptional,
+  IsNotEmpty,
+  IsDefined,
+  IsBoolean,
+  IsEmail,
 } from 'class-validator';
 import { Type as TransformType } from 'class-transformer';
-
-class TypeDTO {
-  @IsOptional()
-  @IsString()
-  id?: string;
-
-  @IsOptional()
-  @IsString()
-  value?: string;
-}
-
-class SizeDTO {
-  @IsOptional()
-  @IsString()
-  id?: string;
-
-  @IsOptional()
-  @IsString()
-  value?: string;
-
-  @IsOptional()
-  @IsString()
-  unit?: string;
-}
 
 class ProductDTO {
   @IsString()
@@ -60,12 +40,7 @@ class ProductDTO {
   status!: string;
 
   @IsString()
-  orderProductStatus:
-    | 'Pending'
-    | 'Confirmed'
-    | 'Shipped'
-    | 'Delivered'
-    | 'Cancelled' = 'Pending';
+  orderProductStatus: 'Pending' | 'Reject' | 'Accept' = 'Pending';
 
   @IsString()
   store!: string;
@@ -73,6 +48,63 @@ class ProductDTO {
   size!: any;
 
   type!: any;
+}
+
+class ShippingInfoDTO {
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  fullName!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsEmail()
+  email!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  phone!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  country!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  city!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  state!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  zip!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  address!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  fulfillmentMethod!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsString()
+  paymentMethod!: string;
+
+  @IsDefined()
+  @IsNotEmpty()
+  @IsBoolean()
+  agree!: boolean;
 }
 
 class CompleteOrderDTO {
@@ -93,15 +125,10 @@ export class OrderDTO {
   @IsNumber()
   total!: number;
 
-  paymentMethod:
-    | 'Credit Card'
-    | 'Debit Card'
-    | 'PayPal'
-    | 'Bank Transfer'
-    | 'COD' = 'COD';
-
   @IsNumber()
   discountedTotal!: number;
+
+  shippingInfo!: ShippingInfoDTO;
 
   @IsString()
   status!: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
