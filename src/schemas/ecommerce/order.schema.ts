@@ -55,15 +55,6 @@ class Product {
   @Prop({ required: true })
   status!: string;
 
-  @Prop({
-    enum: ['Accept', 'Reject', 'Pending'],
-    default: 'Pending',
-  })
-  orderProductStatus!: string;
-
-  @Prop({ required: true })
-  store!: string;
-
   @Prop({ type: [TypeSchema] }) // ✅ Accepts an array of Type
   type!: any[];
 
@@ -73,19 +64,64 @@ class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 @Schema({ _id: false })
+class ShippingInfo {
+  @Prop({ required: true })
+  fullName!: string;
+  
+  @Prop({ required: true })
+  email!: string;
+  
+  @Prop({ required: true })
+  phone!: string;
+  
+  @Prop({ required: true })
+  country!: string;
+  
+  @Prop({ required: true })
+  city!: string;
+  
+  @Prop({ required: true })
+  state!: string;
+  
+  @Prop({ required: true })
+  zip!: string;
+  
+  @Prop({ required: true })
+  address!: string;
+  
+  @Prop({ required: true ,enum: ['Delivery', 'Pick Up',],
+  })
+  shippingMethod!: string;
+
+}
+export const ShippingInfoSchema = SchemaFactory.createForClass(ShippingInfo);
+
+@Schema({ _id: false })
 class CompleteOrder {
   @Prop({ type: ProductSchema, required: true })
   product!: Product;
 
   @Prop({ required: true })
+  storeId!: string;
+
+  @Prop({ required: true })
   quantity!: number;
+
+  @Prop({ required: true })
+  total_price!: number;  
+  
+  @Prop({
+    enum: ['Accepted', 'Rejected', 'Pending'],
+    default: 'Pending',
+  })
+  orderProductStatus!: string;
 }
 export const CompleteOrderSchema = SchemaFactory.createForClass(CompleteOrder);
 
 @Schema({ timestamps: true })
 export class Order {
   @Prop({ required: true })
-  customerId!: string;
+  customerName!: string;
 
   @Prop({ required: true })
   customerEmail!: string;
@@ -112,6 +148,9 @@ export class Order {
     default: 'Pending',
   })
   status!: string;
+  
+  @Prop({ type: ShippingInfoSchema, required: true })
+  ShippingInfo!: ShippingInfo;  
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

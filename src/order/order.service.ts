@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { OrderReqDto } from './dtos/req_dtos/order.dto';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { OrderStatus } from './enums/order_status.enum';
@@ -9,10 +9,9 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
 import { SSE } from 'src/notifications/sse.service';
 import { SSE_EVENTS } from 'src/commons/enums/sse_types.enum';
-
-import { Order, OrderDocument } from 'src/schemas/ecommerce/order.schema';
+import { Order, OrderDocument, ShippingInfoSchema } from 'src/schemas/ecommerce/order.schema';
 import { Model } from 'mongoose';
-import { OrderDTO } from './dtos/req_dtos/order';
+import { CreateOrderDto, UpdateOrderStatusDto, UpdateProductStatusDto } from './dtos/req_dtos/order';
 import { stat } from 'fs';
 
 @Injectable()
@@ -25,6 +24,389 @@ export class OrderService {
 
     // @InjectConnection() private readonly connection: Connection
   ) {}
+
+  async create_order(order_dto: CreateOrderDto): Promise<{order:Order,message:string}> {
+    const newOrder = new this.orderModel({
+      ShippingInfo: order_dto.ShippingInfo,
+      customerName: order_dto.customerName,
+      customerEmail: order_dto.customerEmail,
+      productList: order_dto.productList, 
+      total: order_dto.total,
+      discountedTotal: order_dto.discountedTotal,
+      paymentMethod: order_dto.paymentMethod,
+    });
+
+    let order=await newOrder.save();
+    return {order:order,message:"SucessFully Created Order"}
+  }
+  async get_all_store_orders(page_no: number, id: string, store_payload: AuthPayload) {
+    try {
+      const limit = 10; 
+      const skip = (page_no - 1) * limit; 
+      const total = await this.orderModel.aggregate([
+        {
+          $match: {
+            "productList.storeId": id
+          }
+        },
+        {
+          $count: "totalCount" 
+        }
+      ]);
+      const totalCount = total.length > 0 ? total[0].totalCount : 0; 
+      const orders = await this.orderModel.aggregate([
+        {
+          $match: {
+            "productList.storeId": id
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            customerName: 1,
+            customerEmail: 1,
+            total: 1,
+            discountedTotal: 1,
+            paymentMethod: 1,
+            ShippingInfo:1,
+            productList: {
+              $filter: {
+                input: "$productList",
+                as: "product",
+                cond: { $eq: ["$$product.storeId", id] }
+              }
+            }
+          }
+        },
+        {
+          $skip: skip
+        },
+        {
+          $limit: limit
+        }
+      ]);
+      return {
+        orders,
+        totalCount,
+        currentPage: page_no,
+        totalPages: Math.ceil(totalCount / limit)
+      };
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
+  async get_order_by_id(_id: string) {
+    try {
+      const order = await this.orderModel.find(
+       { _id:new Types.ObjectId(_id)},
+      );
+      return order;
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
+
+async update_order_status(
+  order: UpdateOrderStatusDto,
+  user: AuthPayload,
+): Promise<any> {
+  
+
+
+  const result = await this.orderModel.updateOne(
+    {
+      _id: order.order_id,
+    },
+    {
+       status: order.order_status,
+    },
+  );
+
+  if (result.modifiedCount === 0) {
+    throw new BadRequestException(
+      'Order  not found or you are not authorized to update it.',
+    );
+  }
+
+  let message = '';
+  switch (order.order_status) {
+    case 'Pending':
+      message = 'Your order is pending and awaiting confirmation.';
+      break;
+    case 'Confirmed':
+      message = 'Your order has been confirmed and is being processed.';
+      break;
+    case 'Shipped':
+      message = 'Your order has been shipped and is on the way.';
+      break;
+    case 'Delivered':
+      message = 'Your order has been delivered successfully.';
+      break;
+    case 'Cancelled':
+      message = 'Your order has been cancelled.';
+      break;
+    default:
+      message = 'Order status updated successfully.';
+  }
+  
+
+  return {
+    message,
+    status: order.order_status,
+    orderId: order.order_id,
+  };
+}
+async delete_order(
+  order_id: string,
+): Promise<any> {
+  
+
+  const result = await this.orderModel.deleteOne(
+    {
+      _id: order_id,
+    },
+   
+  );
+
+  return {
+    message:"Order Deleted"
+  };
+}
+async update_product_status_of_order_provided(
+  order: UpdateProductStatusDto,
+  user: AuthPayload,
+): Promise<any> {
+  const productCheck = await this.product_repository.get_product_by_store_id_product_id(
+    new Types.ObjectId(order.product_id),
+    new Types.ObjectId(order.store_id),
+  );
+
+  if (!productCheck) {
+    throw new NotFoundException('Product not found.');
+  }
+
+  if(order.order_product_status=="Accepted"){
+
+  const orderDetails = await this.orderModel.findOne({
+    _id: order.order_id,
+    'productList.product._id': order.product_id,
+    'productList.storeId': order.store_id,
+  });
+
+  if (!orderDetails) {
+    throw new NotFoundException('Order not found.');
+  }
+
+  const productInOrder = orderDetails.productList.find(
+    (item) => item.product._id.toString() === order.product_id,
+  );
+
+  if (!productInOrder) {
+    throw new NotFoundException('Product not found in the order.');
+  }
+
+  if (productInOrder.quantity > productCheck.quantity) {
+    throw new BadRequestException(
+      `Order quantity exceeds available stock (${productCheck.quantity}).`,
+    );
+  }
+  const minusStock = await this.product_repository.update_product(
+    new Types.ObjectId(order.product_id),
+    new Types.ObjectId(order.store_id),
+    {quantity:productCheck.quantity-productInOrder.quantity}
+  );
+}
+  const result = await this.orderModel.updateOne(
+    {
+      _id: order.order_id,
+      'productList.product._id': order.product_id,
+      'productList.storeId': order.store_id,
+    },
+    {
+      $set: {
+        'productList.$.orderProductStatus': order.order_product_status,
+      },
+    },
+  );
+console.log(result,"result")
+  if (result.modifiedCount === 0) {
+    throw new BadRequestException(
+      'Order or product not found or you are not authorized to update it.',
+    );
+  }
+
+  let message = '';
+  switch (order.order_product_status) {
+    case 'Pending':
+      message =
+        'The product status has been set to Pending. Awaiting further processing.';
+      break;
+    case 'Accepted':
+      message = 'The product has been confirmed and is now being prepared for shipment.';
+      break;
+    case 'Rejected':
+      message = 'The product has been Rejected.';
+      break;
+    default:
+      message = 'Product status updated successfully.';
+  }
+
+  return {
+    message,
+    status: order.order_product_status,
+    orderId: order.order_id,
+    productId: order.product_id,
+  };
+}
+
+
+async get_all_orders(page_no: string, user: AuthPayload) {
+  try {
+    const page = parseInt(page_no) || 1; 
+    const limit = 10; 
+    const skip = (page - 1) * limit; 
+    const orders = await this.orderModel
+      .find({})
+      .skip(skip)
+      .limit(limit);
+    const totalOrders = await this.orderModel.countDocuments({});
+    return {
+      data: orders,
+      page,
+      limit,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+    };
+  } catch (e) {
+    console.log(e);
+    throw new InternalServerErrorException(e);
+  }
+}
+
+
+ 
+
+  // async get_all_store_orders(page_no: number, store_payload: AuthPayload) {
+  //   try {
+  //     const orders = await this.order_repository.get_all_store_orders(
+  //       new Types.ObjectId(store_payload._id),
+  //       page_no,
+  //     );
+  //     const total = await this.order_repository.get_total_no_store_orders({
+  //       store: new Types.ObjectId(store_payload._id),
+  //     });
+
+  //     return { orders, total };
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
+ 
+  
+  
+  // async get_store_order_by_id(id: string) {
+  //   try {
+  //     const order = await this.order_repository.get_store_order_by_id(
+  //       new Types.ObjectId(id),
+  //     );
+
+  //     return order;
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
+  // async get_store_order_by_id(id: string) {
+  //   try {
+  //     const order = await this.orderModel.aggregate([{
+  //       $match: {
+  //         "productList.storeId": id
+  //       }
+  //     }]);
+
+  //     return order;
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
+
+  // async update_store_order_by_id(
+  //   id: string,
+  //   update_store_order_dto: UpdateStoreOrder,
+  // ) {
+  //   try {
+  //     const order = await this.order_repository.update_store_order_by_id(
+  //       new Types.ObjectId(id),
+  //       update_store_order_dto,
+  //     );
+
+  //     return order;
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
+
+  // async getOrdersByStore(
+  //   status: string,
+  //   store_payload: AuthPayload,
+  //   page: string = '1', // Default to page 1
+  //   limit: string = '8', // Limit of 8 orders per page
+  // ): Promise<{ orders: any[]; totalPages: number }> {
+  //   // Fetch all orders from the database (can be optimized with pagination in DB query)
+
+  //   const orders: any[] = await this.orderModel.find().lean();
+
+  //   // Filter orders based on the status
+  //   const filteredOrders: any[] = orders
+  //     // .filter((order) => {
+  //     //   if (status === 'Pending') {
+  //     //     return order.status === 'Pending';
+  //     //   }
+  //     //   if (status === '') {
+  //     //     return order.status !== 'Pending';
+  //     //   }
+  //     //   return order.status === status;
+  //     // })
+  //     .map((order) => {
+  //       const { productList, ...rest } = order;
+  //       const items = productList.filter((item: any) => {
+  //         const isFromStore = item.product.store === store_payload._id;
+
+  //         if (!status) {
+  //           // If status is empty, show all except "Pending"
+  //           return isFromStore && item.product.status !== 'Pending';
+  //         }
+
+  //         // Otherwise, show only the specific status
+  //         return isFromStore && item.product.status === status;
+  //       });
+
+  //       return { ...rest, items };
+  //     })
+
+  //     .filter((order) => order.items.length > 0); // Remove orders with no matching items
+
+  //   // Calculate total number of pages
+  //   const totalOrders = filteredOrders.length;
+  //   const totalPages = Math.ceil(totalOrders / parseInt(limit));
+
+  //   // Implement pagination
+  //   const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  //   const paginatedOrders = filteredOrders.slice(
+  //     startIndex,
+  //     startIndex + parseInt(limit),
+  //   );
+
+  //   return {
+  //     orders: paginatedOrders,
+  //     totalPages,
+  //   };
+  // }
 
   // async create_order(order_dto: OrderReqDto, user: AuthPayload) {
   //   const session = await this.connection.startSession();
@@ -119,197 +501,4 @@ export class OrderService {
   //     await session.endSession();
   //   }
   // }
-
-  async create_order(order_dto: OrderDTO, user: AuthPayload): Promise<Order> {
-    const newOrder = new this.orderModel({
-      shippingInfo: order_dto.shippingInfo,
-      productList: order_dto.ProductList, // Copying products from DTO
-      total: order_dto.total,
-      discountedTotal: order_dto.discountedTotal,
-      status: order_dto.status,
-    });
-
-    return await newOrder.save();
-  }
-
-  async update_product_status_of_order_provided(
-    Order: any,
-    user: AuthPayload,
-  ): Promise<any> {
-    const result = await this.orderModel.updateOne(
-      {
-        _id: Order.orderId,
-        'productList.product._id': Order.productId,
-        'productList.product.store': user._id,
-      },
-      { $set: { 'productList.$.product.status': Order.status } },
-    );
-
-    if (result.modifiedCount === 0) {
-      throw new Error(
-        'Order or product not found or you are not authorized to update it.',
-      );
-    }
-
-    let message = '';
-
-    switch (Order.status) {
-      case 'Pending':
-        message =
-          'The product status has been set to Pending. Awaiting further processing.';
-        break;
-      case 'Confirmed':
-        message =
-          'The product has been confirmed and is now being prepared for shipment.';
-        break;
-      case 'Shipped':
-        message =
-          'The product has been shipped. Tracking details may be available soon.';
-        break;
-      case 'Delivered':
-        message =
-          'The product has been successfully delivered to the customer.';
-        break;
-      case 'Cancelled':
-        message = 'The product order has been cancelled as per the request.';
-        break;
-      default:
-        message = 'Product status updated successfully.';
-    }
-
-    return {
-      message,
-      status: Order.status,
-      orderId: Order.orderId,
-      productId: Order.productId,
-    };
-  }
-
-  async get_orders(user: AuthPayload) {
-    try {
-      const order = await this.order_repository.get_order_by_customer_id(
-        new Types.ObjectId(user._id),
-      );
-      return order;
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-
-  async get_order_by_id(_id: string) {
-    try {
-      const order = await this.order_repository.get_order_by_id(
-        new Types.ObjectId(_id),
-      );
-      return order;
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-
-  async get_all_store_orders(page_no: number, store_payload: AuthPayload) {
-    try {
-      const orders = await this.order_repository.get_all_store_orders(
-        new Types.ObjectId(store_payload._id),
-        page_no,
-      );
-      const total = await this.order_repository.get_total_no_store_orders({
-        store: new Types.ObjectId(store_payload._id),
-      });
-
-      return { orders, total };
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-
-  async get_store_order_by_id(id: string) {
-    try {
-      const order = await this.order_repository.get_store_order_by_id(
-        new Types.ObjectId(id),
-      );
-
-      return order;
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-
-  async update_store_order_by_id(
-    id: string,
-    update_store_order_dto: UpdateStoreOrder,
-  ) {
-    try {
-      const order = await this.order_repository.update_store_order_by_id(
-        new Types.ObjectId(id),
-        update_store_order_dto,
-      );
-
-      return order;
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-
-  async getOrdersByStore(
-    status: string,
-    store_payload: AuthPayload,
-    page: string = '1', // Default to page 1
-    limit: string = '8', // Limit of 8 orders per page
-  ): Promise<{ orders: any[]; totalPages: number }> {
-    // Fetch all orders from the database (can be optimized with pagination in DB query)
-
-    const orders: any[] = await this.orderModel.find().lean();
-
-    // Filter orders based on the status
-    const filteredOrders: any[] = orders
-      // .filter((order) => {
-      //   if (status === 'Pending') {
-      //     return order.status === 'Pending';
-      //   }
-      //   if (status === '') {
-      //     return order.status !== 'Pending';
-      //   }
-      //   return order.status === status;
-      // })
-      .map((order) => {
-        const { productList, ...rest } = order;
-        const items = productList.filter((item: any) => {
-          const isFromStore = item.product.store === store_payload._id;
-
-          if (!status) {
-            // If status is empty, show all except "Pending"
-            return isFromStore && item.product.status !== 'Pending';
-          }
-
-          // Otherwise, show only the specific status
-          return isFromStore && item.product.status === status;
-        });
-
-        return { ...rest, items };
-      })
-
-      .filter((order) => order.items.length > 0); // Remove orders with no matching items
-
-    // Calculate total number of pages
-    const totalOrders = filteredOrders.length;
-    const totalPages = Math.ceil(totalOrders / parseInt(limit));
-
-    // Implement pagination
-    const startIndex = (parseInt(page) - 1) * parseInt(limit);
-    const paginatedOrders = filteredOrders.slice(
-      startIndex,
-      startIndex + parseInt(limit),
-    );
-
-    return {
-      orders: paginatedOrders,
-      totalPages,
-    };
-  }
 }
