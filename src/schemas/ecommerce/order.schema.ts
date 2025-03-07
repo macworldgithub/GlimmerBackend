@@ -126,8 +126,8 @@ export class Order {
   @Prop({ required: true })
   customerEmail!: string;
 
-  @Prop({ type: [CompleteOrderSchema], required: true })
-  productList!: CompleteOrder[];
+  @Prop({ required: true })
+  productList!: any[];
 
   @Prop({ required: true })
   total!: number;
