@@ -30,7 +30,7 @@ export class OrderService {
       ShippingInfo: order_dto.ShippingInfo,
       customerName: order_dto.customerName,
       customerEmail: order_dto.customerEmail,
-      productList: order_dto.ProductList, 
+      productList: order_dto.productList, 
       total: order_dto.total,
       discountedTotal: order_dto.discountedTotal,
       paymentMethod: order_dto.paymentMethod,

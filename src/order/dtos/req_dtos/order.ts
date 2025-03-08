@@ -173,7 +173,8 @@ export class CreateOrderDto {
   @ApiProperty({ type: [CompleteOrderDto] })
   @IsArray()
   @ValidateNested({ each: true })
-  ProductList!: any[];
+  @Type(() => CompleteOrderDto)
+  productList!: CompleteOrderDto[];
 
   @ApiProperty()
   @IsNumber()
