@@ -106,6 +106,7 @@ export class OrderService {
             customerName: 1,
             customerEmail: 1,
             total: 1,
+            status: 1,
             discountedTotal: 1,
             paymentMethod: 1,
             ShippingInfo: 1,
