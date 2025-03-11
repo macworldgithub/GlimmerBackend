@@ -43,6 +43,16 @@ export class OrderController {
   get_order_by_id(@Query('id') id: string) {
     return this.order_service.get_order_by_id(id);
   }
+  @HttpCode(HttpStatus.OK)
+  @Get('get_store_order_by_id')
+  @ApiQuery({ name: 'store_id', required: true, type: String })
+  @ApiQuery({ name: 'order_id', required: true, type: String })
+  get_store_order_by_id(
+    @Query('store_id') store_id: string,
+    @Query('order_id') order_id: string,
+  ) {
+    return this.order_service.get_store_order_by_id(store_id, order_id);
+  }
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

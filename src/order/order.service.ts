@@ -148,6 +148,44 @@ export class OrderService {
       throw new InternalServerErrorException(e);
     }
   }
+  async get_store_order_by_id(storeId: string, orderId: string) {
+    try {
+      const pipeline: any[] = [
+        {
+          $match: {
+            _id: new Types.ObjectId(orderId), // Match specific order
+            'productList.storeId': storeId, // Ensure order contains a product from the store
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            customerName: 1,
+            customerEmail: 1,
+            total: 1,
+            status: 1,
+            discountedTotal: 1,
+            paymentMethod: 1,
+            ShippingInfo: 1,
+            productList: {
+              $filter: {
+                input: '$productList',
+                as: 'product',
+                cond: { $eq: ['$$product.storeId', storeId] }, // Keep only store's product(s)
+              },
+            },
+          },
+        },
+      ];
+
+      const orders = await this.orderModel.aggregate(pipeline);
+
+      return orders.length > 0 ? orders[0] : null; // Return the entire order with filtered product list
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
 
   async update_order_status(
     order: UpdateOrderStatusDto,
