@@ -46,8 +46,8 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role(Roles.STORE)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
   @Get('get_all_store_orders')
   @ApiQuery({ name: 'store_id', required: true, type: String })
   @ApiQuery({ name: 'page_no', required: true, type: Number })
@@ -69,8 +69,8 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role(Roles.SUPERADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SUPERADMIN)
   @ApiQuery({ name: 'page_no', required: true, type: Number }) // Page number is required
   @ApiQuery({ name: 'order_id', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
@@ -100,8 +100,8 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role(Roles.SUPERADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SUPERADMIN)
   @Put('updateOrderStatus')
   update_order_status(
     @Body() Order: UpdateOrderStatusDto,
