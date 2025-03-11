@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Optional,
   Post,
   Put,
   Query,
@@ -45,30 +46,24 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
-  @Get('get_all_pending_store_orders')
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.STORE)
+  @Get('get_all_store_orders')
+  @ApiQuery({ name: 'store_id', required: true, type: String })
+  @ApiQuery({ name: 'page_no', required: true, type: Number })
+  @ApiQuery({ name: 'order_id', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
   get_all_store_orders(
     @Query('store_id') store_id: string,
     @Query('page_no') page_no: number,
-    @Req() req: AuthPayloadRequest,
+    @Query('order_id') order_id?: string,
+    @Query('status') status?: string,
   ) {
-    return this.order_service.get_all_store_orders(page_no, store_id, req.user);
-  }
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
-  @Get('get_all_accepted_rejected_store_orders')
-  get_all_accepted_rejected_store_orders(
-    @Query('store_id') store_id: string,
-    @Query('page_no') page_no: number,
-    @Req() req: AuthPayloadRequest,
-  ) {
-    return this.order_service.get_all_accepted_rejected_store_orders(
+    return this.order_service.get_all_store_orders(
       page_no,
       store_id,
-      req.user,
+      order_id,
+      status,
     );
   }
 
@@ -76,27 +71,18 @@ export class OrderController {
   @ApiBearerAuth()
   // @UseGuards(AuthGuard, RolesGuard)
   // @Role(Roles.SUPERADMIN)
-  @Get('get_all_admin_pending_orders')
-  get_all_admin_pending_orders(
+  @ApiQuery({ name: 'page_no', required: true, type: Number }) // Page number is required
+  @ApiQuery({ name: 'order_id', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @Get('get_all_admin_orders')
+  get_all_admin_orders(
     @Query('page_no') page_no: string,
-    @Req() req: AuthPayloadRequest,
+    @Query('order_id') order_id?: string,
+    @Query('status') status?: string,
   ) {
-    return this.order_service.get_all_admin_pending_orders(page_no, req.user);
+    return this.order_service.get_all_admin_orders(page_no, order_id, status);
   }
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role(Roles.SUPERADMIN)
-  @Get('get_all_admin_accepted_rejected_orders')
-  get_all_admin_accepted_rejected_orders(
-    @Query('page_no') page_no: string,
-    @Req() req: AuthPayloadRequest,
-  ) {
-    return this.order_service.get_all_admin_accepted_rejected_orders(
-      page_no,
-      req.user,
-    );
-  }
+
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)

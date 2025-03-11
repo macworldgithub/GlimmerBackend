@@ -54,96 +54,52 @@ export class OrderService {
     let order = await newOrder.save();
     return { order: order, message: 'SucessFully Created Order' };
   }
+
   async get_all_store_orders(
     page_no: number,
     id: string,
-    store_payload: AuthPayload,
+    orderIdPrefix?: string,
+    status?: string,
   ) {
     try {
       const limit = 10;
       const skip = (page_no - 1) * limit;
-      const total = await this.orderModel.aggregate([
-        {
-          $match: {
-            'productList.storeId': id,
-            'productList.orderProductStatus': 'Pending',
-          },
-        },
-        {
-          $count: 'totalCount',
-        },
-      ]);
-      const totalCount = total.length > 0 ? total[0].totalCount : 0;
-      const orders = await this.orderModel.aggregate([
-        {
-          $match: {
-            'productList.storeId': id,
-            'productList.orderProductStatus': 'Pending',
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            customerName: 1,
-            customerEmail: 1,
-            total: 1,
-            discountedTotal: 1,
-            paymentMethod: 1,
-            ShippingInfo: 1,
-            productList: {
-              $filter: {
-                input: '$productList',
-                as: 'product',
-                cond: { $eq: ['$$product.storeId', id] },
-              },
-            },
-          },
-        },
-        {
-          $skip: skip,
-        },
-        {
-          $limit: limit,
-        },
-      ]);
-      return {
-        orders,
-        totalCount,
-        currentPage: page_no,
-        totalPages: Math.ceil(totalCount / limit),
+
+      const validStatuses = ['Accepted', 'Rejected', 'Pending'];
+
+      const matchFilter: any = {
+        'productList.storeId': id,
+        'productList.orderProductStatus': { $ne: 'Pending' },
       };
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-  async get_all_accepted_rejected_store_orders(
-    page_no: number,
-    id: string,
-    store_payload: AuthPayload,
-  ) {
-    try {
-      const limit = 10;
-      const skip = (page_no - 1) * limit;
-      const total = await this.orderModel.aggregate([
+
+      if (status && validStatuses.includes(status)) {
+        matchFilter['productList.orderProductStatus'] = status;
+      }
+
+      const pipeline: any[] = [
         {
-          $match: {
-            'productList.storeId': id,
-            'productList.orderProductStatus': { $ne: 'Pending' },
+          $addFields: {
+            stringId: { $toString: '$_id' },
           },
         },
-        {
-          $count: 'totalCount',
-        },
+        { $match: matchFilter },
+      ];
+
+      if (orderIdPrefix) {
+        pipeline.push({
+          $match: {
+            stringId: { $regex: `^${orderIdPrefix}` },
+          },
+        });
+      }
+
+      const total = await this.orderModel.aggregate([
+        ...pipeline,
+        { $count: 'totalCount' },
       ]);
       const totalCount = total.length > 0 ? total[0].totalCount : 0;
-      const orders = await this.orderModel.aggregate([
-        {
-          $match: {
-            'productList.storeId': id,
-            'productList.orderProductStatus': { $ne: 'Pending' },
-          },
-        },
+
+      pipeline.push(
         {
           $project: {
             _id: 1,
@@ -162,13 +118,12 @@ export class OrderService {
             },
           },
         },
-        {
-          $skip: skip,
-        },
-        {
-          $limit: limit,
-        },
-      ]);
+        { $skip: skip },
+        { $limit: limit },
+      );
+
+      const orders = await this.orderModel.aggregate(pipeline);
+
       return {
         orders,
         totalCount,
@@ -336,41 +291,73 @@ export class OrderService {
     };
   }
 
-  async get_all_admin_pending_orders(page_no: string, user: AuthPayload) {
-    try {
-      const page = parseInt(page_no) || 1;
-      const limit = 10;
-      const skip = (page - 1) * limit;
-      const orders = await this.orderModel
-        .find({ status: 'Pending' })
-        .skip(skip)
-        .limit(limit);
-      const totalOrders = await this.orderModel.countDocuments({});
-      return {
-        data: orders,
-        page,
-        limit,
-        totalOrders,
-        totalPages: Math.ceil(totalOrders / limit),
-      };
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
-    }
-  }
-  async get_all_admin_accepted_rejected_orders(
+  async get_all_admin_orders(
     page_no: string,
-    user: AuthPayload,
+    orderIdPrefix?: string,
+    status?: string,
   ) {
     try {
       const page = parseInt(page_no) || 1;
       const limit = 10;
       const skip = (page - 1) * limit;
-      const orders = await this.orderModel
-        .find({ status: { $ne: 'Pending' } })
-        .skip(skip)
-        .limit(limit);
-      const totalOrders = await this.orderModel.countDocuments({});
+
+      const validStatuses = [
+        'Pending',
+        'Confirmed',
+        'Shipped',
+        'Delivered',
+        'Cancelled',
+      ];
+
+      const matchFilter: any = { status: { $ne: 'Pending' } };
+
+      if (status && validStatuses.includes(status)) {
+        matchFilter.status = status;
+      }
+
+      const pipeline: any[] = [
+        {
+          $addFields: {
+            stringId: { $toString: '$_id' },
+          },
+        },
+        { $match: matchFilter },
+      ];
+
+      if (orderIdPrefix) {
+        pipeline.push({
+          $match: {
+            stringId: { $regex: `^${orderIdPrefix}` },
+          },
+        });
+      }
+
+      const total = await this.orderModel.aggregate([
+        ...pipeline,
+        { $count: 'totalCount' },
+      ]);
+      const totalOrders = total.length > 0 ? total[0].totalCount : 0;
+
+      pipeline.push(
+        {
+          $project: {
+            _id: 1,
+            customerName: 1,
+            customerEmail: 1,
+            total: 1,
+            productList: 1,
+            discountedTotal: 1,
+            paymentMethod: 1,
+            ShippingInfo: 1,
+            status: 1,
+          },
+        },
+        { $skip: skip },
+        { $limit: limit },
+      );
+
+      const orders = await this.orderModel.aggregate(pipeline);
+
       return {
         data: orders,
         page,
