@@ -20,7 +20,11 @@ import { OrderReqDto } from './dtos/req_dtos/order.dto';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 import { OrderService } from './order.service';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
-import { CreateOrderDto, UpdateOrderStatusDto, UpdateProductStatusDto } from './dtos/req_dtos/order';
+import {
+  CreateOrderDto,
+  UpdateOrderStatusDto,
+  UpdateProductStatusDto,
+} from './dtos/req_dtos/order';
 
 @ApiTags('Order')
 @Controller('order')
@@ -38,31 +42,60 @@ export class OrderController {
   get_order_by_id(@Query('id') id: string) {
     return this.order_service.get_order_by_id(id);
   }
-  
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
-  @Get('get_all_store_orders')
+  @Get('get_all_pending_store_orders')
   get_all_store_orders(
     @Query('store_id') store_id: string,
     @Query('page_no') page_no: number,
     @Req() req: AuthPayloadRequest,
   ) {
-    return this.order_service.get_all_store_orders(page_no,store_id, req.user);
+    return this.order_service.get_all_store_orders(page_no, store_id, req.user);
+  }
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
+  @Get('get_all_accepted_rejected_store_orders')
+  get_all_accepted_rejected_store_orders(
+    @Query('store_id') store_id: string,
+    @Query('page_no') page_no: number,
+    @Req() req: AuthPayloadRequest,
+  ) {
+    return this.order_service.get_all_accepted_rejected_store_orders(
+      page_no,
+      store_id,
+      req.user,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SUPERADMIN)
-  @Get('get_all_orders')
-  get_all_orders(
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.SUPERADMIN)
+  @Get('get_all_admin_pending_orders')
+  get_all_admin_pending_orders(
     @Query('page_no') page_no: string,
     @Req() req: AuthPayloadRequest,
   ) {
-    return this.order_service.get_all_orders(page_no, req.user);
+    return this.order_service.get_all_admin_pending_orders(page_no, req.user);
+  }
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.SUPERADMIN)
+  @Get('get_all_admin_accepted_rejected_orders')
+  get_all_admin_accepted_rejected_orders(
+    @Query('page_no') page_no: string,
+    @Req() req: AuthPayloadRequest,
+  ) {
+    return this.order_service.get_all_admin_accepted_rejected_orders(
+      page_no,
+      req.user,
+    );
   }
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -79,20 +112,16 @@ export class OrderController {
     );
   }
 
-  
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SUPERADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.SUPERADMIN)
   @Put('updateOrderStatus')
   update_order_status(
     @Body() Order: UpdateOrderStatusDto,
     @Req() req: AuthPayloadRequest,
   ) {
-    return this.order_service.update_order_status(
-      Order,
-      req.user,
-    );
+    return this.order_service.update_order_status(Order, req.user);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -105,9 +134,7 @@ export class OrderController {
 
     @Req() req: AuthPayloadRequest,
   ) {
-    return this.order_service.delete_order(
-      order_id,
-    );
+    return this.order_service.delete_order(order_id);
   }
 
   // @HttpCode(HttpStatus.OK)
