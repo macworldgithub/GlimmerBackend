@@ -46,8 +46,8 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.STORE)
   @Get('get_all_store_orders')
   @ApiQuery({ name: 'store_id', required: true, type: String })
   @ApiQuery({ name: 'page_no', required: true, type: Number })

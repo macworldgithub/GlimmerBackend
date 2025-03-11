@@ -249,15 +249,19 @@ export class OrderService {
       );
     }
     const result = await this.orderModel.updateOne(
-      {
-        _id: order.order_id,
-        'productList.product._id': order.product_id,
-        'productList.storeId': order.store_id,
-      },
+      { _id: order.order_id }, // Find order by ID
       {
         $set: {
-          'productList.$.orderProductStatus': order.order_product_status,
+          'productList.$[elem].orderProductStatus': order.order_product_status,
         },
+      },
+      {
+        arrayFilters: [
+          {
+            'elem.product._id': order.product_id,
+            'elem.storeId': order.store_id,
+          },
+        ],
       },
     );
     console.log(result, 'result');
