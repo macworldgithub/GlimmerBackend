@@ -79,6 +79,27 @@ export class OrderController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
+  @Get('get_store_revenue_sales')
+  @ApiQuery({ name: 'store_id', required: true, type: String })
+  @ApiQuery({ name: 'page_no', required: true, type: Number })
+  @ApiQuery({ name: 'order_id', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  async get_store_revenue_sales(
+    @Query('store_id') store_id: string,
+    @Query('page_no') page_no: number,
+    @Query('order_id') order_id?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.order_service.get_store_revenue_sales(
+      page_no,
+      store_id,
+      order_id,
+      status,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.SUPERADMIN)
   @ApiQuery({ name: 'page_no', required: true, type: Number }) // Page number is required

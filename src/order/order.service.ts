@@ -137,6 +137,58 @@ export class OrderService {
     }
   }
 
+  async get_store_revenue_sales(
+    page_no: number,
+    store_id: string,
+    orderIdPrefix?: string,
+    status?: string,
+  ) {
+    try {
+      const orderData = await this.get_all_store_orders(
+        page_no,
+        store_id,
+        orderIdPrefix,
+        status,
+      );
+
+      // Initialize revenue and sales count
+      let totalRevenue = 0;
+      let salesCount = {
+        Accepted: 0,
+        Rejected: 0,
+        Pending: 0,
+      };
+
+      // Loop through orders and calculate revenue & sales count based on product's orderProductStatus
+      orderData.orders.forEach((order) => {
+        order.productList.forEach((product: any) => {
+          const productStatus = product.orderProductStatus;
+
+          // Increment sales count based on product orderProductStatus
+          if (salesCount.hasOwnProperty(productStatus)) {
+            salesCount[productStatus as keyof typeof salesCount]++;
+          }
+
+          totalRevenue += product.discounted_price ?? product.total_price;
+        });
+      });
+
+      const totalCount = orderData.totalCount;
+
+      return {
+        orders: orderData.orders,
+        totalRevenue,
+        salesCount,
+        totalCount,
+        currentPage: page_no,
+        totalPages: orderData.totalPages,
+      };
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
+
   async get_order_by_id(_id: string) {
     try {
       const order = await this.orderModel.find({
