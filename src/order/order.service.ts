@@ -141,16 +141,12 @@ export class OrderService {
     page_no: number,
     store_id: string,
     orderIdPrefix?: string,
-    status?: string,
+    status?: string
   ) {
     try {
-      const orderData = await this.get_all_store_orders(
-        page_no,
-        store_id,
-        orderIdPrefix,
-        status,
-      );
-
+      let currentPage = 1;
+      let totalPages = 1;
+  
       // Initialize revenue and sales count
       let totalRevenue = 0;
       let salesCount = {
@@ -158,30 +154,48 @@ export class OrderService {
         Rejected: 0,
         Pending: 0,
       };
-
-      // Loop through orders and calculate revenue & sales count based on product's orderProductStatus
-      orderData.orders.forEach((order) => {
-        order.productList.forEach((product: any) => {
-          const productStatus = product.orderProductStatus;
-
-          // Increment sales count based on product orderProductStatus
-          if (salesCount.hasOwnProperty(productStatus)) {
-            salesCount[productStatus as keyof typeof salesCount]++;
-          }
-
-          totalRevenue += product.discounted_price ?? product.total_price;
+  
+      let allOrders: any[] = [];
+      let totalCount = 0;
+  
+      while (currentPage <= totalPages) {
+        const orderData = await this.get_all_store_orders(
+          currentPage,
+          store_id,
+          orderIdPrefix,
+          status
+        );
+        console.log("OrderData", orderData);
+        if (currentPage === 1) {
+          totalPages = orderData.totalPages; 
+          totalCount = orderData.totalCount;
+        }
+  
+        allOrders = allOrders.concat(orderData.orders);
+        console.log("All Orders", allOrders);
+        orderData.orders.forEach((order) => {
+          order.productList.forEach((product: any) => {
+            const productStatus = product.orderProductStatus;
+            console.log(productStatus);
+            // Increment sales count based on product orderProductStatus
+            if (salesCount.hasOwnProperty(productStatus)) {
+              salesCount[productStatus as keyof typeof salesCount]++;
+            }
+  
+            totalRevenue += product.discounted_price ?? product.total_price;
+          });
         });
-      });
-
-      const totalCount = orderData.totalCount;
-
+  
+        currentPage++;
+      }
+  
       return {
-        orders: orderData.orders,
+        orders: allOrders,
         totalRevenue,
         salesCount,
         totalCount,
-        currentPage: page_no,
-        totalPages: orderData.totalPages,
+        currentPage: page_no, 
+        totalPages,
       };
     } catch (e) {
       console.log(e);
