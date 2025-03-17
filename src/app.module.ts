@@ -22,6 +22,9 @@ import { ProductItemModule } from './product_item/product_item.module';
 import { AdminController } from './admin/admin.controller';
 import { AdminModule } from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SalonService } from './salon/salon.service';
+import { SalonController } from './salon/salon.controller';
+import { SalonModule } from './salon/salon.module';
 
 @Module({
   imports: [
@@ -40,8 +43,9 @@ import { NotificationsModule } from './notifications/notifications.module';
     ProductItemModule,
     AdminModule,
     NotificationsModule,
+    SalonModule,
   ],
-  controllers: [AppController, SSE, AdminController],
+  controllers: [AppController, SSE, AdminController, SalonController],
   providers: [
     AppService,
     StoreService,
@@ -50,6 +54,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     S3Service,
     OrderRepository,
     FirebaseService,
+    SalonService,
   ],
 })
 export class AppModule {}

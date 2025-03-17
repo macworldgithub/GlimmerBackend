@@ -2,7 +2,30 @@ import { Admin } from 'src/schemas/admin/admin.schema';
 import { Customer } from 'src/schemas/customer.schema';
 import { Store } from 'src/schemas/ecommerce/store.schema';
 
+export class CreateSalonDto {
+  salonName!: string;
+  ownerName!: string;
+  ownerContactEmail!: string;
+  email!: string;
+  password!: string;
+  contactNumber!: string;
+  address!: string;
+  about!: string;
+}
+
 export class StoreSignUpResponseDto {
+  store: Store;
+  token: string;
+  role: string;
+
+  constructor(obj: StoreSignUpResponseDto) {
+    this.store = obj.store;
+    this.token = obj.token;
+    this.role = obj.role;
+  }
+}
+
+export class SalonSignUpResponseDto {
   store: Store;
   token: string;
   role: string;

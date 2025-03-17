@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateStoreDto } from 'src/store/dtos/store.dto';
+import { CreateSalonDto } from 'src/salon/dto/salon.dto';
 import {
   CustomerGoogleSignInDto,
   CustomerSignInDto,
@@ -25,6 +26,19 @@ import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private auth_service: AuthService) {}
+
+  @HttpCode(HttpStatus.OK)
+  @Post('signup/salon')
+  @UseInterceptors(FileInterceptor('salon_image'))
+  async signUpSalon(
+    @UploadedFile(new SingleImageSizeValidationPipe())
+    @Body()
+    createSalonDto: CreateSalonDto,
+    salon_image: Express.Multer.File,
+  ) {
+    createSalonDto.salon_image = salon_image;
+    return this.auth_service.salon_signup(createSalonDto);
+  }
 
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(FileInterceptor('store_image'))
@@ -65,9 +79,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('signup/admin')
-  sign_up_admin(
-    @Body() create_admin_dto: CreateAdminDto
-  ) {
+  sign_up_admin(@Body() create_admin_dto: CreateAdminDto) {
     return this.auth_service.admin_signup(create_admin_dto);
   }
 
@@ -76,5 +88,4 @@ export class AuthController {
   sign_in_admin(@Body() signin_dto: StoreSignInDto) {
     return this.auth_service.admin_signin(signin_dto);
   }
-
 }

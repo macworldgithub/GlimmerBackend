@@ -52,3 +52,4 @@ export class CreateStoreDto {
   @IsOptional()
   store_image?: Express.Multer.File;
 }
+

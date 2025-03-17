@@ -29,6 +29,7 @@ export class StoreService {
     return 'glimmer/brands/' + id + '/store_image/image1';
   };
 
+
   async get_store_by_id(
     store_payload: AuthPayload,
     projection?: StoreProjection,

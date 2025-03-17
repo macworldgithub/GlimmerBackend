@@ -1,7 +1,7 @@
 import {
-    BadRequestException,
-    Injectable,
-    InternalServerErrorException,
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateStoreDto } from 'src/store/dtos/store.dto';
@@ -9,15 +9,16 @@ import { StoreRepository } from 'src/store/store.repository';
 import { Roles } from './enums/roles.enum';
 import { Store } from 'src/schemas/ecommerce/store.schema';
 import {
-    AdminSignUpResponseDto,
-    CustomerSignUpResponseDto,
-    StoreSignUpResponseDto,
+  AdminSignUpResponseDto,
+  CustomerSignUpResponseDto,
+  StoreSignUpResponseDto,
+  SalonSignUpResponseDto,
 } from './dtos/resonse_dtos/signup_response.dto';
 import { comparePassword, hashPassword } from 'src/utils/data.encryption';
 import {
-    AdminSigninDto,
-    CustomerSignInDto,
-    StoreSignInDto,
+  AdminSigninDto,
+  CustomerSignInDto,
+  StoreSignInDto,
 } from './dtos/request_dtos/signin_dto.dto';
 import { AuthPayload } from './payloads/auth.payload';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
@@ -29,329 +30,389 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { AdminRepository } from 'src/admin/admin.repository';
 import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 import { Admin } from 'src/schemas/admin/admin.schema';
+import { SalonRepository } from 'src/salon/salon.repository';
+
+import { SalonService } from 'src/salon/salon.service';
+
+import { CreateSalonDto } from 'src/salon/dto/salon.dto';
+import { SalonDocument } from 'src/schemas/salon/salon.schema';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        private store_repository: StoreRepository,
-        private jwt_service: JwtService,
-        private customer_repository: CustomerRepository,
-        private s3_service: S3Service,
-        private firebase_service: FirebaseService,
-        private admin_repository: AdminRepository
-    ) { }
+  constructor(
+    private store_repository: StoreRepository,
+    private salon_repository: SalonRepository,
+    private jwt_service: JwtService,
+    private customer_repository: CustomerRepository,
+    private s3_service: S3Service,
+    private firebase_service: FirebaseService,
+    private admin_repository: AdminRepository,
+  ) {}
 
-    async store_signup(
-        create_store_dto: CreateStoreDto,
-    ): Promise<StoreSignUpResponseDto> {
-        try {
-            const is_email_available = await this.store_repository.get_store_by_email(
-                create_store_dto.email,
-            );
+  async salon_signup(
+    create_salon_dto: CreateSalonDto,
+  ): Promise<SalonSignUpResponseDto> {
+    try {
+      // Check if the email already exists
+      const is_email_available = await this.salon_repository.get_salon_by_email(
+        create_salon_dto.email,
+      );
+      if (is_email_available?.email) {
+        throw new BadRequestException('Email already exists!');
+      }
 
-            if (is_email_available?.email) {
-                throw new BadRequestException('Email Already exists!');
-            }
+      // Hash the password
+      create_salon_dto.password = await hashPassword(create_salon_dto.password);
 
-            create_store_dto.password = await hashPassword(create_store_dto.password);
-            const store_image_temp = create_store_dto.store_image;
-            delete create_store_dto.store_image;
+      // Temporarily store the salon image and remove it from the DTO
+      const salon_image_temp = create_salon_dto.salon_image;
+      delete create_salon_dto.salon_image;
 
-            const inserted_store =
-                await this.store_repository.create_store(create_store_dto);
+      // Create the salon document
+      const inserted_salon: SalonDocument =
+        await this.salon_repository.create_salon(create_salon_dto);
 
-            if (store_image_temp) {
-                const path = StoreService.GET_STORE_IMAGE_PATH(
-                    inserted_store._id.toString(),
-                );
-                const store_image = (
-                    await this.s3_service.upload_file_by_key(store_image_temp, path)
-                ).Key;
-                this.store_repository.update_store(inserted_store._id, { store_image });
-                inserted_store.store_image =
-                    await this.s3_service.get_image_url(store_image);
-            }
+      // If an image was provided, handle the file upload
+      if (salon_image_temp) {
+        const path = SalonService.GET_SALON_IMAGE_PATH(
+          //@ts-ignore
+          inserted_salon._id.toString(),
+        );
+        const uploadedImage = (
+          await this.s3_service.upload_file_by_key(salon_image_temp, path)
+        ).Key;
+        //@ts-ignore
+        await this.salon_repository.update_salon(inserted_salon._id, {
+          salon_image: uploadedImage,
+        });
+        inserted_salon.salon_image =
+          await this.s3_service.get_image_url(uploadedImage);
+      }
 
-            if (!inserted_store._id) {
-                throw new InternalServerErrorException();
-            }
+      if (!inserted_salon._id) {
+        throw new InternalServerErrorException();
+      }
 
-            const token = await this.jwt_service.signAsync({
-                _id: inserted_store._id.toString(),
-                email: inserted_store.email,
-                role: Roles.STORE,
-            });
-
-            return { store: new Store(inserted_store), token, role: Roles.STORE };
-        } catch (e) {
-            console.log(e);
-            throw new BadRequestException(e);
-        }
+      // Generate a JWT token for the newly registered salon
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_salon._id.toString(),
+        email: inserted_salon.email,
+        role: Roles.SALON,
+      });
+      //@ts-ignore
+      return { salon: new Salon(inserted_salon), token, role: Roles.SALON };
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException(e);
     }
+  }
 
-    async store_signin(
-        signin_dto: StoreSignInDto,
-    ): Promise<StoreSignUpResponseDto> {
-        try {
-            const store = await this.store_repository.get_store_by_email(
-                signin_dto.email,
-            );
+  async store_signup(
+    create_store_dto: CreateStoreDto,
+  ): Promise<StoreSignUpResponseDto> {
+    try {
+      const is_email_available = await this.store_repository.get_store_by_email(
+        create_store_dto.email,
+      );
 
-            if (!store?.email) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      if (is_email_available?.email) {
+        throw new BadRequestException('Email Already exists!');
+      }
 
-            const isPasswordValid = await comparePassword(
-                signin_dto.password,
-                store.password,
-            );
+      create_store_dto.password = await hashPassword(create_store_dto.password);
+      const store_image_temp = create_store_dto.store_image;
+      delete create_store_dto.store_image;
 
-            if (!isPasswordValid) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      const inserted_store =
+        await this.store_repository.create_store(create_store_dto);
 
-            const payload: AuthPayload = {
-                _id: store._id.toString(),
-                email: store.email,
-                role: Roles.STORE,
-            };
+      if (store_image_temp) {
+        const path = StoreService.GET_STORE_IMAGE_PATH(
+          inserted_store._id.toString(),
+        );
+        const store_image = (
+          await this.s3_service.upload_file_by_key(store_image_temp, path)
+        ).Key;
+        this.store_repository.update_store(inserted_store._id, { store_image });
+        inserted_store.store_image =
+          await this.s3_service.get_image_url(store_image);
+      }
 
-            const token = await this.jwt_service.signAsync(payload);
+      if (!inserted_store._id) {
+        throw new InternalServerErrorException();
+      }
 
-            return { store: new Store(store), token, role: Roles.STORE };
-        } catch (e) {
-            console.log(e)
-            throw new BadRequestException(e);
-        }
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_store._id.toString(),
+        email: inserted_store.email,
+        role: Roles.STORE,
+      });
+
+      return { store: new Store(inserted_store), token, role: Roles.STORE };
+    } catch (e) {
+      console.log(e);
+      throw new BadRequestException(e);
     }
+  }
 
-    async customer_signup(create_customer_dto: CreateCustomerDto): Promise<any> {
-        try {
-            const is_email_available =
-                await this.customer_repository.get_customer_by_email(
-                    create_customer_dto.email,
-                );
+  async store_signin(
+    signin_dto: StoreSignInDto,
+  ): Promise<StoreSignUpResponseDto> {
+    try {
+      const store = await this.store_repository.get_store_by_email(
+        signin_dto.email,
+      );
 
-            if (is_email_available?.email) {
-                throw new BadRequestException('Email Already exists!');
-            }
+      if (!store?.email) {
+        throw new BadRequestException('Incorrect email or password');
+      }
 
-            create_customer_dto.password = await hashPassword(
-                create_customer_dto.password,
-            );
+      const isPasswordValid = await comparePassword(
+        signin_dto.password,
+        store.password,
+      );
 
-            const inserted_customer =
-                await this.customer_repository.create_customer(create_customer_dto);
+      if (!isPasswordValid) {
+        throw new BadRequestException('Incorrect email or password');
+      }
 
-            if (!inserted_customer._id) {
-                throw new InternalServerErrorException();
-            }
+      const payload: AuthPayload = {
+        _id: store._id.toString(),
+        email: store.email,
+        role: Roles.STORE,
+      };
 
-            const token = await this.jwt_service.signAsync({
-                _id: inserted_customer._id.toString(),
-                email: inserted_customer.email,
-                role: Roles.CUSTOMER,
-            });
+      const token = await this.jwt_service.signAsync(payload);
 
-            return {
-                customer: new Customer(inserted_customer),
-                token,
-                role: Roles.CUSTOMER,
-            };
-        } catch (e) {
-            throw new BadRequestException(e);
-        }
+      return { store: new Store(store), token, role: Roles.STORE };
+    } catch (e) {
+      console.log(e);
+      throw new BadRequestException(e);
     }
+  }
 
-    async customer_signin(
-        customer_signin_dto: CustomerSignInDto,
-    ): Promise<CustomerSignUpResponseDto> {
-        try {
-            const customer = await this.customer_repository.get_customer_by_email(
-                customer_signin_dto.email,
-            );
+  async customer_signup(create_customer_dto: CreateCustomerDto): Promise<any> {
+    try {
+      const is_email_available =
+        await this.customer_repository.get_customer_by_email(
+          create_customer_dto.email,
+        );
 
-            if (!customer?.email) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      if (is_email_available?.email) {
+        throw new BadRequestException('Email Already exists!');
+      }
 
-            if (customer.password) {
-                const isPasswordValid = await comparePassword(
-                    customer_signin_dto.password,
-                    customer.password,
-                );
+      create_customer_dto.password = await hashPassword(
+        create_customer_dto.password,
+      );
 
-                if (!isPasswordValid) {
-                    throw new BadRequestException('Incorrect email or password');
-                }
-            }
+      const inserted_customer =
+        await this.customer_repository.create_customer(create_customer_dto);
 
-            const payload: AuthPayload = {
-                _id: customer._id.toString(),
-                email: customer.email,
-                role: Roles.CUSTOMER,
-            };
+      if (!inserted_customer._id) {
+        throw new InternalServerErrorException();
+      }
 
-            const token = await this.jwt_service.signAsync(payload);
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_customer._id.toString(),
+        email: inserted_customer.email,
+        role: Roles.CUSTOMER,
+      });
 
-            return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
-        } catch (e) {
-            throw new InternalServerErrorException(e);
-        }
+      return {
+        customer: new Customer(inserted_customer),
+        token,
+        role: Roles.CUSTOMER,
+      };
+    } catch (e) {
+      throw new BadRequestException(e);
     }
+  }
 
-    async oauth_customer_signup(
-        customer: Omit<CreateCustomerDto, 'password'>,
-    ): Promise<any> {
-        try {
-            const inserted_customer =
-                await this.customer_repository.create_customer(customer);
+  async customer_signin(
+    customer_signin_dto: CustomerSignInDto,
+  ): Promise<CustomerSignUpResponseDto> {
+    try {
+      const customer = await this.customer_repository.get_customer_by_email(
+        customer_signin_dto.email,
+      );
 
-            if (!inserted_customer._id) {
-                throw new InternalServerErrorException();
-            }
+      if (!customer?.email) {
+        throw new BadRequestException('Incorrect email or password');
+      }
 
-            const token = await this.jwt_service.signAsync({
-                _id: inserted_customer._id.toString(),
-                email: inserted_customer.email,
-                role: Roles.CUSTOMER,
-            });
+      if (customer.password) {
+        const isPasswordValid = await comparePassword(
+          customer_signin_dto.password,
+          customer.password,
+        );
 
-            return {
-                customer: new Customer(inserted_customer),
-                token,
-                role: Roles.CUSTOMER,
-            };
-        } catch (e) {
-            throw new BadRequestException(e);
+        if (!isPasswordValid) {
+          throw new BadRequestException('Incorrect email or password');
         }
+      }
+
+      const payload: AuthPayload = {
+        _id: customer._id.toString(),
+        email: customer.email,
+        role: Roles.CUSTOMER,
+      };
+
+      const token = await this.jwt_service.signAsync(payload);
+
+      return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
+    } catch (e) {
+      throw new InternalServerErrorException(e);
     }
+  }
 
-    async oauth_customer_signin(
-        customer_dto: Omit<CustomerSignInDto, 'password'>,
-    ): Promise<any> {
-        try {
-            const customer = await this.customer_repository.get_customer_by_email(
-                customer_dto.email,
-            );
+  async oauth_customer_signup(
+    customer: Omit<CreateCustomerDto, 'password'>,
+  ): Promise<any> {
+    try {
+      const inserted_customer =
+        await this.customer_repository.create_customer(customer);
 
-            if (!customer?.email) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      if (!inserted_customer._id) {
+        throw new InternalServerErrorException();
+      }
 
-            const payload: AuthPayload = {
-                _id: customer._id.toString(),
-                email: customer.email,
-                role: Roles.CUSTOMER,
-            };
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_customer._id.toString(),
+        email: inserted_customer.email,
+        role: Roles.CUSTOMER,
+      });
 
-            const token = await this.jwt_service.signAsync(payload);
-
-            return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
-        } catch (e) {
-            throw new BadRequestException(e);
-        }
+      return {
+        customer: new Customer(inserted_customer),
+        token,
+        role: Roles.CUSTOMER,
+      };
+    } catch (e) {
+      throw new BadRequestException(e);
     }
+  }
 
-    async customer_signup_with_google(id_token: string): Promise<any> {
-        try {
-            const credentials =
-                await this.firebase_service.login_with_google(id_token);
+  async oauth_customer_signin(
+    customer_dto: Omit<CustomerSignInDto, 'password'>,
+  ): Promise<any> {
+    try {
+      const customer = await this.customer_repository.get_customer_by_email(
+        customer_dto.email,
+      );
 
-            if (!credentials.user.email || !credentials.user.displayName) {
-                throw new InternalServerErrorException('could not login with google');
-            }
-            const email_already_exist =
-                await this.customer_repository.get_customer_by_email(
-                    credentials.user.email,
-                );
+      if (!customer?.email) {
+        throw new BadRequestException('Incorrect email or password');
+      }
 
-            if (!email_already_exist) {
-                return this.oauth_customer_signup({
-                    email: credentials.user.email,
-                    name: credentials.user.displayName,
-                });
-            }
-            return this.oauth_customer_signin({ email: credentials.user.email });
-        } catch (e) {
-            throw new BadRequestException(e);
-        }
+      const payload: AuthPayload = {
+        _id: customer._id.toString(),
+        email: customer.email,
+        role: Roles.CUSTOMER,
+      };
+
+      const token = await this.jwt_service.signAsync(payload);
+
+      return { customer: new Customer(customer), token, role: Roles.CUSTOMER };
+    } catch (e) {
+      throw new BadRequestException(e);
     }
+  }
 
+  async customer_signup_with_google(id_token: string): Promise<any> {
+    try {
+      const credentials =
+        await this.firebase_service.login_with_google(id_token);
 
-    async admin_signup(create_admin_dto: CreateAdminDto): Promise<AdminSignUpResponseDto> {
-        try {
-            const is_email_available =
-                await this.admin_repository.get_admin_by_email(
-                    create_admin_dto.email,
-                );
+      if (!credentials.user.email || !credentials.user.displayName) {
+        throw new InternalServerErrorException('could not login with google');
+      }
+      const email_already_exist =
+        await this.customer_repository.get_customer_by_email(
+          credentials.user.email,
+        );
 
-            if (is_email_available?.email) {
-                throw new BadRequestException('Email Already exists!');
-            }
-
-            create_admin_dto.password = await hashPassword(
-                create_admin_dto.password,
-            );
-
-            const inserted_admin =
-                await this.admin_repository.create_admin(create_admin_dto);
-
-            if (!inserted_admin._id) {
-                throw new InternalServerErrorException();
-            }
-
-            const token = await this.jwt_service.signAsync({
-                _id: inserted_admin._id.toString(),
-                email: inserted_admin.email,
-                role: Roles.SUPERADMIN,
-            });
-
-            return {
-                admin: new Admin(inserted_admin),
-                token,
-                role: Roles.SUPERADMIN,
-            };
-        } catch (e) {
-            throw new BadRequestException(e);
-        }
+      if (!email_already_exist) {
+        return this.oauth_customer_signup({
+          email: credentials.user.email,
+          name: credentials.user.displayName,
+        });
+      }
+      return this.oauth_customer_signin({ email: credentials.user.email });
+    } catch (e) {
+      throw new BadRequestException(e);
     }
+  }
 
-    async admin_signin(
-        admin_signin_dto: AdminSigninDto,
-    ): Promise<AdminSignUpResponseDto> {
-        try {
-            const admin = await this.admin_repository.get_admin_by_email(
-                admin_signin_dto.email,
-            );
+  async admin_signup(
+    create_admin_dto: CreateAdminDto,
+  ): Promise<AdminSignUpResponseDto> {
+    try {
+      const is_email_available = await this.admin_repository.get_admin_by_email(
+        create_admin_dto.email,
+      );
 
-            if (!admin) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      if (is_email_available?.email) {
+        throw new BadRequestException('Email Already exists!');
+      }
 
-            const isPasswordValid = await comparePassword(
-                admin_signin_dto.password,
-                admin.password)
+      create_admin_dto.password = await hashPassword(create_admin_dto.password);
 
-            if (!isPasswordValid) {
-                throw new BadRequestException('Incorrect email or password');
-            }
+      const inserted_admin =
+        await this.admin_repository.create_admin(create_admin_dto);
 
-            const payload: AuthPayload = {
-                _id: admin._id.toString(),
-                email: admin.email,
-                role: Roles.SUPERADMIN,
-            };
+      if (!inserted_admin._id) {
+        throw new InternalServerErrorException();
+      }
 
-            const token = await this.jwt_service.signAsync(payload);
+      const token = await this.jwt_service.signAsync({
+        _id: inserted_admin._id.toString(),
+        email: inserted_admin.email,
+        role: Roles.SUPERADMIN,
+      });
 
-            return { admin: new Admin(admin), token, role: Roles.SUPERADMIN};
-        } catch (e) {
-            throw new InternalServerErrorException(e);
-        }
+      return {
+        admin: new Admin(inserted_admin),
+        token,
+        role: Roles.SUPERADMIN,
+      };
+    } catch (e) {
+      throw new BadRequestException(e);
     }
+  }
 
+  async admin_signin(
+    admin_signin_dto: AdminSigninDto,
+  ): Promise<AdminSignUpResponseDto> {
+    try {
+      const admin = await this.admin_repository.get_admin_by_email(
+        admin_signin_dto.email,
+      );
 
+      if (!admin) {
+        throw new BadRequestException('Incorrect email or password');
+      }
 
+      const isPasswordValid = await comparePassword(
+        admin_signin_dto.password,
+        admin.password,
+      );
 
+      if (!isPasswordValid) {
+        throw new BadRequestException('Incorrect email or password');
+      }
+
+      const payload: AuthPayload = {
+        _id: admin._id.toString(),
+        email: admin.email,
+        role: Roles.SUPERADMIN,
+      };
+
+      const token = await this.jwt_service.signAsync(payload);
+
+      return { admin: new Admin(admin), token, role: Roles.SUPERADMIN };
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
+  }
 }
