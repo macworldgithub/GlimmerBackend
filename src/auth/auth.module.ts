@@ -12,6 +12,9 @@ import { S3Service } from 'src/aws/s3.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { AdminRepository } from 'src/admin/admin.repository';
 import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
+import { SalonRepository } from 'src/salon/salon.repository';
+import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
+// import { SalonModule } from 'src/salon/salon.module';
 
 @Module({
   imports: [
@@ -19,6 +22,7 @@ import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },
       { name: Admin.name, schema: AdminSchema},
+      { name: Salon.name, schema: SalonSchema},
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -35,6 +39,7 @@ import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
     S3Service,
     FirebaseService,
     AdminRepository,
+    SalonRepository,
   ],
   controllers: [AuthController],
 })

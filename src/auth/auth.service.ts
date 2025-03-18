@@ -31,11 +31,9 @@ import { AdminRepository } from 'src/admin/admin.repository';
 import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 import { Admin } from 'src/schemas/admin/admin.schema';
 import { SalonRepository } from 'src/salon/salon.repository';
-
-import { SalonService } from 'src/salon/salon.service';
-
 import { CreateSalonDto } from 'src/salon/dto/salon.dto';
-import { SalonDocument } from 'src/schemas/salon/salon.schema';
+import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
+import { SalonService } from 'src/salon/salon.service';
 
 @Injectable()
 export class AuthService {
@@ -88,10 +86,10 @@ export class AuthService {
         inserted_salon.salon_image =
           await this.s3_service.get_image_url(uploadedImage);
       }
-
       if (!inserted_salon._id) {
         throw new InternalServerErrorException();
       }
+
 
       // Generate a JWT token for the newly registered salon
       const token = await this.jwt_service.signAsync({
@@ -99,6 +97,7 @@ export class AuthService {
         email: inserted_salon.email,
         role: Roles.SALON,
       });
+
       //@ts-ignore
       return { salon: new Salon(inserted_salon), token, role: Roles.SALON };
     } catch (e) {
@@ -106,7 +105,41 @@ export class AuthService {
       throw new BadRequestException(e);
     }
   }
+  async salon_signin(
+    signin_dto: StoreSignInDto,
+  ): Promise<SalonSignUpResponseDto> {
+    try {
+      const salon = await this.salon_repository.get_salon_by_email(
+        signin_dto.email,
+      );
 
+      if (!salon?.email) {
+        throw new BadRequestException('Incorrect email or password');
+      }
+
+      const isPasswordValid = await comparePassword(
+        signin_dto.password,
+        salon.password,
+      );
+
+      if (!isPasswordValid) {
+        throw new BadRequestException('Incorrect email or password');
+      }
+
+      const payload: AuthPayload = {
+        _id: salon._id.toString(),
+        email: salon.email,
+        role: Roles.SALON,
+      };
+
+      const token = await this.jwt_service.signAsync(payload);
+      //@ts-ignore
+      return { salon: new Salon(salon), token, role: Roles.SALON };
+    } catch (e) {
+      console.log(e);
+      throw new BadRequestException(e);
+    }
+  }
   async store_signup(
     create_store_dto: CreateStoreDto,
   ): Promise<StoreSignUpResponseDto> {

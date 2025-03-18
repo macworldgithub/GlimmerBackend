@@ -7,7 +7,6 @@ export class SalonService {
     constructor(
         private salon_repository:SalonRepository,
         private s3_service: S3Service,
-
     ){
 
     }

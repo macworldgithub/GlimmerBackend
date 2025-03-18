@@ -28,16 +28,21 @@ export class AuthController {
   constructor(private auth_service: AuthService) {}
 
   @HttpCode(HttpStatus.OK)
-  @Post('signup/salon')
   @UseInterceptors(FileInterceptor('salon_image'))
-  async signUpSalon(
+  @ApiConsumes('multipart/form-data')
+  @Post('signup/salon')
+  async sign_up_salon(
+    @Body() createSalonDto: CreateSalonDto,
     @UploadedFile(new SingleImageSizeValidationPipe())
-    @Body()
-    createSalonDto: CreateSalonDto,
     salon_image: Express.Multer.File,
   ) {
     createSalonDto.salon_image = salon_image;
     return this.auth_service.salon_signup(createSalonDto);
+  }
+  @HttpCode(HttpStatus.OK)
+  @Post('signin/salon')
+  sign_in_salon(@Body() signin_dto: StoreSignInDto) {
+    return this.auth_service.salon_signin(signin_dto);
   }
 
   @HttpCode(HttpStatus.OK)
