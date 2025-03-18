@@ -30,6 +30,7 @@ import {
 } from './dtos/request_dtos/product.dto';
 import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ProductFiles } from './types/update_product.type';
+import { Types } from 'mongoose';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -109,11 +110,13 @@ export class ProductController {
   @Put('bulk_update_product_prices')
   async bulk_update_product_prices(
     @Req() req: AuthPayloadRequest,
-    @Body() body: { discount: number },
+    @Body() body: { discount: number, productIds: string[] },
   ) {
+    const productIdsAsObjectIds = body.productIds.map(id => new Types.ObjectId(id));
     return this.product_service.bulk_update_product_prices(
       req.user,
       body.discount,
+      productIdsAsObjectIds,
     );
   }
 

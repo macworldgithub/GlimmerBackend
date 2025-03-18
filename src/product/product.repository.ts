@@ -152,10 +152,14 @@ export class ProductRepository {
   async bulk_update_product_prices(
     store_id: Types.ObjectId,
     discount: number,
+    productIds: Types.ObjectId[]
   ): Promise<any> {
     try {
       // Fetch all products for the store
-      const store_products = await this.product_model.find({ store: store_id });
+      const store_products = await this.product_model.find({
+        store: store_id,
+        _id: { $in: productIds },
+      });
 
       if (!store_products.length)
         throw new Error('No products found for this store');

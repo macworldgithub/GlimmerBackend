@@ -347,11 +347,13 @@ export class ProductService {
   async bulk_update_product_prices(
     store_payload: AuthPayload,
     discount: number,
+    productIds: Types.ObjectId[]
   ): Promise<{ message: string }> {
     try {
       const bulkWriteResult = await this.product_repository.bulk_update_product_prices(
         new Types.ObjectId(store_payload._id),
         discount,
+        productIds
       );
   
       if (bulkWriteResult.modifiedCount === 0) {
