@@ -106,6 +106,21 @@ export class ProductController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.STORE)
+  @Put('bulk_update_product_prices')
+  async bulk_update_product_prices(
+    @Req() req: AuthPayloadRequest,
+    @Body() body: { discount: number },
+  ) {
+    return this.product_service.bulk_update_product_prices(
+      req.user,
+      body.discount,
+    );
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
   @Delete('delete_store_product_by_id')
   delete_product_by_id(
     @Query('id') id: string,
