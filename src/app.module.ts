@@ -25,6 +25,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { SalonService } from './salon/salon.service';
 import { SalonController } from './salon/salon.controller';
 import { SalonModule } from './salon/salon.module';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { SalonModule } from './salon/salon.module';
     AppService,
     StoreService,
     StoreRepository,
+    JwtService,
     AwsService,
     S3Service,
     OrderRepository,

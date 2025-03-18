@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { StoreModule } from 'src/store/store.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StoreRepository } from 'src/store/store.repository';
 import { CustomerRepository } from 'src/customer/customer.repository';
@@ -21,8 +21,8 @@ import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
     StoreModule,
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },
-      { name: Admin.name, schema: AdminSchema},
-      { name: Salon.name, schema: SalonSchema},
+      { name: Admin.name, schema: AdminSchema },
+      { name: Salon.name, schema: SalonSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

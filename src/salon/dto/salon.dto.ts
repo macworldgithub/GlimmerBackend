@@ -42,7 +42,59 @@ export class CreateSalonDto {
   @IsOptional()
   about?: string;
 
-  @ApiPropertyOptional({ description: 'Salon image', type: 'string', format: 'binary' })
+  @ApiPropertyOptional({
+    description: 'Salon image',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  salon_image?: Express.Multer.File;
+}
+
+export class UpdateSaloonDto {
+  @ApiPropertyOptional({ description: 'The name of the salon' })
+  @IsString()
+  @IsOptional()
+  salon_name?: string;
+
+  @ApiPropertyOptional({ description: 'The name of the owner' })
+  @IsString()
+  @IsOptional()
+  owner_name?: string;
+
+  @ApiPropertyOptional({ description: 'The contact email of the owner' })
+  @IsOptional()
+  owner_contact_email?: string;
+
+  @ApiPropertyOptional({ description: 'Salon email address' })
+  @IsOptional()
+  email?: string;
+
+  @ApiPropertyOptional({ description: 'Salon password' })
+  @IsString()
+  @IsOptional()
+  password?: string;
+
+  @ApiPropertyOptional({ description: 'Contact number of the salon' })
+  @IsString()
+  @IsOptional()
+  contact_number?: string;
+
+  @ApiPropertyOptional({ description: 'Address of the salon' })
+  @IsString()
+  @IsOptional()
+  address?: string;
+
+  @ApiPropertyOptional({ description: 'About the salon' })
+  @IsString()
+  @IsOptional()
+  about?: string;
+
+  @ApiPropertyOptional({
+    description: 'Salon image',
+    type: 'string',
+    format: 'binary',
+  })
   @IsOptional()
   salon_image?: Express.Multer.File;
 }
