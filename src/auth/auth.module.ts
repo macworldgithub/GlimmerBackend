@@ -12,13 +12,15 @@ import { S3Service } from 'src/aws/s3.service';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { AdminRepository } from 'src/admin/admin.repository';
 import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
+import { SalonModule } from 'src/salon/salon.module';
 
 @Module({
   imports: [
     StoreModule,
+    SalonModule,
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },
-      { name: Admin.name, schema: AdminSchema},
+      { name: Admin.name, schema: AdminSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
