@@ -64,18 +64,18 @@ export class OrderService {
     try {
       const limit = 10;
       const skip = (page_no - 1) * limit;
-
+  
       const validStatuses = ['Accepted', 'Rejected', 'Pending'];
-
+  
       const matchFilter: any = {
         'productList.storeId': id,
-        'productList.orderProductStatus': { $ne: 'Pending' },
+        // 'productList.orderProductStatus': { $ne: 'Pending' },
       };
-
+  
       if (status && validStatuses.includes(status)) {
         matchFilter['productList.orderProductStatus'] = status;
-      }
-
+      } 
+  
       const pipeline: any[] = [
         {
           $addFields: {
@@ -84,7 +84,7 @@ export class OrderService {
         },
         { $match: matchFilter },
       ];
-
+  
       if (orderIdPrefix) {
         pipeline.push({
           $match: {
@@ -92,13 +92,13 @@ export class OrderService {
           },
         });
       }
-
+  
       const total = await this.orderModel.aggregate([
         ...pipeline,
         { $count: 'totalCount' },
       ]);
       const totalCount = total.length > 0 ? total[0].totalCount : 0;
-
+  
       pipeline.push(
         {
           $project: {
@@ -122,9 +122,9 @@ export class OrderService {
         { $skip: skip },
         { $limit: limit },
       );
-
+  
       const orders = await this.orderModel.aggregate(pipeline);
-
+  
       return {
         orders,
         totalCount,
@@ -157,7 +157,7 @@ export class OrderService {
   
       let allOrders: any[] = [];
       let totalCount = 0;
-  
+
       while (currentPage <= totalPages) {
         const orderData = await this.get_all_store_orders(
           currentPage,
@@ -165,18 +165,15 @@ export class OrderService {
           orderIdPrefix,
           status
         );
-        console.log("OrderData", orderData);
         if (currentPage === 1) {
           totalPages = orderData.totalPages; 
           totalCount = orderData.totalCount;
         }
   
         allOrders = allOrders.concat(orderData.orders);
-        console.log("All Orders", allOrders);
         orderData.orders.forEach((order) => {
           order.productList.forEach((product: any) => {
             const productStatus = product.orderProductStatus;
-            console.log(productStatus);
             // Increment sales count based on product orderProductStatus
             if (salesCount.hasOwnProperty(productStatus)) {
               salesCount[productStatus as keyof typeof salesCount]++;

@@ -148,4 +148,47 @@ export class ProductRepository {
       .session(session)
       .exec();
   }
+
+  async bulk_update_product_prices(
+    store_id: Types.ObjectId,
+    discount: number,
+    productIds: Types.ObjectId[]
+  ): Promise<any> {
+    try {
+      // Fetch all products for the store
+      const store_products = await this.product_model.find({
+        store: store_id,
+        _id: { $in: productIds },
+      });
+
+      if (!store_products.length)
+        throw new Error('No products found for this store');
+
+      // Prepare bulk update queries
+      const updatedProducts = store_products.map((product) => {
+        const newPrice =
+          product.base_price - (product.base_price * discount) / 100;
+
+        return {
+          updateOne: {
+            filter: { _id: product._id },
+            update: {
+              $set: {
+                base_price: newPrice,
+              },
+            },
+          },
+        };
+      });
+
+      // Perform bulk update
+      const bulkWriteResult =
+        await this.product_model.bulkWrite(updatedProducts);
+
+      return bulkWriteResult; // Returning the result from bulkWrite
+    } catch (e) {
+      console.error(e);
+      throw new Error('Failed to update product prices');
+    }
+  }
 }

@@ -344,6 +344,30 @@ export class ProductService {
     }
   }
 
+  async bulk_update_product_prices(
+    store_payload: AuthPayload,
+    discount: number,
+    productIds: Types.ObjectId[]
+  ): Promise<{ message: string }> {
+    try {
+      const bulkWriteResult = await this.product_repository.bulk_update_product_prices(
+        new Types.ObjectId(store_payload._id),
+        discount,
+        productIds
+      );
+  
+      if (bulkWriteResult.modifiedCount === 0) {
+        throw new BadRequestException('No products were updated');
+      }
+  
+      return { message: 'Product prices updated successfully' };
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to update product prices');
+    }
+  }
+  
+  
   async get_total_no_products_by_store_id(store: string) {
     try {
       const total =
