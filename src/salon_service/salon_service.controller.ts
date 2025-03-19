@@ -18,6 +18,7 @@ import {
   ApplyDiscountDto,
   ApprovePriceUpdateDto,
   RemoveDiscountDto,
+  ApplyBulkDiscountDto,
 } from './dto/create_salon_service.dto';
 
 @ApiTags('Salon Services')
@@ -95,9 +96,14 @@ export class SalonServicesController {
   }
 
   @Patch('applyDiscounttoSingleService')
-  @ApiOperation({ summary: 'Apply a global discount to all services' })
+  @ApiOperation({ summary: 'Apply a  discount to single services' })
   applyDiscount(@Body() applyDiscountDto: ApplyDiscountDto) {
     return this.salonServicesService.applyDiscount(applyDiscountDto);
+  }
+  @Patch('applyBulkDiscount')
+  @ApiOperation({ summary: 'Apply a global discount to all services' })
+  applyBulkDiscount(@Body() applyDiscountDto: ApplyBulkDiscountDto) {
+    return this.salonServicesService.applyBulkDiscount(applyDiscountDto);
   }
 
   @Patch('removeDiscountFromSingleService')

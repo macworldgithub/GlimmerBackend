@@ -92,6 +92,21 @@ export class SalonServicesRepository {
     return service;
   }
 
+  async applyBulkDiscount(id: string[], discountPercentage: any) {
+    const service = await this.salonServiceModel
+      .updateMany(
+        { _id: { $in: id } },
+        {
+          $set: {
+            discountPercentage: discountPercentage,
+            hasDiscount: true,
+          },
+        },
+      )
+      .exec();
+
+    return service;
+  }
   async applyDiscount(id: string, discountPercentage: any) {
     console.log(discountPercentage, id);
     const service = await this.salonServiceModel

@@ -6,6 +6,7 @@ import {
   IsNumber,
   Min,
   IsOptional,
+  IsArray,
 } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
 export class CreateSalonServiceDto {
@@ -156,6 +157,21 @@ export class ApplyDiscountDto {
   @IsString()
   @IsNotEmpty()
   id!: string;
+  @ApiPropertyOptional({
+    example: 15,
+    description: 'Discount percentage (0-100)',
+  })
+  @IsNumber()
+  discountPercentage?: number;
+}
+export class ApplyBulkDiscountDto {
+  @ApiProperty({
+    example: ['60d5f3b1fc13ae4567890123', '60d5f3b1fc13ae4567890123'],
+    description: 'ID of the service',
+  })
+  @IsArray()
+  @IsNotEmpty()
+  id!: string[];
   @ApiPropertyOptional({
     example: 15,
     description: 'Discount percentage (0-100)',

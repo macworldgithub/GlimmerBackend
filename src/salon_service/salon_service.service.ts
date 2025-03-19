@@ -7,6 +7,7 @@ import {
   ApprovePriceUpdateDto,
   ApplyDiscountDto,
   RemoveDiscountDto,
+  ApplyBulkDiscountDto,
 } from './dto/create_salon_service.dto';
 import { SalonService } from 'src/schemas/salon/salon_service.schema';
 
@@ -101,6 +102,12 @@ export class SalonServicesService {
 
   async applyDiscount(applyDiscountDto: ApplyDiscountDto) {
     await this.salonServicesRepository.applyDiscount(
+      applyDiscountDto.id,
+      applyDiscountDto.discountPercentage,
+    );
+  }
+  async applyBulkDiscount(applyDiscountDto: ApplyBulkDiscountDto) {
+    await this.salonServicesRepository.applyBulkDiscount(
       applyDiscountDto.id,
       applyDiscountDto.discountPercentage,
     );
