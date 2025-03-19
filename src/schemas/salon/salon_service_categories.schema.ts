@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type SalonServiceDocument = HydratedDocument<SalonServiceCategories>;
 
@@ -9,8 +9,8 @@ export class SalonServiceCategories {
   @Prop({ required: true })
   category!: string;
 
-  @Prop({ type: Map, of: [String], required: true }) // Ensure the correct type definition
-  services!: Record<string, string[] | string>;
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  services!: Record<string, any> | Record<string, any>[];
 }
 
 export const SalonServiceCategoriesSchema = SchemaFactory.createForClass(

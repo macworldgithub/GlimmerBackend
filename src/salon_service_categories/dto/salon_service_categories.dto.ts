@@ -11,12 +11,10 @@ export class CreateSalonServiceCategoriesDto {
 
   @ApiProperty({
     description: 'Services offered in this category',
-    type: Object,
     example: { Hair: ['Cut', 'Coloring'], Nails: 'Manicure' },
   })
-  @IsObject()
   @IsNotEmpty()
-  services: Record<string, string[] | string>;
+  services: any;
 }
 
 export class UpdateSalonServiceCategoriesDto {
@@ -27,10 +25,8 @@ export class UpdateSalonServiceCategoriesDto {
 
   @ApiPropertyOptional({
     description: 'Updated services in this category',
-    type: Object,
     example: { Hair: ['Styling', 'Keratin Treatment'], Nails: 'Pedicure' },
   })
-  @IsObject()
   @IsOptional()
-  services?: Record<string, string[] | string>;
+  services?: any;
 }
