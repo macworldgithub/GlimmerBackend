@@ -1,48 +1,115 @@
-// import {
-//   Body,
-//   ClassSerializerInterceptor,
-//   Controller,
-//   HttpCode,
-//   HttpStatus,
-//   Post,
-//   Put,
-//   Req,
-//   UploadedFile,
-//   UseGuards,
-//   UseInterceptors,
-// } from '@nestjs/common';
-// import { FileInterceptor } from '@nestjs/platform-express';
-// import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
-// import { CreateSalonDto, UpdateSaloonDto } from 'src/salon/dto/salon.dto';
-// import { SalonServicesService } from './salon_service.service';
-// import { SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
-// import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
-// import { AuthGuard } from 'src/auth/auth.guard';
-// import { RolesGuard } from 'src/auth/roles.guard';
-// import { Role } from 'src/auth/roles.decorator';
-// import { Roles } from 'src/auth/enums/roles.enum';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Delete,
+  Query,
+  Put,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { SalonServicesService } from './salon_service.service';
+import {
+  CreateSalonServiceDto,
+  UpdateSalonServiceDto,
+  RequestPriceUpdateDto,
+  ApplyDiscountDto,
+  ApprovePriceUpdateDto,
+  RemoveDiscountDto,
+} from './dto/create_salon_service.dto';
 
-// @ApiTags('Salon Services')
-// @UseInterceptors(ClassSerializerInterceptor)
-// @Controller('salon/services')
-// export class SalonServiceController {
-//   constructor(private salon_service_service: SalonServicesService) {}
-//   @ApiBearerAuth()
-//   @HttpCode(HttpStatus.OK)
-//   @UseInterceptors(FileInterceptor('salon_image'))
-//   @ApiConsumes('multipart/form-data')
-//   @UseGuards(AuthGuard, RolesGuard)
-//   @Role(Roles.SALON)
-//   @Put('/create')
-//   async update_salon(
-//     @Body() updateSalonDto: UpdateSaloonDto,
-//     @Req()
-//     req: AuthPayloadRequest,
-//     @UploadedFile(new SingleImageSizeValidationPipe())
-//     salon_image?: Express.Multer.File,
-//   ) {
-//     salon_image ? (updateSalonDto.salon_image = salon_image) : null;
+@ApiTags('Salon Services')
+@Controller('salon-services')
+export class SalonServicesController {
+  constructor(private readonly salonServicesService: SalonServicesService) {}
 
-//     // return this.salon_service_service.updateSalon(updateSalonDto, req.user);
-//   }
-// }
+  @Post('createService')
+  @ApiOperation({ summary: 'Create a new salon service' })
+  create(@Body() createSalonServiceDto: CreateSalonServiceDto) {
+    return this.salonServicesService.create(createSalonServiceDto);
+  }
+
+  @Get('getAllActiveServicesForWebiste')
+  @ApiOperation({ summary: 'Get all salon services' })
+  @ApiQuery({ name: 'page_no', type: String, required: true })
+  @ApiQuery({ name: 'categoryId', type: String, required: false })
+  @ApiQuery({ name: 'salonId', type: String, required: false })
+  @ApiQuery({ name: 'subCategoryName', type: String, required: false })
+  @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  findAllActive(@Query() query: any) {
+    return this.salonServicesService.findAllActive(query);
+  }
+  @Get('getAllServicesForSalon')
+  @ApiOperation({ summary: 'Get all salon services(for salon dahboard)' })
+  @ApiQuery({ name: 'page_no', type: String, required: true })
+  @ApiQuery({ name: 'salonId', type: String, required: true })
+  @ApiQuery({ name: 'categoryId', type: String, required: false })
+  @ApiQuery({ name: 'subCategoryName', type: String, required: false })
+  @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  getAllServicesForSalon(@Query() query: any) {
+    return this.salonServicesService.findAllServices(query);
+  }
+  @Get('getAllServicesForAdmin')
+  @ApiOperation({ summary: 'Get all salon services (for admin )' })
+  @ApiQuery({ name: 'page_no', type: String, required: true })
+  @ApiQuery({ name: 'categoryId', type: String, required: false })
+  @ApiQuery({ name: 'salonId', type: String, required: false })
+  @ApiQuery({ name: 'status', type: String, required: false })
+  @ApiQuery({ name: 'subCategoryName', type: String, required: false })
+  @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  getAllServicesForAdmin(@Query() query: any) {
+    return this.salonServicesService.findAllServices(query);
+  }
+
+  @Get('getServiceById')
+  @ApiOperation({ summary: 'Get a single salon service by ID' })
+  @ApiQuery({ name: 'id', type: String, required: true })
+  findOne(@Query('id') id: string) {
+    return this.salonServicesService.findOne(id);
+  }
+  @Get('changeActivationStatus')
+  @ApiOperation({ summary: 'Change Status of the service' })
+  @ApiQuery({ name: 'id', type: String, required: true })
+  changeStatus(@Query('id') id: string) {
+    return this.salonServicesService.changeActivationStatus(id);
+  }
+
+  @Put('updateServiceById')
+  @ApiOperation({ summary: 'Update an existing salon service' })
+  update(@Body() updateSalonServiceDto: UpdateSalonServiceDto) {
+    return this.salonServicesService.update(updateSalonServiceDto);
+  }
+
+  @Patch('requestPriceUpdate')
+  @ApiOperation({ summary: 'Request a price update (Employee action)' })
+  requestPriceUpdate(@Body() requestPriceUpdateDto: RequestPriceUpdateDto) {
+    return this.salonServicesService.requestPriceUpdate(requestPriceUpdateDto);
+  }
+
+  @Patch('approvePriceUpdate')
+  @ApiOperation({ summary: 'Approve or reject a price update (Admin only)' })
+  approvePriceUpdate(@Body() approvePriceUpdateDto: ApprovePriceUpdateDto) {
+    return this.salonServicesService.approvePriceUpdate(approvePriceUpdateDto);
+  }
+
+  @Patch('applyDiscounttoSingleService')
+  @ApiOperation({ summary: 'Apply a global discount to all services' })
+  applyDiscount(@Body() applyDiscountDto: ApplyDiscountDto) {
+    return this.salonServicesService.applyDiscount(applyDiscountDto);
+  }
+
+  @Patch('removeDiscountFromSingleService')
+  @ApiOperation({ summary: 'Remove discount from all services' })
+  removeDiscount(@Body() removeDiscountDto: RemoveDiscountDto) {
+    return this.salonServicesService.removeDiscount(removeDiscountDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a salon service' })
+  @ApiParam({ name: 'id', type: String })
+  remove(@Param('id') id: string) {
+    return this.salonServicesService.remove(id);
+  }
+}

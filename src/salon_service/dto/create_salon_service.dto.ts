@@ -16,6 +16,13 @@ export class CreateSalonServiceDto {
 
   @ApiProperty({
     example: '12345',
+    description: 'The Salon ID of the service',
+  })
+  @IsString()
+  @IsNotEmpty()
+  salonId!: string;
+  @ApiProperty({
+    example: '12345',
     description: 'The category ID of the service',
   })
   @IsString()
@@ -50,16 +57,21 @@ export class CreateSalonServiceDto {
     description: 'Duration of the service in minutes',
   })
   @IsNumber()
-  @Min(1)
   duration: number;
 
   @ApiProperty({ example: 100, description: 'Actual price of the service' })
   @IsNumber()
-  @Min(0)
   requestedPrice: number;
 }
 
 export class UpdateSalonServiceDto {
+  @ApiProperty({
+    example: '60d5f3b1fc13ae4567890123',
+    description: 'ID of the service',
+  })
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
   @ApiProperty({ example: 'Haircut', description: 'The name of the service' })
   @IsString()
   @IsOptional()
@@ -102,58 +114,62 @@ export class UpdateSalonServiceDto {
     description: 'Duration of the service in minutes',
   })
   @IsNumber()
-  @Min(1)
   @IsOptional()
   duration: number;
-
-  @ApiProperty({ example: 100, description: 'Actual price of the service' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  requestedPrice: number;
 }
 
 export class RequestPriceUpdateDto {
+  @ApiProperty({
+    example: '60d5f3b1fc13ae4567890123',
+    description: 'ID of the service',
+  })
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
   @ApiProperty({
     example: 150,
     description: 'Requested new price for the service',
   })
   @IsNumber()
-  @Min(0)
   @IsNotEmpty()
   requestedPrice: number;
 }
 
 export class ApprovePriceUpdateDto {
   @ApiProperty({
-    example: 'approved',
-    enum: ['approved', 'rejected'],
-    description: 'Admin approval status',
+    example: '60d5f3b1fc13ae4567890123',
+    description: 'ID of the service',
   })
   @IsString()
   @IsNotEmpty()
-  status: 'approved' | 'rejected';
+  id!: string;
   @ApiProperty({ example: 100, description: 'Actual price of the service' })
   @IsNumber()
-  @Min(0)
   adminSetPrice: number;
 }
 
 export class ApplyDiscountDto {
+  @ApiProperty({
+    example: '60d5f3b1fc13ae4567890123',
+    description: 'ID of the service',
+  })
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
   @ApiPropertyOptional({
     example: 15,
     description: 'Discount percentage (0-100)',
   })
   @IsNumber()
-  @Min(0)
-  @Max(100)
   discountPercentage?: number;
+}
 
+export class RemoveDiscountDto {
   @ApiProperty({
-    example: true,
-    description: 'Apply discount globally to all services',
+    example: '60d5f3b1fc13ae4567890123',
+    description: 'ID of the service',
   })
-  @IsBoolean()
+  @IsString()
   @IsNotEmpty()
-  isGlobalDiscount: boolean;
+  id!: string;
 }
