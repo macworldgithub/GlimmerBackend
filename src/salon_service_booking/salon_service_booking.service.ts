@@ -1,123 +1,172 @@
-// import { Injectable, NotFoundException } from '@nestjs/common';
-// import { SalonServicesRepository } from './salon_service.repository';
-// import {
-//   CreateSalonServiceDto,
-//   UpdateSalonServiceDto,
-//   RequestPriceUpdateDto,
-//   ApprovePriceUpdateDto,
-//   ApplyDiscountDto,
-//   RemoveDiscountDto,
-//   ApplyBulkDiscountDto,
-// } from './dto/create_salon_service.dto';
-// import { SalonService } from 'src/schemas/salon/salon_service.schema';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { SalonServiceBookingRepository } from './salon_service_booking.repository';
+import { CreateSalonServiceBookingDto, UpdateSalonServiceBookingStatusDto } from './dto/create_salon_service_booking.dto';
+import { SalonServicesRepository } from 'src/salon_service/salon_service.repository';
+import { SalonServicesCategoriesRepository } from 'src/salon_service_categories/salon_service_categories.repository';
+import { AuthPayload } from 'src/auth/payloads/auth.payload';
+@Injectable()
+export class SalonServiceBookingService {
+  constructor(private readonly bookingRepository: SalonServiceBookingRepository,
+    private readonly salonServiceRepository: SalonServicesRepository,
+    private readonly salonServiceCategoryRepository: SalonServicesCategoriesRepository,
+  ) {}
 
-// @Injectable()
-// export class SalonServicesService {
-//   constructor(
-//     private readonly salonServicesRepository: SalonServicesRepository,
-//   ) {}
+  async createBooking(bookingData:CreateSalonServiceBookingDto) {
+    const { serviceId, finalPrice,bookingDate,paymentMethod, ...otherData } = bookingData;
+    const service = await this.salonServiceRepository.findById(serviceId);
+    if (!service) {
+      throw new NotFoundException(`Service with ID ${serviceId} not found.`);
+    }
+    const cat = await this.salonServiceCategoryRepository.findById(service.categoryId);
+    console.log(cat)
+    let total = service.discountPercentage ? service.actualPrice - (service.actualPrice * service.discountPercentage) / 100 : service.actualPrice;
 
-//   async create(
-//     createSalonServiceDto: CreateSalonServiceDto,
-//   ): Promise<SalonService> {
-//     return this.salonServicesRepository.create(createSalonServiceDto);
-//   }
+    if(total!=finalPrice){
+      throw new BadRequestException(`Invalid final price. The correct price is ${total}`);
+    }
+    const newBooking = {
+      serviceName: service.name,
+      serviceDuration: service.duration,
+      serviceDescription: service.description,
+      salonId: service.salonId,
+      categoryId: service.categoryId,
+      categoryName: cat.category,
+      subCategoryName: service.subCategoryName,
+      subSubCategoryName: service.subSubCategoryName,
+      isDiscounted: service.hasDiscount,
+      discountPercentage: service.discountPercentage,
+      actualPrice: service.actualPrice,
+      finalPrice: finalPrice,
+      bookingStatus: 'Pending',
+      bookingDate:new Date(bookingDate),
+      isPaid:paymentMethod=="Prepaid (Card)",
+      paymentMethod:paymentMethod,
+      ...otherData, 
+    };
+    return this.bookingRepository.create(newBooking);
+  }
 
-//   async findAllActive(query: any) {
-//     const filter: any = { priceUpdateStatus: 'assigned', status: true };
+  async getAllBookings(query:any) {
+    const filter: any = {};
+    if (query.status) {
+      filter.bookingStatus = query.status;
+    }
+    if (query.categoryId) {
+      filter.categoryId = query.categoryId;
+    }
 
-//     if (query.categoryId) {
-//       filter.categoryId = query.categoryId;
-//     }
+    if (query?.salonId) {
+      filter.salonId = query.salonId;
+    }
 
-//     if (query.salonId) {
-//       filter.salonId = query.salonId;
-//     }
+    if (query.subCategoryName) {
+      filter.subCategoryName = query.subCategoryName;
+    }
 
-//     if (query.subCategoryName) {
-//       filter.subCategoryName = query.subCategoryName;
-//     }
+    if (query.subSubCategoryName) {
+      filter.subSubCategoryName = query.subSubCategoryName;
+    }
+    const page = parseInt(query.page_no, 10) || 1;
+   
+    return await this.bookingRepository.findAll(filter,page);
+  }
+  async getAllSalonBookings(query:any,salon_payload?:AuthPayload) {
+    console.log(salon_payload,":pak")
+    const filter: any = {salonId:salon_payload?._id};
+    if (query.status) {
+      filter.bookingStatus = query.status;
+  } else {
+      filter.bookingStatus = { $ne: "Pending" }; // Exclude "pending" status when no status is provided
+  }
+    if (query.categoryId) {
+      filter.categoryId = query.categoryId;
+    }
 
-//     if (query.subSubCategoryName) {
-//       filter.subSubCategoryName = query.subSubCategoryName;
-//     }
-//     const page = parseInt(query.page_no, 10) || 1;
-//     return this.salonServicesRepository.findAll(filter, page);
-//   }
+    if (query?.salonId) {
+      filter.salonId = query.salonId;
+    }
 
-//   async findAllServices(query: any) {
-//     const filter: any = {};
-//     if (query.status) {
-//       filter.priceUpdateStatus = query.status;
-//     }
-//     if (query.categoryId) {
-//       filter.categoryId = query.categoryId;
-//     }
+    if (query.subCategoryName) {
+      filter.subCategoryName = query.subCategoryName;
+    }
 
-//     if (query.salonId) {
-//       filter.salonId = query.salonId;
-//     }
+    if (query.subSubCategoryName) {
+      filter.subSubCategoryName = query.subSubCategoryName;
+    }
+    console.log(filter,"filter")
+    const page = parseInt(query.page_no, 10) || 1;
+   
+    return await this.bookingRepository.findAll(filter,page);
+  }
 
-//     if (query.subCategoryName) {
-//       filter.subCategoryName = query.subCategoryName;
-//     }
+  async getBookingById(bookingId: string) {
+    const booking = await this.bookingRepository.findById(bookingId);
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${bookingId} not found.`);
+    }
+    return booking;
+  }
+  async approveBooking(bookingId: string) {
+    const updatedBooking = await this.bookingRepository.update(bookingId, {bookingStatus:"Approved"});
+    if (!updatedBooking) {
+      throw new NotFoundException(`Booking with ID ${bookingId} not found.`);
+    }
+    return updatedBooking;
+  }
+  async rejectBooking(bookingId: string) {
+    const updatedBooking = await this.bookingRepository.update(bookingId, {bookingStatus:"Rejected"});
+    if (!updatedBooking) {
+      throw new NotFoundException(`Booking with ID ${bookingId} not found.`);
+    }
+    return updatedBooking;
+  }
 
-//     if (query.subSubCategoryName) {
-//       filter.subSubCategoryName = query.subSubCategoryName;
-//     }
-//     const page = parseInt(query.page_no, 10) || 1;
-//     return this.salonServicesRepository.findAll(filter, page);
-//   }
+  async updateApprovedBookingStatus(updateData: UpdateSalonServiceBookingStatusDto) {
+    const booking = await this.bookingRepository.findById(updateData.bookingId);
+  
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID ${updateData.bookingId} not found.`);
+    }
+  
+    if (booking.bookingStatus === 'Completed' || booking.bookingStatus === 'Completed And Paid' || booking.bookingStatus === 'Did not show up') {
+      throw new BadRequestException(`Cannot update booking status as it is already marked as ${booking.bookingStatus}.`);
+    }
+  
+    if (booking.bookingStatus === 'Rejected') {
+      throw new BadRequestException(`Cannot update a rejected booking.`);
+    }
+    if (booking.bookingStatus === 'Pending') {
+      throw new BadRequestException(`Booking needs to be approved first.`);
+    }
+    if (updateData.bookingStatus === 'Completed' && booking.paymentMethod != 'Prepaid (Card)' ) {
+      throw new BadRequestException(`A booking can only be marked as 'Completed' if the payment was made via 'Prepaid (Card)'. This booking uses '${booking.paymentMethod}'.`);
+    }
+    if (updateData.bookingStatus === 'Completed And Paid' && booking.paymentMethod != 'Pay at Counter' ) {
+      throw new BadRequestException(`A booking can only be marked as 'Completed And Paid' if the payment was made via 'Pay at Counter'. This booking uses '${booking.paymentMethod}'.`);
+    }
+  
+    const updatedBooking = await this.bookingRepository.update(updateData.bookingId, { bookingStatus: updateData.bookingStatus });
+  
+    if (!updatedBooking) {
+      throw new NotFoundException(`Booking with ID ${updateData.bookingId} could not be updated.`);
+    }
+  
+    return updatedBooking;
+  }
+  
+  async updateBooking(bookingId: string, updateData:any) {
+    const updatedBooking = await this.bookingRepository.update(bookingId, updateData);
+    if (!updatedBooking) {
+      throw new NotFoundException(`Booking with ID ${bookingId} not found.`);
+    }
+    return updatedBooking;
+  }
 
-//   async findOne(id: string): Promise<SalonService> {
-//     return this.salonServicesRepository.findById(id);
-//   }
-//   async changeActivationStatus(id: string) {
-//     let a = await this.salonServicesRepository.findById(id);
-//     return this.salonServicesRepository.update(id, { status: !a.status });
-//   }
-
-//   async update(
-//     updateSalonServiceDto: UpdateSalonServiceDto,
-//   ): Promise<SalonService> {
-//     return this.salonServicesRepository.update(
-//       updateSalonServiceDto.id,
-//       updateSalonServiceDto,
-//     );
-//   }
-
-//   async requestPriceUpdate(requestDto: RequestPriceUpdateDto) {
-//     return this.salonServicesRepository.requestPriceUpdate(
-//       requestDto.id,
-//       requestDto.requestedPrice,
-//     );
-//   }
-
-//   async approvePriceUpdate(approveDto: ApprovePriceUpdateDto) {
-//     return this.salonServicesRepository.approvePriceUpdate(
-//       approveDto.id,
-//       approveDto.adminSetPrice,
-//     );
-//   }
-
-//   async applyDiscount(applyDiscountDto: ApplyDiscountDto) {
-//     await this.salonServicesRepository.applyDiscount(
-//       applyDiscountDto.id,
-//       applyDiscountDto.discountPercentage,
-//     );
-//   }
-//   async applyBulkDiscount(applyDiscountDto: ApplyBulkDiscountDto) {
-//     await this.salonServicesRepository.applyBulkDiscount(
-//       applyDiscountDto.id,
-//       applyDiscountDto.discountPercentage,
-//     );
-//   }
-
-//   async removeDiscount(data: RemoveDiscountDto) {
-//     await this.salonServicesRepository.removeDiscount(data.id);
-//   }
-
-//   async remove(id: string): Promise<void> {
-//     await this.salonServicesRepository.delete(id);
-//   }
-// }
+  async deleteBooking(bookingId: string) {
+    const deletedBooking = await this.bookingRepository.delete(bookingId);
+    if (!deletedBooking) {
+      throw new NotFoundException(`Booking with ID ${bookingId} not found.`);
+    }
+    return deletedBooking;
+  }
+}

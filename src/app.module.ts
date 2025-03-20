@@ -28,6 +28,7 @@ import { SalonModule } from './salon/salon.module';
 import { JwtService } from '@nestjs/jwt';
 import { SalonServiceCatgegoriesModule } from './salon_service_categories/salon_service_categories.module';
 import { SalonServiceModule } from './salon_service/salon_service.module';
+import { SalonServiceBookingModule } from './salon_service_booking/salon_service_booking.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SalonServiceModule } from './salon_service/salon_service.module';
     SalonModule,
     SalonServiceCatgegoriesModule,
     SalonServiceModule,
+    SalonServiceBookingModule,
     CustomerModule,
     CartModule,
     ProductCategoryModule,

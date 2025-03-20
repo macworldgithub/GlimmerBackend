@@ -1,191 +1,53 @@
-// // @ts-nocheck
-// import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// import {
-//   IsNotEmpty,
-//   IsString,
-//   IsNumber,
-//   Min,
-//   IsOptional,
-//   IsArray,
-// } from 'class-validator';
-// import { PartialType } from '@nestjs/mapped-types';
-// export class CreateSalonServiceDto {
-//   @ApiProperty({ example: 'Haircut', description: 'The name of the service' })
-//   @IsString()
-//   @IsNotEmpty()
-//   name!: string;
+// @ts-nocheck
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEmail, IsOptional, IsBoolean, IsNumber, Min, Max, IsEnum, IsDate } from 'class-validator';
 
-//   @ApiProperty({
-//     example: '12345',
-//     description: 'The Salon ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   salonId!: string;
-//   @ApiProperty({
-//     example: '12345',
-//     description: 'The category ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   categoryId!: string;
+export class CreateSalonServiceBookingDto {
+  @ApiProperty({ description: 'Customer full name', example: 'John Doe' })
+  @IsString()
+  customerName: string;
 
-//   @ApiPropertyOptional({
-//     example: 'Hair Services',
-//     description: 'Sub-category name (optional)',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   subCategoryName?: string;
+  @ApiProperty({ description: 'Customer email address', example: 'john@example.com' })
+  @IsEmail()
+  customerEmail: string;
 
-//   @ApiPropertyOptional({
-//     example: 'Men’s Haircut',
-//     description: 'Sub-sub-category name (optional)',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   subSubCategoryName?: string;
+  @ApiProperty({ description: 'Customer phone number', example: '+1 234 567 890' })
+  @IsString()
+  customerPhone: string;
 
-//   @ApiPropertyOptional({
-//     example: 'A professional haircut service.',
-//     description: 'Description of the service',
-//   })
-//   @IsString()
-//   description?: string;
+  @ApiProperty({ description: 'Service Mongo Db Id', example: 'asnlasid8a7sd8asn' })
+  @IsString()
+  serviceId: string;
 
-//   @ApiProperty({
-//     example: 30,
-//     description: 'Duration of the service in minutes',
-//   })
-//   @IsNumber()
-//   duration: number;
+  @ApiProperty({ description: 'Final price after discount', example: 45 })
+  @IsNumber()
+  @Min(0)
+  finalPrice: number;
 
-//   @ApiProperty({ example: 100, description: 'Actual price of the service' })
-//   @IsNumber()
-//   requestedPrice: number;
-// }
+  @ApiProperty({ description: 'Booking date and time', example: '2025-03-12T15:00:00Z' })
+  // @IsDate()
+  @IsString()
+  bookingDate: Date;
 
-// export class UpdateSalonServiceDto {
-//   @ApiProperty({
-//     example: '60d5f3b1fc13ae4567890123',
-//     description: 'ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   id!: string;
-//   @ApiProperty({ example: 'Haircut', description: 'The name of the service' })
-//   @IsString()
-//   @IsOptional()
-//   name!: string;
+  @ApiProperty({ description: 'Payment method', enum: ['Prepaid (Card)', 'Pay at Counter'] })
+  @IsEnum(['Prepaid (Card)', 'Pay at Counter'])
+  paymentMethod: string;
 
-//   @ApiProperty({
-//     example: '12345',
-//     description: 'The category ID of the service',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   categoryId!: string;
+  @ApiProperty({ description: 'Additional notes', example: 'Customer requested a special style', required: false })
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+export class UpdateSalonServiceBookingStatusDto {
+  @ApiProperty({ description: 'Service Mongo Db Id', example: 'asnlasid8a7sd8asn' })
+  @IsString()
+  bookingId: string;
 
-//   @ApiPropertyOptional({
-//     example: 'Hair Services',
-//     description: 'Sub-category name (optional)',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   subCategoryName?: string;
-
-//   @ApiPropertyOptional({
-//     example: 'Men’s Haircut',
-//     description: 'Sub-sub-category name (optional)',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   subSubCategoryName?: string;
-
-//   @ApiPropertyOptional({
-//     example: 'A professional haircut service.',
-//     description: 'Description of the service',
-//   })
-//   @IsString()
-//   @IsOptional()
-//   description?: string;
-
-//   @ApiProperty({
-//     example: 30,
-//     description: 'Duration of the service in minutes',
-//   })
-//   @IsNumber()
-//   @IsOptional()
-//   duration: number;
-// }
-
-// export class RequestPriceUpdateDto {
-//   @ApiProperty({
-//     example: '60d5f3b1fc13ae4567890123',
-//     description: 'ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   id!: string;
-//   @ApiProperty({
-//     example: 150,
-//     description: 'Requested new price for the service',
-//   })
-//   @IsNumber()
-//   @IsNotEmpty()
-//   requestedPrice: number;
-// }
-
-// export class ApprovePriceUpdateDto {
-//   @ApiProperty({
-//     example: '60d5f3b1fc13ae4567890123',
-//     description: 'ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   id!: string;
-//   @ApiProperty({ example: 100, description: 'Actual price of the service' })
-//   @IsNumber()
-//   adminSetPrice: number;
-// }
-
-// export class ApplyDiscountDto {
-//   @ApiProperty({
-//     example: '60d5f3b1fc13ae4567890123',
-//     description: 'ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   id!: string;
-//   @ApiPropertyOptional({
-//     example: 15,
-//     description: 'Discount percentage (0-100)',
-//   })
-//   @IsNumber()
-//   discountPercentage?: number;
-// }
-// export class ApplyBulkDiscountDto {
-//   @ApiProperty({
-//     example: ['60d5f3b1fc13ae4567890123', '60d5f3b1fc13ae4567890123'],
-//     description: 'ID of the service',
-//   })
-//   @IsArray()
-//   @IsNotEmpty()
-//   id!: string[];
-//   @ApiPropertyOptional({
-//     example: 15,
-//     description: 'Discount percentage (0-100)',
-//   })
-//   @IsNumber()
-//   discountPercentage?: number;
-// }
-
-// export class RemoveDiscountDto {
-//   @ApiProperty({
-//     example: '60d5f3b1fc13ae4567890123',
-//     description: 'ID of the service',
-//   })
-//   @IsString()
-//   @IsNotEmpty()
-//   id!: string;
-// }
+ 
+  @ApiProperty({
+    description: 'Booking status',
+    enum: ['Completed', 'Completed And Paid', 'Did not show up'],
+  })
+  @IsEnum([ 'Completed', 'Completed And Paid', 'Did not show up'])
+  bookingStatus: string;
+ }

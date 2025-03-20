@@ -1,13 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, HydratedDocument } from 'mongoose';
 
-export type SalonServiceBookingDocument = SalonServiceBooking & Document;
+export type SalonServiceBookingDocument = HydratedDocument<SalonServiceBooking>;
 
 @Schema({ timestamps: true })
 export class SalonServiceBooking {
-  @Prop({ required: true })
-  bookingId: string;
-
   @Prop({ required: true })
   customerName: string;
 
@@ -59,7 +56,7 @@ export class SalonServiceBooking {
   @Prop({ required: true, enum: ['Prepaid (Card)', 'Pay at Counter'] })
   paymentMethod: string;
 
-  @Prop({ required: true, enum: ['Pending', 'Approved', 'Completed', 'Did not show up'], default: 'Pending' })
+  @Prop({ required: true, enum: ['Pending','Rejected', 'Approved', 'Completed','Completed And Paid', 'Did not show up'], default: 'Pending' })
   bookingStatus: string;
 
   @Prop({ required: false, default: false })
@@ -69,7 +66,6 @@ export class SalonServiceBooking {
   notes?: string;
 
   constructor(
-    bookingId: string,
     customerName: string,
     customerEmail: string,
     customerPhone: string,
@@ -80,7 +76,7 @@ export class SalonServiceBooking {
     categoryName: string,
     bookingDate: Date,
     paymentMethod: 'Prepaid (Card)' | 'Pay at Counter',
-    bookingStatus: 'Pending' | 'Approved' | 'Completed' | 'Did not show up' = 'Pending',
+    bookingStatus: 'Pending' | 'Approved' |'Rejected'| 'Completed' |'Completed And Paid'| 'Did not show up' = 'Pending',
     isPaid = false,
     actualPrice: number,
     finalPrice: number,
@@ -91,7 +87,6 @@ export class SalonServiceBooking {
     subSubCategoryName?: string,
     notes?: string,
   ) {
-    this.bookingId = bookingId;
     this.customerName = customerName;
     this.customerEmail = customerEmail;
     this.customerPhone = customerPhone;

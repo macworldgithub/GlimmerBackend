@@ -34,7 +34,7 @@ export class SalonServicesCategoriesRepository {
       .findById(id)
       .exec();
     if (!service) {
-      throw new NotFoundException(`Salon Service with ID ${id} not found`);
+      throw new NotFoundException(`Salon Service Category with ID ${id} not found`);
     }
     return service;
   }
