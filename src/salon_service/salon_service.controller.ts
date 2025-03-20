@@ -11,6 +11,9 @@ import {
   HttpCode,
   UseGuards,
   HttpStatus,
+  UseInterceptors,
+  UploadedFiles,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +21,7 @@ import {
   ApiParam,
   ApiQuery,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { SalonServicesService } from './salon_service.service';
 import {
@@ -33,6 +37,9 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Role } from 'src/auth/roles.decorator';
 import { Roles } from 'src/auth/enums/roles.enum';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
+import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 
 @ApiTags('Salon Services')
 @Controller('salon-services')
@@ -44,9 +51,29 @@ export class SalonServicesController {
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.SALON)
   @Post('createService')
+  @UseInterceptors(
+      FileFieldsInterceptor([
+        { name: 'image1', maxCount: 1 },
+        { name: 'image2', maxCount: 1 },
+        { name: 'image3', maxCount: 1 },
+      ]),
+    )
+     @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new salon service' })
-  create(@Body() createSalonServiceDto: CreateSalonServiceDto) {
-    return this.salonServicesService.create(createSalonServiceDto);
+  create(@Body() createSalonServiceDto: CreateSalonServiceDto,
+  @UploadedFiles(new FileSizeValidationPipe())
+      files: {
+        image1?: Express.Multer.File[];
+        image2?: Express.Multer.File[];
+        image3?: Express.Multer.File[];
+      },
+    @Req() req: AuthPayloadRequest,
+    ) {
+        createSalonServiceDto.image1 = files.image1?.length ? files.image1[0] : undefined;
+        createSalonServiceDto.image2 = files.image2?.length ? files.image2[0] : undefined;
+        createSalonServiceDto.image3 = files.image3?.length ? files.image3[0] : undefined;
+
+    return this.salonServicesService.create(createSalonServiceDto,req.user);
   }
 
   @Get('getAllActiveServicesForWebiste')
@@ -67,12 +94,11 @@ export class SalonServicesController {
   @Get('getAllServicesForSalon')
   @ApiOperation({ summary: 'Get all salon services(for salon dahboard)' })
   @ApiQuery({ name: 'page_no', type: String, required: true })
-  @ApiQuery({ name: 'salonId', type: String, required: true })
   @ApiQuery({ name: 'categoryId', type: String, required: false })
   @ApiQuery({ name: 'subCategoryName', type: String, required: false })
   @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
-  getAllServicesForSalon(@Query() query: any) {
-    return this.salonServicesService.findAllServices(query);
+  getAllServicesForSalon(@Query() query: any,@Req() req: AuthPayloadRequest,) {
+    return this.salonServicesService.findAllServices(query,req.user);
   }
 
   @HttpCode(HttpStatus.OK)

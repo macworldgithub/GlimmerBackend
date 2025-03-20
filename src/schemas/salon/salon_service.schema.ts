@@ -18,7 +18,14 @@ export class SalonService {
 
   @Prop()
   subSubCategoryName?: string;
+@Prop({ required: false, default: '' })
+image1?: string;
 
+@Prop({ required: false, default: '' })
+image2?: string;
+
+@Prop({ required: false, default: '' })
+image3?: string;
   @Prop()
   description?: string;
 
@@ -62,6 +69,9 @@ export class SalonService {
     adminSetPrice: number,
     subCategoryName?: string,
     subSubCategoryName?: string,
+    image1?: string,
+    image2?: string,
+    image3?: string,
     description?: string,
     hasDiscount = false,
     status = true,
@@ -73,6 +83,9 @@ export class SalonService {
     this.name = name;
     this.categoryId = categoryId;
     this.salonId = salonId;
+    this.image1 = image1;
+    this.image2 = image2;
+    this.image3 = image3;
     this.subCategoryName = subCategoryName;
     this.subSubCategoryName = subSubCategoryName;
     this.description = description;

@@ -42,6 +42,16 @@ export class CreateSalonDto {
   @IsOptional()
   about?: string;
 
+  @ApiPropertyOptional({ description: 'Opening Hour of salon' })
+  @IsString()
+  @IsOptional()
+  openingHour?: string;
+
+  @ApiPropertyOptional({ description: 'Closing Hour of salon' })
+  @IsString()
+  @IsOptional()
+  closingHour?: string;
+
   @ApiPropertyOptional({
     description: 'Salon image',
     type: 'string',
@@ -70,10 +80,20 @@ export class UpdateSaloonDto {
   @IsOptional()
   email?: string;
 
-  @ApiPropertyOptional({ description: 'Salon password' })
+  // @ApiPropertyOptional({ description: 'Salon password' })
+  // @IsString()
+  // @IsOptional()
+  // password?: string;
+  
+  @ApiPropertyOptional({ description: 'Opening Hour of salon' })
   @IsString()
   @IsOptional()
-  password?: string;
+  openingHour?: string;
+  
+  @ApiPropertyOptional({ description: 'Closing Hour of salon' })
+  @IsString()
+  @IsOptional()
+  closingHour?: string;
 
   @ApiPropertyOptional({ description: 'Contact number of the salon' })
   @IsString()
