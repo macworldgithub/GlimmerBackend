@@ -213,7 +213,7 @@ export class SalonServicesController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SALON)
+  @Role(Roles.SUPERADMIN)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a salon service' })
   @ApiParam({ name: 'id', type: String })
