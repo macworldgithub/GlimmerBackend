@@ -138,7 +138,7 @@ export class SalonServicesController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SALON)
+  // @Role(Roles.SALON)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'image1', maxCount: 1 },
