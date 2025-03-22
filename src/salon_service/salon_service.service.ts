@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { SalonServicesRepository } from './salon_service.repository';
 import {
   CreateSalonServiceDto,
@@ -13,6 +13,7 @@ import { S3Service } from 'src/aws/s3.service';
 import { SalonService } from 'src/schemas/salon/salon_service.schema';
 import { Salon } from 'src/schemas/salon/salon.schema';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
+import { ProductFiles } from 'src/product/types/update_product.type';
 
 @Injectable()
 export class SalonServicesService {
@@ -163,11 +164,88 @@ export class SalonServicesService {
 
   async update(
     updateSalonServiceDto: UpdateSalonServiceDto,
-  ): Promise<SalonService> {
-    return this.salonServicesRepository.update(
+    files:ProductFiles,
+    store_payload:AuthPayload
+  ) {
+          const salon_service =
+            await this.salonServicesRepository.findById(
+              updateSalonServiceDto.id,
+            );
+          if (!salon_service) throw new BadRequestException('Service not found');
+    
+          const path = SalonServicesService.GET_SALON_SERVICE_IMAGE_PATH(store_payload._id);
+          let service_temp: any = structuredClone(updateSalonServiceDto);
+          if (files?.image1?.length) {
+            if (salon_service.image1) {
+              service_temp.image1 = (
+                await this.s3_service.upload_file_by_key(
+                  files.image1[0],
+                  salon_service.image1,
+                )
+              ).Key;
+            } else {
+              service_temp.image1 = (
+                await this.s3_service.upload_file(files.image1[0], path)
+              ).Key;
+            }
+          } else {
+            delete service_temp.image1;
+          }
+          if (files?.image2?.length) {
+            if (salon_service.image2) {
+              service_temp.image2 = (
+                await this.s3_service.upload_file_by_key(
+                  files.image2[0],
+                  salon_service.image2,
+                )
+              ).Key;
+            } else {
+              service_temp.image2 = (
+                await this.s3_service.upload_file(files.image2[0], path)
+              ).Key;
+            }
+          } else {
+            delete service_temp.image2;
+          }
+          if (files?.image3?.length) {
+            if (salon_service.image3) {
+              service_temp.image3 = (
+                await this.s3_service.upload_file_by_key(
+                  files.image3[0],
+                  salon_service.image3,
+                )
+              ).Key;
+            } else {
+              service_temp.image3 = (
+                await this.s3_service.upload_file(files.image3[0], path)
+              ).Key;
+            }
+          } else {
+            delete service_temp.image3;
+          }
+          Object.keys(service_temp).forEach(key => {
+            if (service_temp[key] === '' || key === 'id') {
+              delete service_temp[key];
+            }
+          });
+          console.log(updateSalonServiceDto,"updateSalonServiceDto",service_temp)
+   let serv=await this.salonServicesRepository.update(
       updateSalonServiceDto.id,
-      updateSalonServiceDto,
+      service_temp,
     );
+    if (!serv) {
+            throw new BadRequestException('service doesnot exist');
+          }
+          if (serv.image1) {
+            serv.image1 = await this.s3_service.get_image_url(serv.image1);
+          }
+          if (serv.image2) {
+            serv.image2 = await this.s3_service.get_image_url(serv.image2);
+          }
+          if (serv.image3) {
+            serv.image3 = await this.s3_service.get_image_url(serv.image3);
+          }
+          return serv
   }
 
   async requestPriceUpdate(requestDto: RequestPriceUpdateDto) {

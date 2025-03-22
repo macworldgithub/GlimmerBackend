@@ -131,7 +131,9 @@ export class AuthService {
         email: salon.email,
         role: Roles.SALON,
       };
-
+      if (salon.salon_image) {
+        salon.salon_image = await this.s3_service.get_image_url(salon.salon_image);
+      }
       const token = await this.jwt_service.signAsync(payload);
       //@ts-ignore
       return { salon: new Salon(salon), token, role: Roles.SALON };

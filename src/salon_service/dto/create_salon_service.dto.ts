@@ -35,6 +35,7 @@ export class CreateSalonServiceDto {
     example: 'Men’s Haircut',
     description: 'Sub-sub-category name (optional)',
   })
+
   @ApiPropertyOptional({
     description: 'Updated first image file of the product',
     type: 'string',
@@ -91,10 +92,11 @@ export class UpdateSalonServiceDto {
   @IsString()
   @IsNotEmpty()
   id!: string;
+
   @ApiProperty({ example: 'Haircut', description: 'The name of the service' })
   @IsString()
   @IsOptional()
-  name!: string;
+  name?: string;
 
   @ApiProperty({
     example: '12345',
@@ -102,7 +104,7 @@ export class UpdateSalonServiceDto {
   })
   @IsString()
   @IsOptional()
-  categoryId!: string;
+  categoryId?: string;
 
   @ApiPropertyOptional({
     example: 'Hair Services',
@@ -127,14 +129,36 @@ export class UpdateSalonServiceDto {
   @IsString()
   @IsOptional()
   description?: string;
+ @ApiPropertyOptional({
+    description: 'Updated first image file of the product',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  image1?: Express.Multer.File;
+
+  @ApiPropertyOptional({
+    description: 'Updated second image file of the product',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  image2?: Express.Multer.File;
+
+  @ApiPropertyOptional({
+    description: 'Updated third image file of the product',
+    type: 'string',
+    format: 'binary',
+  })
+  @IsOptional()
+  image3?: Express.Multer.File;
 
   @ApiProperty({
     example: 30,
     description: 'Duration of the service in minutes',
   })
-  @IsNumber()
   @IsOptional()
-  duration: number;
+  duration?: number;
 }
 
 export class RequestPriceUpdateDto {

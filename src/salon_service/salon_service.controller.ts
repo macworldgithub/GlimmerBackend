@@ -139,10 +139,26 @@ export class SalonServicesController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
   @Role(Roles.SALON)
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'image1', maxCount: 1 },
+      { name: 'image2', maxCount: 1 },
+      { name: 'image3', maxCount: 1 },
+    ]),
+  )
+   @ApiConsumes('multipart/form-data')
   @Put('updateServiceById')
   @ApiOperation({ summary: 'Update an existing salon service' })
-  update(@Body() updateSalonServiceDto: UpdateSalonServiceDto) {
-    return this.salonServicesService.update(updateSalonServiceDto);
+  update(@Body() updateSalonServiceDto: UpdateSalonServiceDto,@UploadedFiles(new FileSizeValidationPipe())
+  files: {
+    image1?: Express.Multer.File[];
+    image2?: Express.Multer.File[];
+    image3?: Express.Multer.File[];
+  },
+@Req() req: AuthPayloadRequest,
+) {
+  
+    return this.salonServicesService.update(updateSalonServiceDto,files,req.user);
   }
 
   @HttpCode(HttpStatus.OK)
