@@ -40,7 +40,13 @@ export class Salon {
   closingHour: string;
 
   @Prop({ type: String, required: false, default: null })
-  salon_image?: string;
+  image1?: string;
+  @Prop({ type: String, required: false, default: null })
+  image2?: string;
+  @Prop({ type: String, required: false, default: null })
+  image3?: string;
+  @Prop({ type: String, required: false, default: null })
+  image4?: string;
   constructor(obj: Salon) {
     this._id = obj._id.toString();
     this.salon_name = obj.salon_name;
@@ -53,7 +59,10 @@ export class Salon {
     this.about = obj.about;
     this.openingHour = obj.openingHour;
     this.closingHour = obj.closingHour;
-    this.salon_image = obj.salon_image;
+    this.image1 = obj.image1;
+    this.image2 = obj.image2;
+    this.image3 = obj.image3;
+    this.image4 = obj.image4;
   }
 }
 

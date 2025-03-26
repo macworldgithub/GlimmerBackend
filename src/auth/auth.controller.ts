@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -17,8 +18,8 @@ import {
   StoreSignInDto,
 } from './dtos/request_dtos/signin_dto.dto';
 import { CreateCustomerDto } from 'src/customer/dtos/req_dtos/create_customer.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { FileSizeValidationPipe, SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ApiConsumes } from '@nestjs/swagger';
 import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 
@@ -26,17 +27,31 @@ import { CreateAdminDto } from 'src/admin/dtos/request_dtos/create_admin.dto';
 @Controller('auth')
 export class AuthController {
   constructor(private auth_service: AuthService) {}
-
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('salon_image'))
+   @UseInterceptors(
+      FileFieldsInterceptor([
+        { name: 'image1', maxCount: 1 },
+        { name: 'image2', maxCount: 1 },
+        { name: 'image3', maxCount: 1 },
+        { name: 'image4', maxCount: 1 },
+      ]),
+    )
   @ApiConsumes('multipart/form-data')
   @Post('signup/salon')
   async sign_up_salon(
     @Body() createSalonDto: CreateSalonDto,
-    @UploadedFile(new SingleImageSizeValidationPipe())
-    salon_image: Express.Multer.File,
+    @UploadedFiles(new FileSizeValidationPipe())
+    files: {
+      image1?: Express.Multer.File[];
+      image2?: Express.Multer.File[];
+      image3?: Express.Multer.File[];
+      image4?: Express.Multer.File[];
+    },
   ) {
-    createSalonDto.salon_image = salon_image;
+    createSalonDto.image1 = files.image1?.length ? files.image1[0] : undefined;
+    createSalonDto.image2 = files.image2?.length ? files.image2[0] : undefined;
+    createSalonDto.image3 = files.image3?.length ? files.image3[0] : undefined;
+    createSalonDto.image4 = files.image4?.length ? files.image4[0] : undefined;
     return this.auth_service.salon_signup(createSalonDto);
   }
   @HttpCode(HttpStatus.OK)

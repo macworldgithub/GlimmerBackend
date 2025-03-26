@@ -34,6 +34,7 @@ import { SalonRepository } from 'src/salon/salon.repository';
 import { CreateSalonDto } from 'src/salon/dto/salon.dto';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
 import { SalonService } from 'src/salon/salon.service';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -61,34 +62,61 @@ export class AuthService {
 
       // Hash the password
       create_salon_dto.password = await hashPassword(create_salon_dto.password);
-
-      // Temporarily store the salon image and remove it from the DTO
-      const salon_image_temp = create_salon_dto.salon_image;
-      delete create_salon_dto.salon_image;
-
-      // Create the salon document
-      const inserted_salon: SalonDocument =
-        await this.salon_repository.create_salon(create_salon_dto);
-
-      // If an image was provided, handle the file upload
-      if (salon_image_temp) {
-        const path = SalonService.GET_SALON_IMAGE_PATH(
-          //@ts-ignore
-          inserted_salon._id.toString(),
-        );
-        const uploadedImage = (
-          await this.s3_service.upload_file_by_key(salon_image_temp, path)
-        ).Key;
+ 
+      const temp_id = new mongoose.Types.ObjectId();
+      const path = SalonService.GET_SALON_IMAGE_PATH(
         //@ts-ignore
-        await this.salon_repository.update_salon(inserted_salon._id, {
-          salon_image: uploadedImage,
-        });
-        inserted_salon.salon_image =
-          await this.s3_service.get_image_url(uploadedImage);
+        temp_id.toString(),
+      );
+ 
+      let salon_temp:any = structuredClone(create_salon_dto);
+      if (create_salon_dto.image1) {
+        salon_temp.image1 = (
+          await this.s3_service.upload_file(create_salon_dto.image1, path)
+        ).Key;
       }
+      if (create_salon_dto.image2) {
+        salon_temp.image2 = (
+          await this.s3_service.upload_file(create_salon_dto.image2, path)
+        ).Key;
+      }
+      if (create_salon_dto.image3) {
+        salon_temp.image3 = (
+          await this.s3_service.upload_file(create_salon_dto.image3, path)
+        ).Key;
+      }
+      if (create_salon_dto.image4) {
+        salon_temp.image4 = (
+          await this.s3_service.upload_file(create_salon_dto.image4, path)
+        ).Key;
+      }
+      
+
+      const inserted_salon: SalonDocument =
+      await this.salon_repository.create_salon({
+        ...salon_temp,
+        _id: temp_id, 
+      });
       if (!inserted_salon._id) {
         throw new InternalServerErrorException();
       }
+
+      if (inserted_salon.image1) {
+        inserted_salon.image1 = await this.s3_service.get_image_url(inserted_salon.image1);
+      }
+      if (inserted_salon.image2) {
+        inserted_salon.image2 = await this.s3_service.get_image_url(inserted_salon.image2);
+      }
+      if (inserted_salon.image3) {
+        inserted_salon.image3 = await this.s3_service.get_image_url(inserted_salon.image3);
+      }
+      if (inserted_salon.image4) {
+        inserted_salon.image4 = await this.s3_service.get_image_url(inserted_salon.image4);
+      }
+      delete create_salon_dto.image1;
+      delete create_salon_dto.image2;
+      delete create_salon_dto.image3;
+      delete create_salon_dto.image4;
 
 
       // Generate a JWT token for the newly registered salon
@@ -98,6 +126,7 @@ export class AuthService {
         role: Roles.SALON,
       });
 
+     
       //@ts-ignore
       return { salon: new Salon(inserted_salon), token, role: Roles.SALON };
     } catch (e) {
@@ -131,8 +160,18 @@ export class AuthService {
         email: salon.email,
         role: Roles.SALON,
       };
-      if (salon.salon_image) {
-        salon.salon_image = await this.s3_service.get_image_url(salon.salon_image);
+     
+      if (salon.image1) {
+        salon.image1 = await this.s3_service.get_image_url(salon.image1);
+      }
+      if (salon.image2) {
+        salon.image2 = await this.s3_service.get_image_url(salon.image2);
+      }
+      if (salon.image3) {
+        salon.image3 = await this.s3_service.get_image_url(salon.image3);
+      }
+      if (salon.image4) {
+        salon.image4 = await this.s3_service.get_image_url(salon.image4);
       }
       const token = await this.jwt_service.signAsync(payload);
       //@ts-ignore

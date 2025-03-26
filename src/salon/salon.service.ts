@@ -19,7 +19,7 @@ export class SalonService {
   ) {}
 
   public static readonly GET_SALON_IMAGE_PATH = (id: string) => {
-    return `glimmer/brands/${id}/salon_image/image1`;
+    return `glimmer/brands/${id}/salon_images`;
   };
 
   async updateSalon(
@@ -27,6 +27,7 @@ export class SalonService {
     salon_payload: AuthPayload,
   ) {
     try {
+      console.log(update_salon_Dto,"lol")
       const update_obj: any = update_salon_Dto;
       Object.keys(update_obj).forEach((key) => {
         if (
@@ -37,15 +38,38 @@ export class SalonService {
           delete update_obj[key];
         }
       });
-      if (update_salon_Dto.salon_image) {
-        const path = SalonService.GET_SALON_IMAGE_PATH(salon_payload._id);
-        const salon_image = (
-          await this.s3_service.upload_file_by_key(
-            update_salon_Dto.salon_image,
+      const path = SalonService.GET_SALON_IMAGE_PATH(salon_payload._id);
+      if (update_salon_Dto.image1) {
+        update_obj.image1 = (
+          await this.s3_service.upload_file(
+            update_salon_Dto.image1,
             path,
           )
         ).Key;
-        update_obj.salon_image = salon_image;
+      }
+      if (update_salon_Dto.image2) {
+        update_obj.image2 = (
+          await this.s3_service.upload_file(
+            update_salon_Dto.image2,
+            path,
+          )
+        ).Key;
+      }
+      if (update_salon_Dto.image3) {
+        update_obj.image3 = (
+          await this.s3_service.upload_file(
+            update_salon_Dto.image3,
+            path,
+          )
+        ).Key;
+      }
+      if (update_salon_Dto.image4) {
+        update_obj.image4 = (
+          await this.s3_service.upload_file(
+            update_salon_Dto.image4,
+            path,
+          )
+        ).Key;
       }
       console.log(update_obj, 'update_obj');
       const salon = await this.salon_repository.update_salon(
@@ -55,10 +79,17 @@ export class SalonService {
       if (!salon) {
         throw new BadRequestException('Store coulnot be updated');
       }
-      if (salon.salon_image) {
-        salon.salon_image = await this.s3_service.get_image_url(
-          salon.salon_image,
-        );
+      if (salon.image1) {
+        salon.image1 = await this.s3_service.get_image_url(salon.image1);
+      }
+      if (salon.image2) {
+        salon.image2 = await this.s3_service.get_image_url(salon.image2);
+      }
+      if (salon.image3) {
+        salon.image3 = await this.s3_service.get_image_url(salon.image3);
+      }
+      if (salon.image4) {
+        salon.image4 = await this.s3_service.get_image_url(salon.image4);
       }
 
       return new Salon(salon);
