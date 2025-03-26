@@ -28,22 +28,25 @@ export class SalonRepository {
   }
 
   async get_salon_by_id(
-    _id: Types.ObjectId,
+    _id: any,
     projection?: SalonProjection,
-  ): Promise<SalonDocument | null> {
-    return this.salon_model.findOne({ _id }, projection).exec();
+  ) {
+    return this.salon_model.findOne({ _id }, projection).lean().exec();
   }
 
   async get_all_salons(
     page_no: number,
     projection?: SalonProjection,
-  ): Promise<SalonDocument[]> {
+  ) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
-    return this.salon_model
-      .find({}, projection)
+    let salons= await this.salon_model
+      .find().lean()
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
+      let total=await this.salon_model
+      .countDocuments()
+      return {total,salons}
   }
 
   async delete_salon_by_id(

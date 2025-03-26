@@ -2,10 +2,12 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Put,
+  Query,
   Req,
   UploadedFile,
   UploadedFiles,
@@ -13,7 +15,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreateSalonDto, UpdateSaloonDto } from 'src/salon/dto/salon.dto';
 import { SalonService } from './salon.service';
 import { FileSizeValidationPipe, SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
@@ -59,22 +61,20 @@ export class SalonController {
         updateSalonDto.image4 = files.image4?.length ? files.image4[0] : undefined;
     return this.salon_service.updateSalon(updateSalonDto, req.user);
   }
-//   @ApiBearerAuth()
-//   @HttpCode(HttpStatus.OK)
-//   @UseInterceptors(FileInterceptor('salon_image'))
-//   @ApiConsumes('multipart/form-data')
-//   @UseGuards(AuthGuard, RolesGuard)
-//   @Role(Roles.SALON)
-//   @Put('/get-all-salon')
-//   async get_all_salon(
-//     @Body() updateSalonDto: UpdateSaloonDto,
-//     @Req()
-//     req: AuthPayloadRequest,
-//     @UploadedFile(new SingleImageSizeValidationPipe())
-//     salon_image?: Express.Multer.File,
-//   ) {
-//     salon_image ? (updateSalonDto.salon_image = salon_image) : null;
 
-//     return this.salon_service.updateSalon(updateSalonDto, req.user);
-//   }
+  @HttpCode(HttpStatus.OK)
+  @Get('/get-all-salon')
+  @ApiOperation({ summary: 'Get all salon' })
+  @ApiQuery({ name: 'page_no', type: String, required: true })
+  async get_all_salon(@Query() query: any) {
+    return this.salon_service.getAllSalon(query);
+  }
+  
+  @HttpCode(HttpStatus.OK)
+  @Get('/get-salon-by-id')
+  @ApiOperation({ summary: 'Get a siingle salon by id' })
+  @ApiQuery({ name: 'id', type: String, required: true })
+  async get_a_salon_by_id(@Query() query: any) {
+    return this.salon_service.getSalonById(query);
+  }
 }
