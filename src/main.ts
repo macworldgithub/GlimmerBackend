@@ -19,7 +19,21 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   app.use(morgan('dev'));
-  app.enableCors({origin :"*"});
+  app.enableCors({
+    origin: [
+      'https://admin.glimmer.com.pk',
+      'https://www.admin.glimmer.com.pk',
+      'http://localhost:3001', // Optional: for local dev
+      'http://localhost:5173', // Optional: for local dev
+
+      'https://api.glimmer.com.pk',
+      'https://www.api.glimmer.com.pk',
+
+      'https://glimmer.com.pk',
+      'https://www.glimmer.com.pk',
+    ],
+    credentials: true,
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }
