@@ -57,6 +57,23 @@ export class SalonServiceBookingController {
     console.log(req,"opopop",req.user)
     return this.bookingService.getAllSalonBookings(query,req.user);
   }
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SALON)
+  @ApiOperation({ summary: 'Get all salon service bookings status' })
+  @ApiResponse({ status: 200, description: 'Returns all bookings status' })
+  @Get("getAllSalonBookingStatus")
+  @ApiOperation({ summary: 'Get all salon services status (for admin )' })
+    @ApiQuery({ name: 'page_no', type: String, required: false })
+    @ApiQuery({ name: 'categoryId', type: String, required: false })
+    @ApiQuery({ name: 'status', type: String, required: false })
+    @ApiQuery({ name: 'subCategoryName', type: String, required: false })
+    @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  async getAllSalonBookingStatus(@Query() query: any, @Req() req: AuthPayloadRequest){
+    console.log(req,"opopop",req.user)
+    return this.bookingService.getAllSalonBookingStatus(query,req.user);
+  }
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()

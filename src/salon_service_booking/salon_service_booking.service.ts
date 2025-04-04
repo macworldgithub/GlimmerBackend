@@ -41,7 +41,7 @@ export class SalonServiceBookingService {
       bookingDate:new Date(bookingDate),
       isPaid:paymentMethod=="Prepaid (Card)",
       paymentMethod:paymentMethod,
-      ...otherData, 
+      ...otherData,
     };
     return this.bookingRepository.create(newBooking);
   }
@@ -67,7 +67,7 @@ export class SalonServiceBookingService {
       filter.subSubCategoryName = query.subSubCategoryName;
     }
     const page = parseInt(query.page_no, 10) || 1;
-   
+
     return await this.bookingRepository.findAll(filter,page);
   }
   async getAllSalonBookings(query:any,salon_payload?:AuthPayload) {
@@ -75,9 +75,9 @@ export class SalonServiceBookingService {
     const filter: any = {salonId:salon_payload?._id};
     if (query.status) {
       filter.bookingStatus = query.status;
-  } else {
+    } else {
       filter.bookingStatus = { $ne: "Pending" }; // Exclude "pending" status when no status is provided
-  }
+    }
     if (query.categoryId) {
       filter.categoryId = query.categoryId;
     }
@@ -95,9 +95,83 @@ export class SalonServiceBookingService {
     }
     console.log(filter,"filter")
     const page = parseInt(query.page_no, 10) || 1;
-   
-    return await this.bookingRepository.findAll(filter,page);
+
+    return await this.bookingRepository.findAll(filter, page);
   }
+  async getAllSalonBookingStatus(query: any, salon_payload?: AuthPayload) {
+    console.log(salon_payload, ':pak');
+    const filter: any = { salonId: salon_payload?._id };
+
+    if (query.status) {
+        filter.bookingStatus = query.status;
+    } 
+
+    if (query.categoryId) {
+        filter.categoryId = query.categoryId;
+    }
+
+    if (query?.salonId) {
+        filter.salonId = query.salonId;
+    }
+
+    if (query.subCategoryName) {
+        filter.subCategoryName = query.subCategoryName;
+    }
+
+    if (query.subSubCategoryName) {
+        filter.subSubCategoryName = query.subSubCategoryName;
+    }
+
+    console.log(filter, 'filter');
+    const page = parseInt(query.page_no, 10) || 1;
+
+    // Fetch the result (contains bookings array)
+    const result = await this.bookingRepository.findAll(filter, page);
+
+    // Extract bookings array
+    const bookings = result.bookings || [];
+
+    // Initialize accumulation variables
+    let totalFinalPrice = 0;
+    let accumulatedPendingStatus = 0;
+    let accumulatedRejectedStatus = 0;
+    let accumulatedApprovedStatus = 0;
+    let accumulatedCompletedStatus = 0;
+    let accumulatedCompleteAndPaidStatus = 0;
+
+    // Loop through bookings to calculate totals
+    bookings.forEach((booking: { finalPrice: number; bookingStatus: string }) => {
+        totalFinalPrice += booking.finalPrice || 0;
+
+        switch (booking.bookingStatus) {
+            case "Pending":
+                accumulatedPendingStatus++;
+                break;
+            case "Rejected":
+                accumulatedRejectedStatus++;
+                break;
+            case "Approved":
+                accumulatedApprovedStatus++;
+                break;
+            case "Completed":
+                accumulatedCompletedStatus++;
+                break;
+            case "Completed And Paid":
+                accumulatedCompleteAndPaidStatus++;
+                break;
+        }
+    });
+
+    return {
+        ...result, // Includes bookings, total, currentPage, totalPages
+        totalFinalPrice, // Sum of finalPrice
+        accumulatedPendingStatus,
+        accumulatedRejectedStatus,
+        accumulatedApprovedStatus,
+        accumulatedCompletedStatus,
+        accumulatedCompleteAndPaidStatus
+    };
+}
 
   async getBookingById(bookingId: string) {
     const booking = await this.bookingRepository.findById(bookingId);
@@ -123,15 +197,15 @@ export class SalonServiceBookingService {
 
   async updateApprovedBookingStatus(updateData: UpdateSalonServiceBookingStatusDto) {
     const booking = await this.bookingRepository.findById(updateData.bookingId);
-  
+
     if (!booking) {
       throw new NotFoundException(`Booking with ID ${updateData.bookingId} not found.`);
     }
-  
+
     if (booking.bookingStatus === 'Completed' || booking.bookingStatus === 'Completed And Paid' || booking.bookingStatus === 'Did not show up') {
       throw new BadRequestException(`Cannot update booking status as it is already marked as ${booking.bookingStatus}.`);
     }
-  
+
     if (booking.bookingStatus === 'Rejected') {
       throw new BadRequestException(`Cannot update a rejected booking.`);
     }
@@ -144,16 +218,16 @@ export class SalonServiceBookingService {
     if (updateData.bookingStatus === 'Completed And Paid' && booking.paymentMethod != 'Pay at Counter' ) {
       throw new BadRequestException(`A booking can only be marked as 'Completed And Paid' if the payment was made via 'Pay at Counter'. This booking uses '${booking.paymentMethod}'.`);
     }
-  
+
     const updatedBooking = await this.bookingRepository.update(updateData.bookingId, { bookingStatus: updateData.bookingStatus });
-  
+
     if (!updatedBooking) {
       throw new NotFoundException(`Booking with ID ${updateData.bookingId} could not be updated.`);
     }
-  
+
     return updatedBooking;
   }
-  
+
   async updateBooking(bookingId: string, updateData:any) {
     const updatedBooking = await this.bookingRepository.update(bookingId, updateData);
     if (!updatedBooking) {
