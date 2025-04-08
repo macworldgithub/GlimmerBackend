@@ -111,9 +111,13 @@ export class SalonServicesService {
       filter.categoryId = query.categoryId;
     }
 
-    if (salon_payload?._id) {
-      filter.salonId = salon_payload._id;
+    if (query.salonId) {
+      filter.salonId = query.salonId;
     }
+
+    // if (salon_payload?._id) {
+    //   filter.salonId = salon_payload._id;
+    // }
 
     if (query.subCategoryName) {
       filter.subCategoryName = query.subCategoryName;
