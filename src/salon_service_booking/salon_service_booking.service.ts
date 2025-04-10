@@ -12,7 +12,7 @@ export class SalonServiceBookingService {
   ) {}
 
   async createBooking(bookingData:CreateSalonServiceBookingDto) {
-    const { serviceId, finalPrice,bookingDate,paymentMethod, ...otherData } = bookingData;
+    const { serviceId, finalPrice,bookingDate,bookingTime,paymentMethod, ...otherData } = bookingData;
     const service = await this.salonServiceRepository.findById(serviceId);
     if (!service) {
       throw new NotFoundException(`Service with ID ${serviceId} not found.`);
@@ -39,6 +39,7 @@ export class SalonServiceBookingService {
       finalPrice: finalPrice,
       bookingStatus: 'Pending',
       bookingDate:new Date(bookingDate),
+      bookingTime:bookingTime,
       isPaid:paymentMethod=="Prepaid (Card)",
       paymentMethod:paymentMethod,
       ...otherData,

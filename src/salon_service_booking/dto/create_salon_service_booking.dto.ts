@@ -28,6 +28,11 @@ export class CreateSalonServiceBookingDto {
   // @IsDate()
   @IsString()
   bookingDate: Date;
+  
+  @ApiProperty({ description: 'Booking time', example: '2025-03-12T15:00:00Z' })
+  // @IsDate()
+  @IsString()
+  bookingTime: string;
 
   @ApiProperty({ description: 'Payment method', enum: ['Prepaid (Card)', 'Pay at Counter'] })
   @IsEnum(['Prepaid (Card)', 'Pay at Counter'])

@@ -52,6 +52,9 @@ export class SalonServiceBooking {
 
   @Prop({ required: true })
   bookingDate: Date;
+  
+  @Prop({ required: true })
+  bookingTime: string;
 
   @Prop({ required: true, enum: ['Prepaid (Card)', 'Pay at Counter'] })
   paymentMethod: string;
@@ -72,6 +75,7 @@ export class SalonServiceBooking {
     categoryId: string,
     categoryName: string,
     bookingDate: Date,
+    bookingTime: string,
     paymentMethod: 'Prepaid (Card)' | 'Pay at Counter',
     bookingStatus: 'Pending' | 'Approved' |'Rejected'| 'Completed' |'Completed And Paid'| 'Did not show up' = 'Pending',
     isPaid = false,
@@ -92,6 +96,7 @@ export class SalonServiceBooking {
     this.categoryId = categoryId;
     this.categoryName = categoryName;
     this.bookingDate = bookingDate;
+    this.bookingTime = bookingTime;
     this.paymentMethod = paymentMethod;
     this.bookingStatus = bookingStatus;
     this.isPaid = isPaid;
