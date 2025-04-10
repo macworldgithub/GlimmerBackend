@@ -7,16 +7,6 @@ export class CreateSalonDto {
   @IsNotEmpty()
   salon_name!: string;
 
-  @ApiProperty({ description: 'The name of the owner' })
-  @IsString()
-  @IsNotEmpty()
-  owner_name!: string;
-
-  @ApiProperty({ description: 'The contact email of the owner' })
-  @IsEmail()
-  @IsNotEmpty()
-  owner_contact_email!: string;
-
   @ApiProperty({ description: 'Salon email address' })
   @IsEmail()
   @IsNotEmpty()
@@ -91,15 +81,6 @@ export class UpdateSaloonDto {
   @IsString()
   @IsOptional()
   salon_name?: string;
-
-  @ApiPropertyOptional({ description: 'The name of the owner' })
-  @IsString()
-  @IsOptional()
-  owner_name?: string;
-
-  @ApiPropertyOptional({ description: 'The contact email of the owner' })
-  @IsOptional()
-  owner_contact_email?: string;
 
   // @ApiPropertyOptional({ description: 'Salon password' })
   // @IsString()

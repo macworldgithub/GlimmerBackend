@@ -5,8 +5,6 @@ import { Salon } from 'src/schemas/salon/salon.schema';
 
 export class CreateSalonDto {
   salonName!: string;
-  ownerName!: string;
-  ownerContactEmail!: string;
   email!: string;
   password!: string;
   contactNumber!: string;

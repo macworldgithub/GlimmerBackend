@@ -12,12 +12,6 @@ export class Salon {
   @Prop({ type: String, required: true })
   salon_name: string;
 
-  @Prop({ type: String, required: true })
-  owner_name: string;
-
-  @Prop({ type: String, required: true, unique: true, index: true })
-  owner_contact_email: string;
-
   @Prop({ type: String, required: true, unique: true, index: true })
   email: string;
 
@@ -50,8 +44,6 @@ export class Salon {
   constructor(obj: Salon) {
     this._id = obj._id.toString();
     this.salon_name = obj.salon_name;
-    this.owner_name = obj.owner_name;
-    this.owner_contact_email = obj.owner_contact_email;
     this.email = obj.email;
     this.password = obj.password;
     this.contact_number = obj.contact_number;
