@@ -62,9 +62,6 @@ export class SalonServiceBooking {
   @Prop({ required: false, default: false })
   isPaid: boolean;
 
-  @Prop({ required: false, default: '' })
-  notes?: string;
-
   constructor(
     customerName: string,
     customerEmail: string,
@@ -85,7 +82,6 @@ export class SalonServiceBooking {
     serviceDescription?: string,
     subCategoryName?: string,
     subSubCategoryName?: string,
-    notes?: string,
   ) {
     this.customerName = customerName;
     this.customerEmail = customerEmail;
@@ -106,7 +102,6 @@ export class SalonServiceBooking {
     this.serviceDescription = serviceDescription;
     this.subCategoryName = subCategoryName;
     this.subSubCategoryName = subSubCategoryName;
-    this.notes = notes;
   }
 }
 

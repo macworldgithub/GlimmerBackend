@@ -33,10 +33,6 @@ export class CreateSalonServiceBookingDto {
   @IsEnum(['Prepaid (Card)', 'Pay at Counter'])
   paymentMethod: string;
 
-  @ApiProperty({ description: 'Additional notes', example: 'Customer requested a special style', required: false })
-  @IsOptional()
-  @IsString()
-  notes?: string;
 }
 export class UpdateSalonServiceBookingStatusDto {
   @ApiProperty({ description: 'Service Mongo Db Id', example: 'asnlasid8a7sd8asn' })
