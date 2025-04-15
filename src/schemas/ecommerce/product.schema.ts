@@ -77,6 +77,13 @@ export class Product {
   })
   size?: [];
 
+  @Prop({})
+  rate_of_salon? :number
+  
+  @Prop({})
+  ref_of_salon? :string
+
+
   constructor(product: Product) {
     if (!product) return;
     this._id = product._id?.toString();
