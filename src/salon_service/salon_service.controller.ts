@@ -184,7 +184,7 @@ export class SalonServicesController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SALON)
+  // @Role(Roles.SALON)
   @Patch('applyDiscounttoSingleService')
   @ApiOperation({ summary: 'Apply a  discount to single services' })
   applyDiscount(@Body() applyDiscountDto: ApplyDiscountDto) {
@@ -193,7 +193,7 @@ export class SalonServicesController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SALON)
+  // @Role(Roles.SALON)
   @Patch('applyBulkDiscount')
   @ApiOperation({ summary: 'Apply a global discount to all services' })
   applyBulkDiscount(@Body() applyDiscountDto: ApplyBulkDiscountDto) {
