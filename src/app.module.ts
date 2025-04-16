@@ -29,6 +29,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SalonServiceCatgegoriesModule } from './salon_service_categories/salon_service_categories.module';
 import { SalonServiceModule } from './salon_service/salon_service.module';
 import { SalonServiceBookingModule } from './salon_service_booking/salon_service_booking.module';
+import { AdminService } from './admin/admin.service';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { SalonServiceBookingModule } from './salon_service_booking/salon_service
     OrderRepository,
     FirebaseService,
     SalonService,
+    AdminService
   ],
 })
 export class AppModule {}

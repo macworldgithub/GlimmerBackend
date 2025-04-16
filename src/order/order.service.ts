@@ -26,12 +26,19 @@ import {
   UpdateProductStatusDto,
 } from './dtos/req_dtos/order';
 import { stat } from 'fs';
+import { AdminService } from 'src/admin/admin.service';
+import {
+  RecommendedProductsDocument,
+  RecommendedProducts,
+} from 'src/schemas/recommendedProducts/recommendedproducts.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
     private order_repository: OrderRepository,
     private product_repository: ProductRepository,
+
+    private readonly adminService: AdminService,
 
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
 
@@ -41,6 +48,27 @@ export class OrderService {
   async create_order(
     order_dto: CreateOrderDto,
   ): Promise<{ order: Order; message: string }> {
+    
+    order_dto.productList?.forEach((prod) => {
+      if (prod.rate_of_salon) {
+        const price =
+          (prod.product.base_price * prod.product.discounted_price) / 100;
+        const quantity = prod.quantity;
+        const salonCut = (price * prod.rate_of_salon) / 100;
+
+        const salonId = prod.ref_of_salon;
+        const productId = prod.product._id;
+
+        const createSaleDto = {
+          price: price,
+          quantity: quantity,
+          salonCut: salonCut,
+        };
+
+        this.adminService.createSaleRecord(salonId, productId, createSaleDto);
+      }
+    });
+
     const newOrder = new this.orderModel({
       ShippingInfo: order_dto.ShippingInfo,
       customerName: order_dto.customerName,
@@ -64,18 +92,18 @@ export class OrderService {
     try {
       const limit = 10;
       const skip = (page_no - 1) * limit;
-  
+
       const validStatuses = ['Accepted', 'Rejected', 'Pending'];
-  
+
       const matchFilter: any = {
         'productList.storeId': id,
         // 'productList.orderProductStatus': { $ne: 'Pending' },
       };
-  
+
       if (status && validStatuses.includes(status)) {
         matchFilter['productList.orderProductStatus'] = status;
-      } 
-  
+      }
+
       const pipeline: any[] = [
         {
           $addFields: {
@@ -84,7 +112,7 @@ export class OrderService {
         },
         { $match: matchFilter },
       ];
-  
+
       if (orderIdPrefix) {
         pipeline.push({
           $match: {
@@ -92,13 +120,13 @@ export class OrderService {
           },
         });
       }
-  
+
       const total = await this.orderModel.aggregate([
         ...pipeline,
         { $count: 'totalCount' },
       ]);
       const totalCount = total.length > 0 ? total[0].totalCount : 0;
-  
+
       pipeline.push(
         {
           $project: {
@@ -122,9 +150,9 @@ export class OrderService {
         { $skip: skip },
         { $limit: limit },
       );
-  
+
       const orders = await this.orderModel.aggregate(pipeline);
-  
+
       return {
         orders,
         totalCount,
@@ -141,12 +169,12 @@ export class OrderService {
     page_no: number,
     store_id: string,
     orderIdPrefix?: string,
-    status?: string
+    status?: string,
   ) {
     try {
       let currentPage = 1;
       let totalPages = 1;
-  
+
       // Initialize revenue and sales count
       let totalRevenue = 0;
       let salesCount = {
@@ -154,7 +182,7 @@ export class OrderService {
         Rejected: 0,
         Pending: 0,
       };
-  
+
       let allOrders: any[] = [];
       let totalCount = 0;
 
@@ -163,13 +191,13 @@ export class OrderService {
           currentPage,
           store_id,
           orderIdPrefix,
-          status
+          status,
         );
         if (currentPage === 1) {
-          totalPages = orderData.totalPages; 
+          totalPages = orderData.totalPages;
           totalCount = orderData.totalCount;
         }
-  
+
         allOrders = allOrders.concat(orderData.orders);
         orderData.orders.forEach((order) => {
           order.productList.forEach((product: any) => {
@@ -178,20 +206,20 @@ export class OrderService {
             if (salesCount.hasOwnProperty(productStatus)) {
               salesCount[productStatus as keyof typeof salesCount]++;
             }
-  
+
             totalRevenue += product.discounted_price ?? product.total_price;
           });
         });
-  
+
         currentPage++;
       }
-  
+
       return {
         orders: allOrders,
         totalRevenue,
         salesCount,
         totalCount,
-        currentPage: page_no, 
+        currentPage: page_no,
         totalPages,
       };
     } catch (e) {
