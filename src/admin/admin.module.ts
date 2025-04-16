@@ -10,12 +10,12 @@ import { ProductSchema, Product } from 'src/schemas/ecommerce/product.schema';
 
 import { AdminController } from './admin.controller';
 import { S3Service } from 'src/aws/s3.service';
+import { OrderService } from 'src/order/order.service';
 
 @Module({
-  providers: [AdminService],
+  providers: [AdminService ,S3Service],
   controllers: [AdminController],
   exports: [
-   
     MongooseModule.forFeature([
       { name: RecommendedProducts.name, schema: RecommendedProductsSchema },
       { name: Product.name, schema: ProductSchema },

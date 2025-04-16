@@ -17,11 +17,15 @@ import { S3Service } from 'src/aws/s3.service';
 @Injectable()
 export class AdminService {
   constructor(
+    private s3_service: S3Service,
+
     @InjectModel(RecommendedProducts.name)
     private readonly recommendedProductsModel: Model<RecommendedProductsDocument>,
 
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+
+   
   ) {}
 
   async addRecommendedProduct(
@@ -158,6 +162,16 @@ export class AdminService {
       );
       if (productFromDatabase) {
         // Update the product with values from the recommendedRecord
+        if (productFromDatabase.image1) {
+          productFromDatabase.image1 = await this.s3_service.get_image_url(productFromDatabase.image1);
+        }
+        if (productFromDatabase.image2) {
+          productFromDatabase.image2 = await this.s3_service.get_image_url(productFromDatabase.image2);
+        }
+        if (productFromDatabase.image3) {
+          productFromDatabase.image3 = await this.s3_service.get_image_url(productFromDatabase.image3);
+        }
+        
         productFromDatabase.rate_of_salon = recommendedRecord.rate;
         productFromDatabase.ref_of_salon = salonId;
         result.push(productFromDatabase);
