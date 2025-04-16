@@ -37,6 +37,17 @@ export class AdminController {
     return await this.adminService.getRecommendedProducts(salonId);
   }
 
+  @Get('/recommended-products')
+  @ApiOperation({ summary: 'Get all recommended products' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns an array of recommended products records',
+    type: [RecommendedProductsDto],
+  })
+  async getAllRecommendedProducts() {
+    return await this.adminService.getAllRecommendedProducts();
+  }
+
   @Delete('/delete-recommended-products-of-salon/:salonId/:productId')
   @ApiOperation({
     summary: 'Delete a recommended product from a salon recommendation list',
