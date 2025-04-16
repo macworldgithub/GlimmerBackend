@@ -31,6 +31,7 @@ export class AdminService {
   async addRecommendedProduct(
     salonId: string,
     productItem: any,
+
   ): Promise<RecommendedProducts> {
     let recommendedRecord = await this.recommendedProductsModel.findOne({
       salonId,

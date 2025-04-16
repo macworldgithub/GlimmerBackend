@@ -133,7 +133,10 @@ export class AdminController {
     examples: {
       example1: {
         summary: 'Add product by productId',
-        value: { productId: '67975d70c5661506b69dc45a' },
+        value: {
+          productId: '67975d70c5661506b69dc45a',
+          productName: 'Sample Product Name',
+        },
       },
     },
   })
