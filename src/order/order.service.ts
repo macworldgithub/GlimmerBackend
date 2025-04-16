@@ -50,21 +50,18 @@ export class OrderService {
   ): Promise<{ order: Order; message: string }> {
     
     order_dto.productList?.forEach((prod) => {
-      if (prod.rate_of_salon) {
+      if (prod.product.rate_of_salon) {
         const price =
           (prod.product.base_price * prod.product.discounted_price) / 100;
         const quantity = prod.quantity;
-        const salonCut = (price * prod.rate_of_salon) / 100;
-
-        const salonId = prod.ref_of_salon;
+        const salonCut = (price * prod.product.rate_of_salon) / 100;
+        const salonId = prod.product.ref_of_salon;
         const productId = prod.product._id;
-
         const createSaleDto = {
           price: price,
           quantity: quantity,
           salonCut: salonCut,
         };
-
         this.adminService.createSaleRecord(salonId, productId, createSaleDto);
       }
     });
