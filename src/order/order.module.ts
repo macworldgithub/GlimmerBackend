@@ -17,6 +17,7 @@ import { ProductRepository } from 'src/product/product.repository';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 import { AdminService } from 'src/admin/admin.service';
 import { AdminModule } from 'src/admin/admin.module';
+import { S3Service } from 'src/aws/s3.service';
 
 @Module({
   imports: [
@@ -28,8 +29,8 @@ import { AdminModule } from 'src/admin/admin.module';
     ]),
     AdminModule
   ],
-  controllers: [OrderController],
-  providers: [OrderService, JwtService, OrderRepository, ProductRepository ,AdminService],
+  controllers: [OrderController ],
+  providers: [OrderService, JwtService,S3Service, OrderRepository, ProductRepository ,AdminService],
   exports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
