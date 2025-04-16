@@ -15,6 +15,8 @@ import {
 } from 'src/schemas/ecommerce/store_order.schema';
 import { ProductRepository } from 'src/product/product.repository';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
+import { AdminService } from 'src/admin/admin.service';
+import { AdminModule } from 'src/admin/admin.module';
 
 @Module({
   imports: [
@@ -24,9 +26,10 @@ import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
       { name: StoreOrder.name, schema: StoreOrderSchema },
       { name: Product.name, schema: ProductSchema },
     ]),
+    AdminModule
   ],
   controllers: [OrderController],
-  providers: [OrderService, JwtService, OrderRepository, ProductRepository],
+  providers: [OrderService, JwtService, OrderRepository, ProductRepository ,AdminService],
   exports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },

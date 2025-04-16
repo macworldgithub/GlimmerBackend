@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsEmail, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
 class TypeDto {
   @ApiProperty({ required: false })
@@ -157,6 +166,12 @@ class CompleteOrderDto {
   @IsNumber()
   @IsNotEmpty()
   total_price!: number;
+
+  @IsOptional()
+  ref_of_salon!: string;
+
+  @IsOptional()
+  rate_of_salon!: number;
 }
 
 export class CreateOrderDto {
@@ -186,7 +201,9 @@ export class CreateOrderDto {
   @IsNotEmpty()
   discountedTotal!: number;
 
-  @ApiProperty({ enum: ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'] })
+  @ApiProperty({
+    enum: ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'],
+  })
   @IsEnum(['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'])
   @IsNotEmpty()
   paymentMethod!: string;
@@ -199,16 +216,15 @@ export class CreateOrderDto {
 export enum OrderProductStatus {
   Accepted = 'Accepted',
   Rejected = 'Rejected',
-  Pending = 'Pending'
+  Pending = 'Pending',
 }
 export enum OrderStatus {
   Pending = 'Pending',
   Confirmed = 'Confirmed',
   Shipped = 'Shipped',
   Delivered = 'Delivered',
-  Cancelled = 'Cancelled'
+  Cancelled = 'Cancelled',
 }
-
 
 export class UpdateProductStatusDto {
   @ApiProperty()
@@ -226,7 +242,9 @@ export class UpdateProductStatusDto {
   store_id!: string;
 
   @ApiProperty({ enum: OrderProductStatus })
-  @IsEnum(OrderProductStatus, { message: 'orderProductStatus must be Accepted, Rejected, or Pending' })
+  @IsEnum(OrderProductStatus, {
+    message: 'orderProductStatus must be Accepted, Rejected, or Pending',
+  })
   @IsNotEmpty()
   order_product_status!: string;
 }
@@ -237,7 +255,10 @@ export class UpdateOrderStatusDto {
   order_id!: string;
 
   @ApiProperty({ enum: OrderStatus })
-  @IsEnum(OrderStatus, { message: 'order Status must be Pending, Confirmed, Shipped, Delivered or Cancelled' })
+  @IsEnum(OrderStatus, {
+    message:
+      'order Status must be Pending, Confirmed, Shipped, Delivered or Cancelled',
+  })
   @IsNotEmpty()
   order_status!: string;
 }

@@ -4,6 +4,21 @@ import { Document } from 'mongoose';
 export type RecommendedProductsDocument = RecommendedProducts & Document;
 
 @Schema({ _id: false })
+export class SaleRecord {
+  @Prop({ default: Date.now })
+  soldAt!: Date; // Date and time at which the product was sold.
+
+  @Prop({ required: true })
+  quantity!: number; // Quantity of product sold.
+
+  @Prop({ required: true })
+  price!: number; // Price at the time of order.
+
+  @Prop({ required: true })
+  salonCut!: number; // Cut of salon.
+}
+
+@Schema({ _id: false })
 export class ProductItem {
   @Prop({ required: true })
   productId!: string;
@@ -14,10 +29,11 @@ export class ProductItem {
   @Prop({ type: Number, default: 0 })
   soldUnits!: number;
 
-  @Prop({type:Number ,default:0})
-  returnedUnits!: number
+  @Prop({ type: Number, default: 0 })
+  returnedUnits!: number;
 
-  
+  @Prop({ type: [SaleRecord], default: [] })
+  saleRecords!: SaleRecord[]; // Array of sale records.
 }
 
 export const ProductItemSchema = SchemaFactory.createForClass(ProductItem);
