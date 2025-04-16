@@ -6,10 +6,17 @@ import {
   Get,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
-import { ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { Delete_recommended_products_dto_response } from './dtos/response/delete.recommended.products.dto';
 import { UpdateRateDto } from './dtos/request_dtos/update.rate.dto';
 import { RecommendedProductsDto } from './dtos/Recommendedprducts.dto';
@@ -156,5 +163,68 @@ export class AdminController {
     @Body() productItem: any,
   ): Promise<any> {
     return await this.adminService.addRecommendedProduct(salonId, productItem);
+  }
+
+  @Get('/sales-summary/:salonId')
+  @ApiOperation({
+    summary: 'Get sales summary',
+    description:
+      'Returns total salon cut and sale records for a given salon. ' +
+      'Optional filters: productId (filter by product), month (1-12), and year. ' +
+      'If productId is provided without month/year, returns all records for that product. ' +
+      'If only month is provided, returns records for that month across all years/products, etc.',
+  })
+  @ApiParam({
+    name: 'salonId',
+    type: String,
+    description: 'Unique identifier for the salon',
+    example: '67d918bc4bf2d4af93416da8',
+  })
+  @ApiQuery({
+    name: 'productId',
+    type: String,
+    required: false,
+    description: 'Optional product identifier to filter records',
+    example: '6790dc0061ee32e4f9038adf',
+  })
+  @ApiQuery({
+    name: 'month',
+    type: Number,
+    required: false,
+    description: 'Optional month (1-12) to filter the sale records',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'year',
+    type: Number,
+    required: false,
+    description: 'Optional year (e.g., 2023) to filter the sale records',
+    example: 2023,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the total salon cut and the matching sale records',
+    schema: {
+      example: {
+        totalSalonCut: 100,
+        records: [
+          {
+            soldAt: '2023-01-15T10:00:00.000Z',
+            quantity: 5,
+            price: 100,
+            salonCut: 20,
+          },
+          // ... more records
+        ],
+      },
+    },
+  })
+  async getSalesSummary(
+    @Param('salonId') salonId: string,
+    @Query('productId') productId?: string,
+    @Query('month') month?: number,
+    @Query('year') year?: number,
+  ): Promise<{ totalSalonCut: number; records: any[] }> {
+    return this.adminService.getSalesSummary(salonId, productId, month, year);
   }
 }
