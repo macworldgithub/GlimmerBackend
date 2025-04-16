@@ -171,7 +171,7 @@ export class AdminService {
         if (productFromDatabase.image3) {
           productFromDatabase.image3 = await this.s3_service.get_image_url(productFromDatabase.image3);
         }
-        
+
         productFromDatabase.rate_of_salon = recommendedRecord.rate;
         productFromDatabase.ref_of_salon = salonId;
         result.push(productFromDatabase);
@@ -181,13 +181,13 @@ export class AdminService {
     return result;
   } //Checked
 
-  // async getAllRecommendedProducts(): Promise<any> {
-  //   const recommendedRecord = await this.recommendedProductsModel.find({});
-  //   if (!recommendedRecord) {
-  //     throw new NotFoundException(`not found`);
-  //   }
-  //   return recommendedRecord;
-  // }
+  async getAllRecommendedProducts(): Promise<any> {
+    const recommendedRecord = await this.recommendedProductsModel.find({});
+    if (!recommendedRecord) {
+      throw new NotFoundException(`not found`);
+    }
+    return recommendedRecord;
+  }
 
   async createSaleRecord(
     salonId: string,
