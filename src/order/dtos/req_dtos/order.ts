@@ -97,6 +97,12 @@ class ProductDto {
   @ValidateNested({ each: true })
   @Type(() => SizeDto)
   size!: SizeDto[];
+
+  @IsOptional()
+  ref_of_salon!: string;
+  
+  @IsOptional()
+  rate_of_salon!: number;
 }
 
 class ShippingInfoDto {
