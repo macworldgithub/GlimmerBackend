@@ -60,6 +60,12 @@ class Product {
 
   @Prop({ type: [SizeSchema] }) // ✅ Accepts an array of Size
   size!: any[];
+
+  @Prop()
+  ref_of_salon!: string;
+
+  @Prop()
+  rate_of_salon!: number;
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
@@ -67,32 +73,30 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
 class ShippingInfo {
   @Prop({ required: true })
   fullName!: string;
-  
+
   @Prop({ required: true })
   email!: string;
-  
+
   @Prop({ required: true })
   phone!: string;
-  
+
   @Prop({ required: true })
   country!: string;
-  
+
   @Prop({ required: true })
   city!: string;
-  
+
   @Prop({ required: true })
   state!: string;
-  
+
   @Prop({ required: true })
   zip!: string;
-  
+
   @Prop({ required: true })
   address!: string;
-  
-  @Prop({ required: true ,enum: ['Delivery', 'Pick Up',],
-  })
-  shippingMethod!: string;
 
+  @Prop({ required: true, enum: ['Delivery', 'Pick Up'] })
+  shippingMethod!: string;
 }
 export const ShippingInfoSchema = SchemaFactory.createForClass(ShippingInfo);
 
@@ -108,8 +112,8 @@ class CompleteOrder {
   quantity!: number;
 
   @Prop({ required: true })
-  total_price!: number;  
-  
+  total_price!: number;
+
   @Prop({
     enum: ['Accepted', 'Rejected', 'Pending'],
     default: 'Pending',
@@ -148,9 +152,9 @@ export class Order {
     default: 'Pending',
   })
   status!: string;
-  
+
   @Prop({ type: ShippingInfoSchema, required: true })
-  ShippingInfo!: ShippingInfo;  
+  ShippingInfo!: ShippingInfo;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
