@@ -6,14 +6,27 @@ import {
   Get,
   Delete,
   Patch,
+  Query,
+  HttpStatus,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
-import { ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiQuery,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { Delete_recommended_products_dto_response } from './dtos/response/delete.recommended.products.dto';
 import { UpdateRateDto } from './dtos/request_dtos/update.rate.dto';
 import { RecommendedProductsDto } from './dtos/Recommendedprducts.dto';
 import { AddRecommendedProductDto } from './dtos/request_dtos/add.recommended.products.dto';
+import { HttpCode } from '@nestjs/common';
+import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -133,7 +146,10 @@ export class AdminController {
     examples: {
       example1: {
         summary: 'Add product by productId',
-        value: { productId: '67975d70c5661506b69dc45a' },
+        value: {
+          productId: '67975d70c5661506b69dc45a',
+          productName: 'Sample Product Name',
+        },
       },
     },
   })
@@ -153,5 +169,43 @@ export class AdminController {
     @Body() productItem: any,
   ): Promise<any> {
     return await this.adminService.addRecommendedProduct(salonId, productItem);
+  }
+
+  @Post('/create-sale-record-for-salon-cut/:salonId/:productId')
+  @ApiOperation({
+    summary:
+      'Create a sale record for a recommended product and update salon cut',
+  })
+  @ApiParam({
+    name: 'salonId',
+    description: 'The ID of the salon',
+    type: String,
+  })
+  @ApiParam({
+    name: 'productId',
+    description: 'The ID of the product',
+    type: String,
+  })
+  @ApiCreatedResponse({
+    description: 'Sale record successfully created',
+    type: RecommendedProducts,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid payload or validation failed',
+  })
+  @ApiNotFoundResponse({
+    description: 'Salon or product not found',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async createSaleRecord(
+    @Param('salonId') salonId: string,
+    @Param('productId') productId: string,
+    @Body() createSaleDto: CreateSaleRecordDto,
+  ): Promise<RecommendedProducts> {
+    return this.adminService.createSaleRecord(
+      salonId,
+      productId,
+      createSaleDto,
+    );
   }
 }

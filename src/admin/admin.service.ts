@@ -31,6 +31,7 @@ export class AdminService {
   async addRecommendedProduct(
     salonId: string,
     productItem: any,
+
   ): Promise<RecommendedProducts> {
     let recommendedRecord = await this.recommendedProductsModel.findOne({
       salonId,
@@ -274,54 +275,7 @@ export class AdminService {
     return recommendedRecord;
   }
 
-  /**
-   * Get sales summary for a given salonId, productId, month, and year.
-   * It returns both:
-   * - totalSalonCut: Sum of all salon cuts in sale records for that time period.
-   * - records: Array of sale records that match the given month and year.
-   *
-   * Month is expected as a number (1-12) and year as a four-digit number.
-   */
-  async getSalesSummary(
-    salonId: string,
-    productId: string,
-    month: number,
-    year: number,
-  ): Promise<{ totalSalonCut: number; records: any[] }> {
-    const recommendedRecord = await this.recommendedProductsModel.findOne({
-      salonId,
-    });
-    if (!recommendedRecord) {
-      throw new NotFoundException(
-        `No recommended products record found for salon ${salonId}`,
-      );
-    }
 
-    const productItem = recommendedRecord.productList.find(
-      (item) => item.productId === productId,
-    );
-    if (!productItem) {
-      throw new NotFoundException(
-        `Product with id ${productId} not found in recommended list for salon ${salonId}`,
-      );
-    }
-
-    // Filter saleRecords by the specified month and year.
-    const filteredRecords = productItem.saleRecords.filter((record) => {
-      const soldAtDate = new Date(record.soldAt);
-      return (
-        soldAtDate.getMonth() + 1 === month && soldAtDate.getFullYear() === year
-      );
-    });
-
-    // Sum the salonCut for the filtered records.
-    const totalSalonCut = filteredRecords.reduce(
-      (acc, curr) => acc + curr.salonCut,
-      0,
-    );
-
-    return { totalSalonCut, records: filteredRecords };
-  }
 
   async updateSaleRecord(
     salonId: string,
