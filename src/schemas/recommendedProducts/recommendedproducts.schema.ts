@@ -23,7 +23,7 @@ export class ProductItem {
   @Prop({ required: true })
   productId!: string;
 
-  @Prop({ required: true })
+  @Prop({})
   productName!: string;
 
   @Prop({ type: String })

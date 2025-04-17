@@ -24,14 +24,11 @@ export class AdminService {
 
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
-
-   
   ) {}
 
   async addRecommendedProduct(
     salonId: string,
     productItem: any,
-
   ): Promise<RecommendedProducts> {
     let recommendedRecord = await this.recommendedProductsModel.findOne({
       salonId,
@@ -164,13 +161,19 @@ export class AdminService {
       if (productFromDatabase) {
         // Update the product with values from the recommendedRecord
         if (productFromDatabase.image1) {
-          productFromDatabase.image1 = await this.s3_service.get_image_url(productFromDatabase.image1);
+          productFromDatabase.image1 = await this.s3_service.get_image_url(
+            productFromDatabase.image1,
+          );
         }
         if (productFromDatabase.image2) {
-          productFromDatabase.image2 = await this.s3_service.get_image_url(productFromDatabase.image2);
+          productFromDatabase.image2 = await this.s3_service.get_image_url(
+            productFromDatabase.image2,
+          );
         }
         if (productFromDatabase.image3) {
-          productFromDatabase.image3 = await this.s3_service.get_image_url(productFromDatabase.image3);
+          productFromDatabase.image3 = await this.s3_service.get_image_url(
+            productFromDatabase.image3,
+          );
         }
 
         productFromDatabase.rate_of_salon = recommendedRecord.rate;
@@ -215,15 +218,21 @@ export class AdminService {
       );
     }
 
+    console.log(createSaleDto, 'eeee');
+
     // Create the new sale record. The soldAt field will use default Date.now if not provided.
-    productItem.saleRecords.push({
+    const saleRecord = {
       quantity: createSaleDto.quantity,
       price: createSaleDto.price,
       salonCut: createSaleDto.salonCut,
       soldAt: new Date(),
-    });
+    };
 
-    // Optionally update the total soldUnits (for aggregation or reporting purposes)
+    productItem.saleRecords.push(saleRecord);
+
+    console.log(createSaleDto, 'Sale record added');
+
+    // Update soldUnits
     productItem.soldUnits += createSaleDto.quantity;
 
     await recommendedRecord.save();
@@ -274,8 +283,6 @@ export class AdminService {
     await recommendedRecord.save();
     return recommendedRecord;
   }
-
-
 
   async updateSaleRecord(
     salonId: string,
