@@ -8,6 +8,7 @@ import {
   Patch,
   Query,
   HttpStatus,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
@@ -200,12 +201,21 @@ export class AdminController {
   async createSaleRecord(
     @Param('salonId') salonId: string,
     @Param('productId') productId: string,
-    @Body() createSaleDto: CreateSaleRecordDto,
+    @Body() createSaleDto: any,
   ): Promise<RecommendedProducts> {
-    return this.adminService.createSaleRecord(
-      salonId,
-      productId,
-      createSaleDto,
-    );
+    try {
+      return await this.adminService.createSaleRecord(
+        salonId,
+        productId,
+        createSaleDto,
+      );
+    } catch (error) {
+      //@ts-ignore
+      throw new InternalServerErrorException(
+        'Error creating sale record',
+        //@ts-ignore
+        error.message,
+      );
+    }
   }
 }
