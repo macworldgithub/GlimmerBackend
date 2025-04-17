@@ -7,6 +7,7 @@ import {
   Delete,
   Patch,
   Query,
+  HttpStatus,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
@@ -16,11 +17,16 @@ import {
   ApiParam,
   ApiBody,
   ApiQuery,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
 } from '@nestjs/swagger';
 import { Delete_recommended_products_dto_response } from './dtos/response/delete.recommended.products.dto';
 import { UpdateRateDto } from './dtos/request_dtos/update.rate.dto';
 import { RecommendedProductsDto } from './dtos/Recommendedprducts.dto';
 import { AddRecommendedProductDto } from './dtos/request_dtos/add.recommended.products.dto';
+import { HttpCode } from '@nestjs/common';
+import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -165,66 +171,41 @@ export class AdminController {
     return await this.adminService.addRecommendedProduct(salonId, productItem);
   }
 
-  @Get('/sales-summary/:salonId')
+  @Post('/create-sale-record-for-salon-cut/:salonId/:productId')
   @ApiOperation({
-    summary: 'Get sales summary',
-    description:
-      'Returns total salon cut and sale records for a given salon. ' +
-      'Optional filters: productId (filter by product), month (1-12), and year. ' +
-      'If productId is provided without month/year, returns all records for that product. ' +
-      'If only month is provided, returns records for that month across all years/products, etc.',
+    summary:
+      'Create a sale record for a recommended product and update salon cut',
   })
   @ApiParam({
     name: 'salonId',
+    description: 'The ID of the salon',
     type: String,
-    description: 'Unique identifier for the salon',
-    example: '67d918bc4bf2d4af93416da8',
   })
-  @ApiQuery({
+  @ApiParam({
     name: 'productId',
+    description: 'The ID of the product',
     type: String,
-    required: false,
-    description: 'Optional product identifier to filter records',
-    example: '6790dc0061ee32e4f9038adf',
   })
-  @ApiQuery({
-    name: 'month',
-    type: Number,
-    required: false,
-    description: 'Optional month (1-12) to filter the sale records',
-    example: 1,
+  @ApiCreatedResponse({
+    description: 'Sale record successfully created',
+    type: RecommendedProducts,
   })
-  @ApiQuery({
-    name: 'year',
-    type: Number,
-    required: false,
-    description: 'Optional year (e.g., 2023) to filter the sale records',
-    example: 2023,
+  @ApiBadRequestResponse({
+    description: 'Invalid payload or validation failed',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the total salon cut and the matching sale records',
-    schema: {
-      example: {
-        totalSalonCut: 100,
-        records: [
-          {
-            soldAt: '2023-01-15T10:00:00.000Z',
-            quantity: 5,
-            price: 100,
-            salonCut: 20,
-          },
-          // ... more records
-        ],
-      },
-    },
+  @ApiNotFoundResponse({
+    description: 'Salon or product not found',
   })
-  async getSalesSummary(
+  @HttpCode(HttpStatus.CREATED)
+  async createSaleRecord(
     @Param('salonId') salonId: string,
-    @Query('productId') productId?: string,
-    @Query('month') month?: number,
-    @Query('year') year?: number,
-  ): Promise<{ totalSalonCut: number; records: any[] }> {
-    return this.adminService.getSalesSummary(salonId, productId, month, year);
+    @Param('productId') productId: string,
+    @Body() createSaleDto: CreateSaleRecordDto,
+  ): Promise<RecommendedProducts> {
+    return this.adminService.createSaleRecord(
+      salonId,
+      productId,
+      createSaleDto,
+    );
   }
 }

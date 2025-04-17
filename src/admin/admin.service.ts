@@ -275,74 +275,7 @@ export class AdminService {
     return recommendedRecord;
   }
 
- /**
-   * Returns sales summary for a given salon, optionally filtered by productId, month, and year.
-   *
-   * - If productId is provided, returns sales for that product only (all months/years if month/year not provided).
-   * - If no productId is provided, aggregates sale records from all products for that salon.
-   * - If month is provided, only records from that month are returned (across years if year not provided).
-   * - If year is provided, only records from that year are returned (across months if month not provided).
-   *
-   * @param salonId - Required salon identifier.
-   * @param productId - Optional product identifier to filter the records.
-   * @param month - Optional month (1-12) to filter sale records.
-   * @param year - Optional full year (e.g., 2023) to filter sale records.
-   * @returns An object containing the totalSalonCut and the matching sale records.
-   */
- async getSalesSummary(
-  salonId: string,
-  productId?: string,
-  month?: number,
-  year?: number,
-): Promise<{ totalSalonCut: number; records: any[] }> {
-  // Get the recommended products document for the salon.
-  const recommendedRecord = await this.recommendedProductsModel.findOne({ salonId });
-  if (!recommendedRecord) {
-    throw new NotFoundException(`No recommended products record found for salon ${salonId}`);
-  }
 
-  // Gather sale records from either a specific product or from all products.
-  let allSaleRecords: any[] = [];
-  if (productId) {
-    const productItem = recommendedRecord.productList.find(
-      (item) => item.productId === productId,
-    );
-    if (!productItem) {
-      throw new NotFoundException(
-        `Product with id ${productId} not found in recommended list for salon ${salonId}`,
-      );
-    }
-    allSaleRecords = productItem.saleRecords;
-  } else {
-    // Combine saleRecords from all products
-    for (const productItem of recommendedRecord.productList) {
-      allSaleRecords = allSaleRecords.concat(productItem.saleRecords);
-    }
-  }
-
-  // Apply filters for month and year if provided.
-  let filteredRecords = allSaleRecords;
-  if (month !== undefined) {
-    filteredRecords = filteredRecords.filter((record) => {
-      const soldAtDate = new Date(record.soldAt);
-      return soldAtDate.getMonth() + 1 === month;
-    });
-  }
-  if (year !== undefined) {
-    filteredRecords = filteredRecords.filter((record) => {
-      const soldAtDate = new Date(record.soldAt);
-      return soldAtDate.getFullYear() === year;
-    });
-  }
-
-  // Sum the salonCut for the filtered records.
-  const totalSalonCut = filteredRecords.reduce(
-    (acc, curr) => acc + curr.salonCut,
-    0,
-  );
-
-  return { totalSalonCut, records: filteredRecords };
-}
 
   async updateSaleRecord(
     salonId: string,
