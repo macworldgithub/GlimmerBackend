@@ -58,9 +58,9 @@ export class AdminController {
     description: 'Returns an array of recommended products records',
     type: [RecommendedProductsDto],
   })
-  async getAllRecommendedProducts() {
-    return await this.adminService.getAllRecommendedProducts();
-  }
+  async getAllRecommendedProducts(@Query('salonId') salonId?: string) {
+    return await this.adminService.getAllRecommendedProducts(salonId);
+  }  
 
   @Delete('/delete-recommended-products-of-salon/:salonId/:productId')
   @ApiOperation({

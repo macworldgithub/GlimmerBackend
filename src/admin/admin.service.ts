@@ -185,13 +185,17 @@ export class AdminService {
     return result;
   } //Checked
 
-  async getAllRecommendedProducts(): Promise<any> {
-    const recommendedRecord = await this.recommendedProductsModel.find({});
-    if (!recommendedRecord) {
-      throw new NotFoundException(`not found`);
+  async getAllRecommendedProducts(salonId?: string): Promise<any> {
+    const filter = salonId ? { salonId } : {};
+    const recommendedRecord = await this.recommendedProductsModel.find(filter);
+  
+    if (!recommendedRecord || recommendedRecord.length === 0) {
+      throw new NotFoundException(`No recommended products found`);
     }
+  
     return recommendedRecord;
   }
+  
 
   async createSaleRecord(
     salonId: string,
