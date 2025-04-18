@@ -54,6 +54,7 @@ export class OrderRepository {
 
     return await this.order_model
       .find({}, projection)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
@@ -113,6 +114,7 @@ export class OrderRepository {
 
     return await this.store_order_model
       .find({ store }, projection)
+      .sort({ createdAt: -1 })
       .populate(['order_items', 'order'])
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)

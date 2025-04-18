@@ -27,6 +27,7 @@ export class AdminRepository{
 
     return await this.admin_model
       .find({}, projection)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();

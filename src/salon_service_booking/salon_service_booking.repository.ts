@@ -24,6 +24,7 @@ export class SalonServiceBookingRepository {
     const totalPages = Math.ceil(total / limit);
     let bookings = await this.salonServiceBookingModel
       .find(filter)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .exec();

@@ -52,6 +52,7 @@ export class ProductRepository {
         },
         projection,
       )
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
@@ -71,6 +72,7 @@ export class ProductRepository {
         },
         projection,
       )
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();

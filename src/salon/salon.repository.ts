@@ -41,6 +41,7 @@ export class SalonRepository {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
     let salons= await this.salon_model
       .find().lean()
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();

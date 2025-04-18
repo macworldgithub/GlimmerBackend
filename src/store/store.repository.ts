@@ -27,6 +27,7 @@ export class StoreRepository {
 
     return await this.store_model
       .find({}, projection)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
