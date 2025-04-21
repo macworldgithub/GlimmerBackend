@@ -117,6 +117,7 @@ export class OrderService {
             discountedTotal: 1,
             paymentMethod: 1,
             ShippingInfo: 1,
+            createdAt: 1,
             productList: {
               $filter: {
                 input: '$productList',
@@ -124,6 +125,11 @@ export class OrderService {
                 cond: { $eq: ['$$product.storeId', id] },
               },
             },
+          },
+        },
+        {
+          $sort: {
+            createdAt: -1,
           },
         },
         { $skip: skip },
