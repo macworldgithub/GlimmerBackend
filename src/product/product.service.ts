@@ -386,6 +386,7 @@ export class ProductService {
     category?: string,
     sub_category?: string,
     item?: string,
+    name?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -406,7 +407,7 @@ export class ProductService {
         throw new BadRequestException('invalid category or sub category!');
       if (item && !isMongoId(item))
         throw new BadRequestException('invalid item!');
-      let filters: Partial<Product> = {};
+      let filters: any = {};
 
       if (category) {
         filters.category = new Types.ObjectId(category);
@@ -416,6 +417,9 @@ export class ProductService {
       }
       if (item && item !== 'all') {
         filters.item = new Types.ObjectId(item);
+      }
+      if (name && name.trim() !== "") {
+        filters.name = { $regex: new RegExp(name.trim(), 'i') };
       }
 
       console.log(filters);

@@ -162,12 +162,14 @@ export class ProductController {
     @Query('category') category?: string,
     @Query('sub_category') sub_category?: string,
     @Query('item') item?: string,
+    @Query('name') name?: string,
   ) {
     return this.product_service.get_all_products(
       page_no,
       category,
       sub_category,
       item,
+      name,
     );
   }
 
