@@ -23,6 +23,10 @@ export class ProductItem {
   @Prop({ required: true })
   productId!: string;
 
+
+  @Prop({ default: 5 })
+  rate!: number;
+
   @Prop({})
   productName!: string;
 
@@ -43,9 +47,6 @@ export const ProductItemSchema = SchemaFactory.createForClass(ProductItem);
 
 @Schema()
 export class RecommendedProducts {
-  @Prop({ default: 5 })
-  rate!: number;
-
   @Prop({ required: true })
   salonId!: string;
 

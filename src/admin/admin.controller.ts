@@ -94,12 +94,16 @@ export class AdminController {
     return await this.adminService.deleteRecommendedProduct(salonId, productId);
   }
 
-  @Patch('/update-rate-of-salon/:salonId')
+  @Patch('/update-rate-of-salon/:salonId/:productId')
   @ApiOperation({
-    summary: 'Update the rate for a salon',
-    description:
-      'Example URL: http://localhost:3000/admin/update-rate-of-salon/67d918bc4bf2d4af93416da8\n\n' +
-      'Request Body: { "newRate": 56 }',
+    summary: 'Update the rate for a specific product in a salon',
+    description: [
+      'Example URL:',
+      '  PATCH http://localhost:3000/admin/update-rate-of-salon/67d918bc4bf2d4af93416da8/67975d70c5661506b69dc45a',
+      '',
+      'Request Body:',
+      '  { "newRate": 56 }',
+    ].join('\n'),
   })
   @ApiParam({
     name: 'salonId',
@@ -107,26 +111,35 @@ export class AdminController {
     type: String,
     example: '67d918bc4bf2d4af93416da8',
   })
+  @ApiParam({
+    name: 'productId',
+    description: 'Unique identifier for the product',
+    type: String,
+    example: '67975d70c5661506b69dc45a',
+  })
   @ApiBody({
     type: UpdateRateDto,
+    description: 'Payload containing the new rate',
     examples: {
       example1: {
-        summary: 'Example request',
+        summary: 'Set rate to 56',
         value: { newRate: 56 },
       },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Returns the updated recommended products record',
+    description: 'Returns the updated RecommendedProducts record',
     type: RecommendedProductsDto,
   })
   @ApiResponse({ status: 404, description: 'Salon not found' })
+  @ApiResponse({ status: 404, description: 'Product not found in this salon' })
   async updateRate(
     @Param('salonId') salonId: string,
+    @Param('productId') productId: string,
     @Body('newRate') newRate: number,
   ): Promise<RecommendedProducts> {
-    return this.adminService.updateRate(salonId, newRate);
+    return this.adminService.updateRate(salonId, productId, newRate);
   }
 
   @Post('/add-recommended-products/:salonId')

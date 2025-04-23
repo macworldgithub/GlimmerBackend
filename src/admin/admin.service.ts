@@ -75,25 +75,30 @@ export class AdminService {
 
   async updateRate(
     salonId: string,
+    productId: string,
     newRate: number,
   ): Promise<RecommendedProducts> {
-    let recommendedRecord = await this.recommendedProductsModel.findOne({
-      salonId,
-    });
-
-    if (!recommendedRecord) {
-      // Create a new document if one doesn't exist for the given salonId.
-      recommendedRecord = new this.recommendedProductsModel({
-        salonId,
-        productList: [],
-        rate: newRate,
-      });
-    } else {
-      // Update the existing document's rate.
-      recommendedRecord.rate = newRate;
+    // 1. Fetch the existing record
+    const record = await this.recommendedProductsModel.findOne({ salonId });
+    if (!record) {
+      throw new NotFoundException(`Salon with id "${salonId}" not found`);
     }
 
-    return recommendedRecord.save();
+    // 2. Locate the product in the list
+    const prod = record.productList.find(
+      item => item.productId.toString() === productId,
+    );
+    if (!prod) {
+      throw new NotFoundException(
+        `Product with id "${productId}" not found for salon "${salonId}"`,
+      );
+    }
+
+    // 3. Update the rate
+    prod.rate = newRate;
+
+    // 4. Persist
+    return record.save();
   }
 
   async updateSoldUnits(
@@ -175,8 +180,11 @@ export class AdminService {
             productFromDatabase.image3,
           );
         }
+        const matched = recommendedRecord?.productList?.find(
+          item => item.productId === productFromDatabase.id
+        );
 
-        productFromDatabase.rate_of_salon = recommendedRecord.rate;
+        productFromDatabase.rate_of_salon = matched?.rate
         productFromDatabase.ref_of_salon = salonId;
         result.push(productFromDatabase);
       }
