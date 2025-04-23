@@ -171,11 +171,12 @@ export class ProductService {
   }
 
   async get_all_store_products(
-    store_payload: AuthPayload,
+    // store_payload: AuthPayload,
     page_no: number,
     category?: string,
     sub_category?: string,
     item?: string,
+    store?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -205,9 +206,12 @@ export class ProductService {
       if (item && item !== 'all') {
         filters.item = new Types.ObjectId(item);
       }
+      if (store) {
+        filters.store = new Types.ObjectId(store);
+      }
 
       const products_res = await this.product_repository.get_all_store_products(
-        new Types.ObjectId(store_payload._id),
+        // new Types.ObjectId(store_payload._id),
         page_no,
         projection,
         filters,
@@ -235,7 +239,7 @@ export class ProductService {
 
       const total =
         await this.product_repository.get_total_no_products_by_store_id({
-          store: new Types.ObjectId(store_payload._id),
+          // store: new Types.ObjectId(store_payload._id),
           ...filters,
         });
 

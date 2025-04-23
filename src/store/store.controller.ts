@@ -95,7 +95,7 @@ export class StoreController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+  // @Role(Roles.STORE)
   @Get('get_all_stores')
   get_all_stores(@Query('page_no') page_no: number) {
     return this.store_service.get_all_stores(page_no);

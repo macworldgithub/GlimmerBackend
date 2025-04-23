@@ -83,23 +83,25 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Role(Roles.STORE)
   @Get('get_all_store_products')
   async get_all_store_products(
-    @Req() req: AuthPayloadRequest,
+    // @Req() req: AuthPayloadRequest,
     @Query('page_no') page_no: number,
     @Query('category') category?: string,
     @Query('sub_category') sub_category?: string,
     @Query('item') item?: string,
+    @Query('store') store?: string,
   ) {
     return this.product_service.get_all_store_products(
-      req.user,
+      // req.user,
       page_no,
       category,
       sub_category,
       item,
+      store,
     );
   }
 

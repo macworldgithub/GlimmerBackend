@@ -37,7 +37,7 @@ export class ProductRepository {
   }
 
   async get_all_store_products(
-    store_id: Types.ObjectId,
+    // store_id: Types.ObjectId,
     page_no: number,
     projection?: ProductProjection,
     filters: Partial<Product> = {},
@@ -47,7 +47,7 @@ export class ProductRepository {
     return this.product_model
       .find(
         {
-          store: store_id,
+          // store: store_id,
           ...filters,
         },
         projection,

@@ -117,7 +117,7 @@ export class OrderController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+  // @Role(Roles.STORE)
   @Put('updateProductStatus')
   update_product_status_of_order_provided(
     @Body() Order: UpdateProductStatusDto,
