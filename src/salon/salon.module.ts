@@ -6,6 +6,7 @@ import { SalonService } from './salon.service';
 import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
 import { JwtService } from '@nestjs/jwt';
 import { S3Service } from 'src/aws/s3.service';
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Salon.name, schema: SalonSchema }]),

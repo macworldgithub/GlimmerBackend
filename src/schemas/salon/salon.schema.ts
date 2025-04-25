@@ -41,6 +41,16 @@ export class Salon {
   image3?: string;
   @Prop({ type: String, required: false, default: null })
   image4?: string;
+
+  @Prop({ type: Boolean, required: false, default: false })
+  newToGlimmer!: boolean;
+
+  @Prop({ type: Boolean, required: false, default: false })
+  trendingSalon!: boolean;
+
+  @Prop({ type: Boolean, required: false, default: false })
+  recommendedSalon!: boolean;
+
   constructor(obj: Salon) {
     this._id = obj._id.toString();
     this.salon_name = obj.salon_name;

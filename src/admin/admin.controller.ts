@@ -10,7 +10,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { AdminService } from './admin.service';
+import { AdminService, SalonFilter, SalonHighlights } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
 import {
   ApiOperation,
@@ -28,6 +28,7 @@ import { RecommendedProductsDto } from './dtos/Recommendedprducts.dto';
 import { AddRecommendedProductDto } from './dtos/request_dtos/add.recommended.products.dto';
 import { HttpCode } from '@nestjs/common';
 import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto';
+import { Salon } from 'src/schemas/salon/salon.schema';
 
 @Controller('admin')
 export class AdminController {
@@ -60,7 +61,7 @@ export class AdminController {
   })
   async getAllRecommendedProducts(@Query('salonId') salonId?: string) {
     return await this.adminService.getAllRecommendedProducts(salonId);
-  }  
+  }
 
   @Delete('/delete-recommended-products-of-salon/:salonId/:productId')
   @ApiOperation({
@@ -230,5 +231,101 @@ export class AdminController {
         error.message,
       );
     }
+  }
+
+  @Patch(':id/new-to-glimmer')
+  @ApiOperation({ summary: 'Mark a salon as New to Glimmer (or unset it)' })
+  @ApiParam({
+    name: 'id',
+    description: 'The salon’s MongoDB ObjectId',
+    type: 'string',
+    example: '67d918bc4bf2d4af93416da8',
+  })
+  @ApiBody({
+    description: 'Payload to set or unset the NewToGlimmer flag',
+
+    schema: {
+      properties: {
+        status: { type: 'boolean', example: true },
+      },
+      required: ['status'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'The updated salon', type: Salon })
+  async setNewToGlimmer(
+    @Param('id') id: string,
+    @Body('status') status: boolean,
+  ): Promise<Salon> {
+    return this.adminService.setNewToGlimmer(id, status);
+  }
+
+  @Patch(':id/trending-salon')
+  @ApiOperation({ summary: 'Mark a salon as Trending (or unset it)' })
+  @ApiParam({
+    name: 'id',
+    description: 'The salon’s MongoDB ObjectId',
+    type: 'string',
+    example: '67d918bc4bf2d4af93416da8',
+  })
+  @ApiBody({
+    description: 'Payload to set or unset the Trending flag',
+
+    schema: {
+      properties: {
+        status: { type: 'boolean', example: false },
+      },
+      required: ['status'],
+    },
+  })
+  @ApiResponse({ status: 200, description: 'The updated salon', type: Salon })
+  async setTrendingSalon(
+    @Param('id') id: string,
+    @Body('status') status: boolean,
+  ): Promise<Salon> {
+    return this.adminService.setTrendingSalon(id, status);
+  }
+
+
+  @Patch(':id/recommended-salon')
+  @ApiOperation({ summary: 'Toggle Recommended flag' })
+  @ApiParam({
+    name: 'id',
+    description: 'The salon’s MongoDB ObjectId',
+    example: '67d918bc4bf2d4af93416da8',
+  })
+  @ApiBody({
+    description: 'Enable/disable the Recommended flag',
+    schema: {
+      required: ['status'],
+      properties: { status: { type: 'boolean', example: true } },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'The updated salon', type: Salon })
+  setRecommendedSalon(
+    @Param('id') id: string,
+    @Body('status') status: boolean,
+  ): Promise<Salon> {
+    return this.adminService.setRecommendedSalon(id, status);
+  }
+
+  @Get('salon-highlights')
+  @ApiOperation({
+    summary: 'Fetch salons by highlight filter, or all three groups if none',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    enum: ['new-to-glimmer', 'trending-salon', 'recommended-salon'],
+    description:
+      '“new-to-glimmer” | “trending-salon” | “recommended-salon”; omit for all',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Either a flat array or an object of arrays',
+  })
+  getSalonHighlights(
+    @Query('filter') filter?: SalonFilter,
+  ): Promise<Salon[] | SalonHighlights> {
+    return this.adminService.findByFilter(filter);
   }
 }

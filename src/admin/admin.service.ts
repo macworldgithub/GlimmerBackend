@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,6 +14,17 @@ import { Product, ProductDocument } from 'src/schemas/ecommerce/product.schema';
 import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto';
 import { UpdateSaleRecordDto } from './dtos/update/update.sales.record.dto';
 import { S3Service } from 'src/aws/s3.service';
+import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
+export type SalonFilter =
+  | 'new-to-glimmer'
+  | 'trending-salon'
+  | 'recommended-salon';
+
+export interface SalonHighlights {
+  newToGlimmer: Salon[];
+  trendingSalon: Salon[];
+  recommendedSalon: Salon[];
+}
 
 @Injectable()
 export class AdminService {
@@ -24,6 +36,9 @@ export class AdminService {
 
     @InjectModel(Product.name)
     private readonly productModel: Model<ProductDocument>,
+
+    @InjectModel(Salon.name)
+    private readonly salonModel: Model<SalonDocument>,
   ) {}
 
   async addRecommendedProduct(
@@ -86,7 +101,7 @@ export class AdminService {
 
     // 2. Locate the product in the list
     const prod = record.productList.find(
-      item => item.productId.toString() === productId,
+      (item) => item.productId.toString() === productId,
     );
     if (!prod) {
       throw new NotFoundException(
@@ -181,10 +196,10 @@ export class AdminService {
           );
         }
         const matched = recommendedRecord?.productList?.find(
-          item => item.productId === productFromDatabase.id
+          (item) => item.productId === productFromDatabase.id,
         );
 
-        productFromDatabase.rate_of_salon = matched?.rate
+        productFromDatabase.rate_of_salon = matched?.rate;
         productFromDatabase.ref_of_salon = salonId;
         result.push(productFromDatabase);
       }
@@ -196,14 +211,13 @@ export class AdminService {
   async getAllRecommendedProducts(salonId?: string): Promise<any> {
     const filter = salonId ? { salonId } : {};
     const recommendedRecord = await this.recommendedProductsModel.find(filter);
-  
+
     if (!recommendedRecord || recommendedRecord.length === 0) {
       throw new NotFoundException(`No recommended products found`);
     }
-  
+
     return recommendedRecord;
   }
-  
 
   async createSaleRecord(
     salonId: string,
@@ -349,5 +363,81 @@ export class AdminService {
 
     await recommendedRecord.save();
     return recommendedRecord;
+  }
+
+  async setNewToGlimmer(salonId: string, isNew: boolean): Promise<Salon> {
+    const updated = await this.salonModel
+      .findByIdAndUpdate(
+        salonId,
+        { $set: { newToGlimmer: isNew } },
+        { new: true }, // return the updated document
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException(`Salon with id "${salonId}" not found.`);
+    }
+    return updated;
+  }
+
+  async setTrendingSalon(salonId: string, isTrending: boolean): Promise<Salon> {
+    const updated = await this.salonModel
+      .findByIdAndUpdate(
+        salonId,
+        { $set: { trendingSalon: isTrending } },
+        { new: true },
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException(`Salon with id "${salonId}" not found.`);
+    }
+    return updated;
+  }
+
+  async setRecommendedSalon(
+    salonId: string,
+    isRecommended: boolean,
+  ): Promise<Salon> {
+    const updated = await this.salonModel
+      .findByIdAndUpdate(
+        salonId,
+        { $set: { recommendedSalon: isRecommended } },
+        { new: true },
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException(`Salon with id "${salonId}" not found.`);
+    }
+    return updated;
+  }
+
+  async findByFilter(
+    filter?: SalonFilter,
+  ): Promise<Salon[] | SalonHighlights> {
+    if (!filter) {
+      const [newToGlimmer, trendingSalon, recommendedSalon] =
+        await Promise.all([
+          this.salonModel.find({ newToGlimmer: true }).exec(),
+          this.salonModel.find({ trendingSalon: true }).exec(),
+          this.salonModel.find({ recommendedSalon: true }).exec(),
+        ]);
+      return { newToGlimmer, trendingSalon, recommendedSalon };
+    }
+
+    switch (filter) {
+      case 'new-to-glimmer':
+        return this.salonModel.find({ newToGlimmer: true }).exec();
+      case 'trending-salon':
+        return this.salonModel.find({ trendingSalon: true }).exec();
+      case 'recommended-salon':
+        return this.salonModel.find({ recommendedSalon: true }).exec();
+      default:
+        throw new BadRequestException(
+          `Unsupported filter "${filter}". Use ` +
+          `"new-to-glimmer", "trending-salon" or "recommended-salon".`,
+        );
+    }
   }
 }
