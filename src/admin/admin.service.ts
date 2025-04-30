@@ -421,25 +421,54 @@ export class AdminService {
     return updated;
   }
 
-  async findByFilter(filter?: SalonFilter): Promise<Salon[] | SalonHighlights> {
-    if (!filter) {
+  private async attachImageUrls(salons: any[]): Promise<any[]> {
+    return Promise.all(
+      salons.map(async (s) => {
+        const { image1, image2, image3, image4, salon_image, ...rest } = s;
+        return {
+          ...rest,
+          image1: image1 ? await this.s3_service.get_image_url(image1) : null,
+          image2: image2 ? await this.s3_service.get_image_url(image2) : null,
+          image3: image3 ? await this.s3_service.get_image_url(image3) : null,
+          image4: image4 ? await this.s3_service.get_image_url(image4) : null,
+          salon_image: salon_image
+            ? await this.s3_service.get_image_url(salon_image)
+            : null,
+        };
+      }),
+    );
+  }
+
+  async findByFilter(filter?: SalonFilter): Promise<any[] | SalonHighlights> {
+    const wantAll = !filter;
+
+    // fetch + post-process one category
+    const fetchAndTransform = async (
+      condition: Record<string, any>,
+    ): Promise<any[]> => {
+      const docs = await this.salonModel.find(condition).lean().exec();
+      return this.attachImageUrls(docs);
+    };
+
+    if (wantAll) {
       const [newToGlimmer, trendingSalon, recommendedSalon] = await Promise.all(
         [
-          this.salonModel.find({ newToGlimmer: true }).exec(),
-          this.salonModel.find({ trendingSalon: true }).exec(),
-          this.salonModel.find({ recommendedSalon: true }).exec(),
+          fetchAndTransform({ newToGlimmer: true }),
+          fetchAndTransform({ trendingSalon: true }),
+          fetchAndTransform({ recommendedSalon: true }),
         ],
       );
       return { newToGlimmer, trendingSalon, recommendedSalon };
     }
 
+    // single‐filter mode
     switch (filter) {
       case 'new-to-glimmer':
-        return this.salonModel.find({ newToGlimmer: true }).exec();
+        return fetchAndTransform({ newToGlimmer: true });
       case 'trending-salon':
-        return this.salonModel.find({ trendingSalon: true }).exec();
+        return fetchAndTransform({ trendingSalon: true });
       case 'recommended-salon':
-        return this.salonModel.find({ recommendedSalon: true }).exec();
+        return fetchAndTransform({ recommendedSalon: true });
       default:
         throw new BadRequestException(
           `Unsupported filter "${filter}". Use ` +
@@ -450,32 +479,46 @@ export class AdminService {
 
   async getProductsHighlights(
     filterDto: GetProductsFilterDto,
-  ): Promise<Record<string, Product[]>> {
+  ): Promise<Record<string, any[]>> {
     const { filter } = filterDto;
     const wantAll = !filter || filter.length === 0;
-    const result: Record<string, Product[]> = {};
+    const result: Record<string, any[]> = {};
 
-    if (wantAll || filter.includes('best_seller')) {
-      result.best_seller = await this.productModel
-        .find({ best_seller: true })
-        .exec();
-    }
+    // helper to fetch + transform one category
+    const fetchAndTransform = async (
+      key: string,
+      condition: Record<string, any>,
+    ) => {
+      if (wantAll || filter.includes(key)) {
+        // 1. grab plain objects
+        const products = await this.productModel.find(condition).lean().exec();
 
-    if (wantAll || filter.includes('trending_product')) {
-      result.trending_product = await this.productModel
-        .find({ trending_product: true })
-        .exec();
-    }
+        // 2. map each to include full URLs
+        result[key] = await Promise.all(
+          products.map(async (p) => {
+            return {
+              ...p,
+              image1: p.image1
+                ? await this.s3_service.get_image_url(p.image1)
+                : null,
+              image2: p.image2
+                ? await this.s3_service.get_image_url(p.image2)
+                : null,
+              image3: p.image3
+                ? await this.s3_service.get_image_url(p.image3)
+                : null,
+            };
+          }),
+        );
+      }
+    };
 
-    if (wantAll || filter.includes('you_must_have_this')) {
-      result.you_must_have_this = await this.productModel
-        .find({ you_must_have_this: true })
-        .exec();
-    }
+    await fetchAndTransform('best_seller', { best_seller: true });
+    await fetchAndTransform('trending_product', { trending_product: true });
+    await fetchAndTransform('you_must_have_this', { you_must_have_this: true });
 
     return result;
   }
-
 
   async setTrendingProducts(
     productId: string,
