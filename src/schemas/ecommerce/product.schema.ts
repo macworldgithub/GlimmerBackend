@@ -78,11 +78,19 @@ export class Product {
   size?: [];
 
   @Prop({})
-  rate_of_salon? :number
-  
-  @Prop({})
-  ref_of_salon? :string
+  rate_of_salon?: number;
 
+  @Prop({})
+  ref_of_salon?: string;
+
+  @Prop({ default: false })
+  trending_product?: boolean;
+
+  @Prop({ default: false })
+  best_seller?: boolean;
+
+  @Prop({ default: false })
+  you_must_have_this?: boolean;
 
   constructor(product: Product) {
     if (!product) return;

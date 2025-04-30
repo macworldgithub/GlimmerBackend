@@ -9,6 +9,8 @@ import {
   Query,
   HttpStatus,
   InternalServerErrorException,
+  DefaultValuePipe,
+  ParseBoolPipe,
 } from '@nestjs/common';
 import { AdminService, SalonFilter, SalonHighlights } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
@@ -21,6 +23,8 @@ import {
   ApiCreatedResponse,
   ApiBadRequestResponse,
   ApiNotFoundResponse,
+  getSchemaPath,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Delete_recommended_products_dto_response } from './dtos/response/delete.recommended.products.dto';
 import { UpdateRateDto } from './dtos/request_dtos/update.rate.dto';
@@ -29,6 +33,8 @@ import { AddRecommendedProductDto } from './dtos/request_dtos/add.recommended.pr
 import { HttpCode } from '@nestjs/common';
 import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto';
 import { Salon } from 'src/schemas/salon/salon.schema';
+import { Product } from 'src/schemas/ecommerce/product.schema';
+import { GetProductsFilterDto } from './dtos/request_dtos/getProductsFilter.dto';
 
 @Controller('admin')
 export class AdminController {
@@ -285,7 +291,6 @@ export class AdminController {
     return this.adminService.setTrendingSalon(id, status);
   }
 
-
   @Patch(':id/recommended-salon')
   @ApiOperation({ summary: 'Toggle Recommended flag' })
   @ApiParam({
@@ -327,5 +332,72 @@ export class AdminController {
     @Query('filter') filter?: SalonFilter,
   ): Promise<Salon[] | SalonHighlights> {
     return this.adminService.findByFilter(filter);
+  }
+
+  @Patch(':productId/trending-product')
+  @ApiOperation({ summary: 'Set trending status for a product' })
+  async setTrendingProduct(
+    @Param('productId') productId: string,
+    @Body('isTrending') isTrending: boolean,
+  ): Promise<Product> {
+    return this.adminService.setTrendingProducts(productId, isTrending);
+  }
+
+  @Patch(':productId/best-seller-product')
+  @ApiOperation({ summary: 'Set best-seller status for a product' })
+  async setBestSeller(
+    @Param('productId') productId: string,
+    @Body('isBestSeller') isBestSeller: boolean,
+  ): Promise<Product> {
+    return this.adminService.setBestSeller(productId, isBestSeller);
+  }
+
+  @Patch(':productId/you-must-have-product')
+  @ApiOperation({ summary: 'Set "you must have" status for a product' })
+  async setYouMustHave(
+    @Param('productId') productId: string,
+    @Body('isYouMustHave') isYouMustHave: boolean,
+  ): Promise<Product> {
+    return this.adminService.setYouMustHave(productId, isYouMustHave);
+  }
+
+  @Get('/product-highlights')
+  @ApiOperation({
+    summary: 'Get product highlights grouped by category flags',
+    description: 'Returns arrays for best_seller, trending_product and you_must_have_this',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    description:
+      'Comma-separated list of flags to include (e.g. `filter=best_seller,trending_product`). ' +
+      'If omitted, all three categories are returned.',
+    style: 'simple',
+    explode: false,
+    type: String,
+    isArray: true,
+  })
+  @ApiOkResponse({
+    description: 'Product highlights fetched successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        best_seller: {
+          type: 'array',
+          items: { $ref: getSchemaPath(Product) },
+        },
+        trending_product: {
+          type: 'array',
+          items: { $ref: getSchemaPath(Product) },
+        },
+        you_must_have_this: {
+          type: 'array',
+          items: { $ref: getSchemaPath(Product) },
+        },
+      },
+    },
+  })
+  async getProducts(@Query() filterDto: GetProductsFilterDto) {
+    return this.adminService.getProductsHighlights(filterDto);
   }
 }

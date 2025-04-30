@@ -15,10 +15,18 @@ import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto
 import { UpdateSaleRecordDto } from './dtos/update/update.sales.record.dto';
 import { S3Service } from 'src/aws/s3.service';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
+import { GetProductsFilterDto } from './dtos/request_dtos/getProductsFilter.dto';
+
 export type SalonFilter =
   | 'new-to-glimmer'
   | 'trending-salon'
   | 'recommended-salon';
+
+export interface FilterOptions {
+  trending?: boolean;
+  bestSeller?: boolean;
+  youMustHave?: boolean;
+}
 
 export interface SalonHighlights {
   newToGlimmer: Salon[];
@@ -413,16 +421,15 @@ export class AdminService {
     return updated;
   }
 
-  async findByFilter(
-    filter?: SalonFilter,
-  ): Promise<Salon[] | SalonHighlights> {
+  async findByFilter(filter?: SalonFilter): Promise<Salon[] | SalonHighlights> {
     if (!filter) {
-      const [newToGlimmer, trendingSalon, recommendedSalon] =
-        await Promise.all([
+      const [newToGlimmer, trendingSalon, recommendedSalon] = await Promise.all(
+        [
           this.salonModel.find({ newToGlimmer: true }).exec(),
           this.salonModel.find({ trendingSalon: true }).exec(),
           this.salonModel.find({ recommendedSalon: true }).exec(),
-        ]);
+        ],
+      );
       return { newToGlimmer, trendingSalon, recommendedSalon };
     }
 
@@ -436,8 +443,90 @@ export class AdminService {
       default:
         throw new BadRequestException(
           `Unsupported filter "${filter}". Use ` +
-          `"new-to-glimmer", "trending-salon" or "recommended-salon".`,
+            `"new-to-glimmer", "trending-salon" or "recommended-salon".`,
         );
     }
+  }
+
+  async getProductsHighlights(
+    filterDto: GetProductsFilterDto,
+  ): Promise<Record<string, Product[]>> {
+    const { filter } = filterDto;
+    const wantAll = !filter || filter.length === 0;
+    const result: Record<string, Product[]> = {};
+
+    if (wantAll || filter.includes('best_seller')) {
+      result.best_seller = await this.productModel
+        .find({ best_seller: true })
+        .exec();
+    }
+
+    if (wantAll || filter.includes('trending_product')) {
+      result.trending_product = await this.productModel
+        .find({ trending_product: true })
+        .exec();
+    }
+
+    if (wantAll || filter.includes('you_must_have_this')) {
+      result.you_must_have_this = await this.productModel
+        .find({ you_must_have_this: true })
+        .exec();
+    }
+
+    return result;
+  }
+
+
+  async setTrendingProducts(
+    productId: string,
+    isTrending: boolean,
+  ): Promise<Product> {
+    const updated = await this.productModel
+      .findByIdAndUpdate(
+        productId,
+        { $set: { trending_product: isTrending } },
+        { new: true },
+      )
+      .exec();
+    if (!updated) {
+      throw new NotFoundException(`Product with id "${productId}" not found.`);
+    }
+    return updated;
+  }
+
+  async setBestSeller(
+    productId: string,
+    isBestSeller: boolean,
+  ): Promise<Product> {
+    const updated = await this.productModel
+      .findByIdAndUpdate(
+        productId,
+        { $set: { best_seller: isBestSeller } },
+        { new: true },
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException(`Product with id "${productId}" not found.`);
+    }
+    return updated;
+  }
+
+  async setYouMustHave(
+    productId: string,
+    isYouMustHave: boolean,
+  ): Promise<Product> {
+    const updated = await this.productModel
+      .findByIdAndUpdate(
+        productId,
+        { $set: { you_must_have_this: isYouMustHave } },
+        { new: true },
+      )
+      .exec();
+
+    if (!updated) {
+      throw new NotFoundException(`Product with id "${productId}" not found.`);
+    }
+    return updated;
   }
 }
