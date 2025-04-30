@@ -338,7 +338,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Set trending status for a product' })
   async setTrendingProduct(
     @Param('productId') productId: string,
-    @Body('isTrending') isTrending: boolean,
+    @Body('status') isTrending: boolean,
   ): Promise<Product> {
     return this.adminService.setTrendingProducts(productId, isTrending);
   }
@@ -347,7 +347,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Set best-seller status for a product' })
   async setBestSeller(
     @Param('productId') productId: string,
-    @Body('isBestSeller') isBestSeller: boolean,
+    @Body('status') isBestSeller: boolean,
   ): Promise<Product> {
     return this.adminService.setBestSeller(productId, isBestSeller);
   }
@@ -356,7 +356,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Set "you must have" status for a product' })
   async setYouMustHave(
     @Param('productId') productId: string,
-    @Body('isYouMustHave') isYouMustHave: boolean,
+    @Body('status') isYouMustHave: boolean,
   ): Promise<Product> {
     return this.adminService.setYouMustHave(productId, isYouMustHave);
   }
