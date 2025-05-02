@@ -9,7 +9,7 @@ import {
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
-import { Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { isMongoId, validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
@@ -177,6 +177,7 @@ export class ProductService {
     sub_category?: string,
     item?: string,
     store?: string,
+    name?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -195,7 +196,7 @@ export class ProductService {
         (!isMongoId(category) || !isMongoId(sub_category))
       )
         throw new BadRequestException('invalid category or sub category!');
-      let filters: Partial<Product> = {};
+      let filters: FilterQuery<Product> = {};
 
       if (category) {
         filters.category = new Types.ObjectId(category);
@@ -209,7 +210,9 @@ export class ProductService {
       if (store) {
         filters.store = new Types.ObjectId(store);
       }
-
+      if (name) {
+        filters.name = { $regex: name, $options: 'i' };
+      }
       const products_res = await this.product_repository.get_all_store_products(
         // new Types.ObjectId(store_payload._id),
         page_no,

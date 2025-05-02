@@ -67,6 +67,14 @@ export class SalonServiceBookingService {
     if (query.subSubCategoryName) {
       filter.subSubCategoryName = query.subSubCategoryName;
     }
+
+    if (query.customerName) {
+      filter.customerName = query.customerName;
+    }
+
+    if (query.serviceName) {
+      filter.serviceName = query.serviceName;
+    }
     const page = parseInt(query.page_no, 10) || 1;
 
     return await this.bookingRepository.findAll(filter,page);
@@ -93,6 +101,14 @@ export class SalonServiceBookingService {
 
     if (query.subSubCategoryName) {
       filter.subSubCategoryName = query.subSubCategoryName;
+    }
+    
+    if (query.customerName) {
+      filter.customerName = query.customerName;
+    }
+
+    if (query.serviceName) {
+      filter.serviceName = query.serviceName;
     }
     console.log(filter,"filter")
     const page = parseInt(query.page_no, 10) || 1;

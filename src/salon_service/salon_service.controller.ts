@@ -97,6 +97,7 @@ export class SalonServicesController {
   @ApiQuery({ name: 'categoryId', type: String, required: false })
   @ApiQuery({ name: 'subCategoryName', type: String, required: false })
   @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  @ApiQuery({ name: 'name', type: String, required: false })
   getAllServicesForSalon(@Query() query: any,@Req() req: AuthPayloadRequest,) {
     return this.salonServicesService.findAllServices(query,req.user);
   }

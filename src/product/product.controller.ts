@@ -94,6 +94,7 @@ export class ProductController {
     @Query('sub_category') sub_category?: string,
     @Query('item') item?: string,
     @Query('store') store?: string,
+    @Query('name') name?: string,
   ) {
     return this.product_service.get_all_store_products(
       // req.user,
@@ -102,6 +103,7 @@ export class ProductController {
       sub_category,
       item,
       store,
+      name,
     );
   }
 

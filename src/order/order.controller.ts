@@ -62,17 +62,20 @@ export class OrderController {
   @ApiQuery({ name: 'store_id', required: true, type: String })
   @ApiQuery({ name: 'page_no', required: true, type: Number })
   @ApiQuery({ name: 'order_id', required: false, type: String })
+  @ApiQuery({ name: 'customerEmail', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
   get_all_store_orders(
     @Query('store_id') store_id: string,
     @Query('page_no') page_no: number,
     @Query('order_id') order_id?: string,
+    @Query('customerEmail') customerEmail?: string,
     @Query('status') status?: string,
   ) {
     return this.order_service.get_all_store_orders(
       page_no,
       store_id,
       order_id,
+      customerEmail,
       status,
     );
   }
