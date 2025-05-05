@@ -104,11 +104,11 @@ export class SalonServiceBookingService {
     }
     
     if (query.customerName) {
-      filter.customerName = query.customerName;
+      filter.customerName = { $regex: new RegExp(query.customerName, 'i') };;
     }
 
     if (query.serviceName) {
-      filter.serviceName = query.serviceName;
+      filter.serviceName = { $regex: new RegExp(query.serviceName, 'i') };
     }
     console.log(filter,"filter")
     const page = parseInt(query.page_no, 10) || 1;

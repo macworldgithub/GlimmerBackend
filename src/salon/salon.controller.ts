@@ -66,6 +66,7 @@ export class SalonController {
   @Get('/get-all-salon')
   @ApiOperation({ summary: 'Get all salon' })
   @ApiQuery({ name: 'page_no', type: String, required: true })
+  @ApiQuery({ name: 'salon_name', type: String, required: false })
   async get_all_salon(@Query() query: any) {
     return this.salon_service.getAllSalon(query);
   }

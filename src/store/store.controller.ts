@@ -97,7 +97,10 @@ export class StoreController {
   @UseGuards(AuthGuard, RolesGuard)
   // @Role(Roles.STORE)
   @Get('get_all_stores')
-  get_all_stores(@Query('page_no') page_no: number) {
-    return this.store_service.get_all_stores(page_no);
+  get_all_stores(
+    @Query('page_no') page_no: number,
+    @Query('store_name') store_name?: string,
+  ) {
+    return this.store_service.get_all_stores(page_no, store_name);
   }
 }
