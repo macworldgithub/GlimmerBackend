@@ -394,6 +394,8 @@ export class ProductService {
     sub_category?: string,
     item?: string,
     name?: string,
+    minPrice?: number,
+    maxPrice?: number,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -428,7 +430,29 @@ export class ProductService {
       if (name && name.trim() !== "") {
         filters.name = { $regex: new RegExp(name.trim(), 'i') };
       }
+      const parsedMin = Number(minPrice);
+      const parsedMax = Number(maxPrice);
 
+      if (!isNaN(parsedMin) || !isNaN(parsedMax)) {
+        const priceFilter: any = {};
+
+        if (!isNaN(parsedMin)) {
+          priceFilter.$gte = parsedMin;
+        }
+        if (!isNaN(parsedMax)) {
+          priceFilter.$lte = parsedMax;
+        }
+
+        filters.$or = [
+          { discounted_price: priceFilter },
+          {
+            $and: [
+              { discounted_price: { $exists: false } },
+              { base_price: priceFilter },
+            ],
+          },
+        ];
+      }
       console.log(filters);
       const products_res = await this.product_repository.get_all_products(
         page_no,

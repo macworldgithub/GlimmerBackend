@@ -167,6 +167,8 @@ export class ProductController {
     @Query('sub_category') sub_category?: string,
     @Query('item') item?: string,
     @Query('name') name?: string,
+    @Query('minPrice') minPrice?: number,
+    @Query('maxPrice') maxPrice?: number,
   ) {
     return this.product_service.get_all_products(
       page_no,
@@ -174,6 +176,8 @@ export class ProductController {
       sub_category,
       item,
       name,
+      minPrice,
+      maxPrice,
     );
   }
 
