@@ -26,7 +26,7 @@ export class SalonServiceBookingController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.SUPERADMIN)
+  // @Role(Roles.SUPERADMIN)
   @ApiOperation({ summary: 'Get all salon service bookings' })
   @ApiResponse({ status: 200, description: 'Returns all bookings' })
   @Get("getAllBookingForAdmin")
@@ -37,6 +37,8 @@ export class SalonServiceBookingController {
     @ApiQuery({ name: 'status', type: String, required: false })
     @ApiQuery({ name: 'subCategoryName', type: String, required: false })
     @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+    @ApiQuery({ name: 'customerName', type: String, required: false })
+    @ApiQuery({ name: 'serviceName', type: String, required: false })
   async getAllBookings(@Query() query: any){
     return this.bookingService.getAllBookings(query);
   }
@@ -53,6 +55,8 @@ export class SalonServiceBookingController {
     @ApiQuery({ name: 'status', type: String, required: false })
     @ApiQuery({ name: 'subCategoryName', type: String, required: false })
     @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+    @ApiQuery({ name: 'customerName', type: String, required: false })
+    @ApiQuery({ name: 'serviceName', type: String, required: false })
   async getAllSalonBookings(@Query() query: any, @Req() req: AuthPayloadRequest){
     console.log(req,"opopop",req.user)
     return this.bookingService.getAllSalonBookings(query,req.user);

@@ -22,11 +22,15 @@ export class StoreRepository {
     return this.store_model.findOne({ _id }, projection).exec();
   }
 
-  async get_all_stores(page_no: number, projection?: StoreProjection) {
+  async get_all_stores(page_no: number, store_name?: string, projection?: StoreProjection) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
+    const query: any = {};
+    if (store_name) {
+      query.store_name = { $regex: new RegExp(store_name, 'i') };
+    }
 
     return await this.store_model
-      .find({}, projection)
+      .find(query, projection)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
@@ -52,7 +56,11 @@ export class StoreRepository {
     session?: ClientSession | null,
   ) {
     if (!session) session = null;
+    const query: any = { ...filters };
 
+    if (filters?.store_name) {
+      query.store_name = { $regex: new RegExp(filters.store_name, 'i') };
+    }
     return this.store_model
       .countDocuments({
         ...filters,

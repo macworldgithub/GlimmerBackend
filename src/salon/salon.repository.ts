@@ -35,19 +35,28 @@ export class SalonRepository {
   }
 
   async get_all_salons(
+    filter: any,
     page_no: number,
     projection?: SalonProjection,
   ) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
-    let salons= await this.salon_model
-      .find().lean()
+  
+    const query = this.salon_model.find(filter); 
+  
+    if (projection) {
+      query.select(projection); // Optional field selection
+    }
+  
+    const salons = await query
+      .lean()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
-      let total=await this.salon_model
-      .countDocuments()
-      return {total,salons}
+  
+    const total = await this.salon_model.countDocuments(filter); 
+  
+    return { total, salons };
   }
 
   async delete_salon_by_id(

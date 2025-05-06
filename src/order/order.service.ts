@@ -66,6 +66,7 @@ export class OrderService {
     page_no: number,
     id: string,
     orderIdPrefix?: string,
+    customerEmail?: string,
     status?: string,
   ) {
     try {
@@ -100,6 +101,13 @@ export class OrderService {
         });
       }
 
+      if (customerEmail) {
+        pipeline.push({
+          $match: {
+            customerEmail: { $regex: customerEmail, $options: 'i' },
+          },
+        });
+      }
       const total = await this.orderModel.aggregate([
         ...pipeline,
         { $count: 'totalCount' },

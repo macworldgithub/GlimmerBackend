@@ -70,6 +70,7 @@ export class StoreService {
 
   async get_all_stores(
     page_no: number,
+    store_name?: string,
     projection?: StoreProjection,
   ): Promise<{ stores: Store[]; total: number }> {
     try {
@@ -84,13 +85,14 @@ export class StoreService {
 
       const stores = await this.store_repository.get_all_stores(
         page_no,
+        store_name,
         projection,
       );
 
       if (!stores) {
         throw new BadRequestException('Product doesnot exist');
       }
-      const total = await this.store_repository.get_total_no_stores();
+      const total = await this.store_repository.get_total_no_stores(store_name ? { store_name } : undefined);
 
       return { stores: stores.map((elem) => new Store(elem)), total };
     } catch (e) {

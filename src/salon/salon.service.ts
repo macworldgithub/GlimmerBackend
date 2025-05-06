@@ -100,8 +100,15 @@ export class SalonService {
   }
 
   async getAllSalon(query:any){
+    const filter: any = {};
+
+    if (query.salon_name) {
+      filter.salon_name = { $regex: new RegExp(query.salon_name, 'i') };
+
+    }
+
     const page = parseInt(query.page_no, 10) || 1;
-    let ser=await this.salon_repository.get_all_salons(page)
+    let ser=await this.salon_repository.get_all_salons(filter, page)
     ser.salons = await Promise.all(
       ser.salons.map(async (e) => {
         // @ts-expect-error jhlk

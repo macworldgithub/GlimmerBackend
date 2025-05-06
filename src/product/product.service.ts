@@ -9,7 +9,7 @@ import {
 } from 'src/schemas/ecommerce/product.schema';
 import { ProductRepository } from './product.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
-import { Types } from 'mongoose';
+import { FilterQuery, Types } from 'mongoose';
 import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { isMongoId, validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
@@ -177,6 +177,7 @@ export class ProductService {
     sub_category?: string,
     item?: string,
     store?: string,
+    name?: string,
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -195,7 +196,7 @@ export class ProductService {
         (!isMongoId(category) || !isMongoId(sub_category))
       )
         throw new BadRequestException('invalid category or sub category!');
-      let filters: Partial<Product> = {};
+      let filters: FilterQuery<Product> = {};
 
       if (category) {
         filters.category = new Types.ObjectId(category);
@@ -209,7 +210,9 @@ export class ProductService {
       if (store) {
         filters.store = new Types.ObjectId(store);
       }
-
+      if (name) {
+        filters.name = { $regex: name, $options: 'i' };
+      }
       const products_res = await this.product_repository.get_all_store_products(
         // new Types.ObjectId(store_payload._id),
         page_no,
@@ -391,6 +394,10 @@ export class ProductService {
     sub_category?: string,
     item?: string,
     name?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    sortBy?: string,
+    order?: 'asc' | 'desc',
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -422,10 +429,32 @@ export class ProductService {
       if (item && item !== 'all') {
         filters.item = new Types.ObjectId(item);
       }
-      if (name && name.trim() !== "") {
+      if (name && name.trim() !== '') {
         filters.name = { $regex: new RegExp(name.trim(), 'i') };
       }
+      const parsedMin = Number(minPrice);
+      const parsedMax = Number(maxPrice);
 
+      if (!isNaN(parsedMin) || !isNaN(parsedMax)) {
+        const priceFilter: any = {};
+
+        if (!isNaN(parsedMin)) {
+          priceFilter.$gte = parsedMin;
+        }
+        if (!isNaN(parsedMax)) {
+          priceFilter.$lte = parsedMax;
+        }
+
+        filters.$or = [
+          { discounted_price: priceFilter },
+          {
+            $and: [
+              { discounted_price: { $exists: false } },
+              { base_price: priceFilter },
+            ],
+          },
+        ];
+      }
       console.log(filters);
       const products_res = await this.product_repository.get_all_products(
         page_no,
@@ -448,6 +477,14 @@ export class ProductService {
           return prod;
         }),
       );
+
+      if (sortBy === 'price') {
+        products.sort((a, b) => {
+          const priceA = a.discounted_price ?? a.base_price ?? 0;
+          const priceB = b.discounted_price ?? b.base_price ?? 0;
+          return order === 'desc' ? priceB - priceA : priceA - priceB;
+        });
+      }
 
       const total =
         await this.product_repository.get_total_no_products_by_store_id({

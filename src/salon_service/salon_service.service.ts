@@ -140,6 +140,10 @@ export class SalonServicesService {
     if (query.subSubCategoryName) {
       filter.subSubCategoryName = query.subSubCategoryName;
     }
+
+    if (query.name) {
+      filter.name = { $regex: new RegExp(query.name, 'i') };
+    }
     const page = parseInt(query.page_no, 10) || 1;
     let ser = await this.salonServicesRepository.findAll(filter, page);
     ser.services = await Promise.all(
