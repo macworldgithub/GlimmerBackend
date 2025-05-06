@@ -13,6 +13,6 @@ import { S3Service } from 'src/aws/s3.service';
   ],
   controllers: [SalonController],
   providers: [SalonService, SalonRepository, JwtService, S3Service],
-  exports: [SalonRepository],
+  exports: [SalonRepository ],
 })
 export class SalonModule {}

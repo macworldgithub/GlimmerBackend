@@ -14,6 +14,8 @@ import {
   UseInterceptors,
   UploadedFiles,
   Req,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -40,6 +42,8 @@ import { Roles } from 'src/auth/enums/roles.enum';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
+import { SearchSalonServiceDto } from './dto/SearchSalonServiceDto';
+import { SalonService } from 'src/schemas/salon/salon_service.schema';
 
 @ApiTags('Salon Services')
 @Controller('salon-services')
@@ -219,5 +223,20 @@ export class SalonServicesController {
   @ApiParam({ name: 'id', type: String })
   remove(@Param('id') id: string) {
     return this.salonServicesService.remove(id);
+  }
+
+
+
+  @Get('search')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async search(
+    @Query() query: SearchSalonServiceDto,
+  ): Promise<SalonService[]> {
+    return this.salonServicesService.elasticSearch(
+      query.nameTerm,
+      query.gender,
+      query.serviceTerm,
+      query.price
+    );
   }
 }

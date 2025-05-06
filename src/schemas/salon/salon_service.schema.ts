@@ -12,6 +12,7 @@ export class SalonService {
   categoryId: string;
   @Prop({ required: true })
   salonId: string;
+  
 
   @Prop()
   subCategoryName?: string;
