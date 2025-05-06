@@ -169,6 +169,9 @@ export class ProductController {
     @Query('name') name?: string,
     @Query('minPrice') minPrice?: number,
     @Query('maxPrice') maxPrice?: number,
+    @Query('sortBy') sortBy?: string,        
+    @Query('order') order?: 'asc' | 'desc',    
+  
   ) {
     return this.product_service.get_all_products(
       page_no,
@@ -178,6 +181,8 @@ export class ProductController {
       name,
       minPrice,
       maxPrice,
+      sortBy,
+      order,
     );
   }
 

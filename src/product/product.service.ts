@@ -396,6 +396,8 @@ export class ProductService {
     name?: string,
     minPrice?: number,
     maxPrice?: number,
+    sortBy?: string,
+    order?: 'asc' | 'desc',
     projection?: ProductProjection,
   ): Promise<{ products: Product[]; total: number }> {
     try {
@@ -427,7 +429,7 @@ export class ProductService {
       if (item && item !== 'all') {
         filters.item = new Types.ObjectId(item);
       }
-      if (name && name.trim() !== "") {
+      if (name && name.trim() !== '') {
         filters.name = { $regex: new RegExp(name.trim(), 'i') };
       }
       const parsedMin = Number(minPrice);
@@ -475,6 +477,14 @@ export class ProductService {
           return prod;
         }),
       );
+
+      if (sortBy === 'price') {
+        products.sort((a, b) => {
+          const priceA = a.discounted_price ?? a.base_price ?? 0;
+          const priceB = b.discounted_price ?? b.base_price ?? 0;
+          return order === 'desc' ? priceB - priceA : priceA - priceB;
+        });
+      }
 
       const total =
         await this.product_repository.get_total_no_products_by_store_id({
