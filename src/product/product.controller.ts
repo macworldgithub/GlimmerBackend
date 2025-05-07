@@ -126,14 +126,12 @@ export class ProductController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+
   @Delete('delete_store_product_by_id')
   delete_product_by_id(
     @Query('id') id: string,
-    @Req() req: AuthPayloadRequest,
   ) {
-    return this.product_service.delete_store_product_by_id(id, req.user);
+    return this.product_service.delete_store_product_by_id(id);
   }
 
   @HttpCode(HttpStatus.OK)

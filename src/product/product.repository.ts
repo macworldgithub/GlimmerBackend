@@ -80,9 +80,8 @@ export class ProductRepository {
 
   async delete_product_by_store_id_product_id(
     _id: Types.ObjectId,
-    store_id: Types.ObjectId,
   ) {
-    return this.product_model.deleteOne({ _id, store: store_id }).exec();
+    return this.product_model.deleteOne({ _id }).exec();
   }
 
   async update_product(

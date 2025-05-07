@@ -151,13 +151,11 @@ export class ProductService {
 
   async delete_store_product_by_id(
     id: string,
-    store_payload: AuthPayload,
   ): Promise<DeleteResponse> {
     try {
       const product =
         await this.product_repository.delete_product_by_store_id_product_id(
           new Types.ObjectId(id),
-          new Types.ObjectId(store_payload._id),
         );
 
       if (!product.deletedCount) {
