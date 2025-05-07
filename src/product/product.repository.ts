@@ -151,14 +151,12 @@ export class ProductRepository {
   }
 
   async bulk_update_product_prices(
-    store_id: Types.ObjectId,
     discount: number,
     productIds: Types.ObjectId[]
   ): Promise<any> {
     try {
       // Fetch all products for the store
       const store_products = await this.product_model.find({
-        store: store_id,
         _id: { $in: productIds },
       });
 

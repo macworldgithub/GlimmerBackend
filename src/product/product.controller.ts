@@ -109,8 +109,6 @@ export class ProductController {
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
   @Put('bulk_update_product_prices')
   async bulk_update_product_prices(
     @Req() req: AuthPayloadRequest,
@@ -118,7 +116,6 @@ export class ProductController {
   ) {
     const productIdsAsObjectIds = body.productIds.map(id => new Types.ObjectId(id));
     return this.product_service.bulk_update_product_prices(
-      req.user,
       body.discount,
       productIdsAsObjectIds,
     );
