@@ -11,6 +11,7 @@ import {
   InternalServerErrorException,
   DefaultValuePipe,
   ParseBoolPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { AdminService, SalonFilter, SalonHighlights } from './admin.service';
 import { RecommendedProducts } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
@@ -35,6 +36,9 @@ import { CreateSaleRecordDto } from './dtos/request_dtos/create.sales.record.dto
 import { Salon } from 'src/schemas/salon/salon.schema';
 import { Product } from 'src/schemas/ecommerce/product.schema';
 import { GetProductsFilterDto } from './dtos/request_dtos/getProductsFilter.dto';
+
+import { SendMailOptions } from './admin.service';
+import { SendMailOptionsDto } from './dtos/request_dtos/send_mail_options_dto';
 
 @Controller('admin')
 export class AdminController {
@@ -364,7 +368,8 @@ export class AdminController {
   @Get('/product-highlights')
   @ApiOperation({
     summary: 'Get product highlights grouped by category flags',
-    description: 'Returns arrays for best_seller, trending_product and you_must_have_this',
+    description:
+      'Returns arrays for best_seller, trending_product and you_must_have_this',
   })
   @ApiQuery({
     name: 'filter',
@@ -399,5 +404,38 @@ export class AdminController {
   })
   async getProducts(@Query() filterDto: GetProductsFilterDto) {
     return this.adminService.getProductsHighlights(filterDto);
+  }
+
+  // @Post('send-order-confirmation-email')
+  // async send(@Body() dto: SendMailOptions) {
+  //   console.log(dto, 'ssss');
+  //   const { to, viewModel } = dto;
+
+  //   try {
+  //     return await this.adminService.sendEmail({ to, viewModel });
+  //   } catch (err) {
+  //     throw new InternalServerErrorException('Failed to send email');
+  //   }
+  // }
+
+  @Post('send-order-confirmation-email')
+  @ApiOperation({
+    summary: 'Send order confirmation e-mail to the customer',
+  })
+  @ApiBody({ type: SendMailOptionsDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Email sent successfully',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to send email',
+  })
+  async send(@Body() dto: any) {
+    try {
+      return await this.adminService.sendEmail(dto);
+    } catch {
+      throw new InternalServerErrorException('Failed to send email');
+    }
   }
 }

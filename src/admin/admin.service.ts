@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -17,6 +18,11 @@ import { S3Service } from 'src/aws/s3.service';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
 import { GetProductsFilterDto } from './dtos/request_dtos/getProductsFilter.dto';
 
+import * as nodemailer from 'nodemailer';
+import { ConfigService } from '@nestjs/config';
+import path, { join } from 'path';
+import ejs = require('ejs');
+import { send } from 'process';
 export type SalonFilter =
   | 'new-to-glimmer'
   | 'trending-salon'
@@ -34,10 +40,49 @@ export interface SalonHighlights {
   recommendedSalon: Salon[];
 }
 
+interface OrderItem {
+  productId: string;
+  storeId: string;
+  storeName: string;
+
+  name: string;
+  image: string;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  date: string;
+  items: OrderItem[];
+
+  subtotal: number;
+  shipping: number;
+  total: number;
+}
+
+interface Customer {
+  name: string;
+}
+
+interface OrderViewModel {
+  customer: Customer;
+  order: Order;
+}
+
+export interface SendMailOptions {
+  to: string;
+  viewModel: OrderViewModel;
+}
 @Injectable()
 export class AdminService {
+  private support_glimmer_transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private s3_service: S3Service,
+
+    private config: ConfigService,
 
     @InjectModel(RecommendedProducts.name)
     private readonly recommendedProductsModel: Model<RecommendedProductsDocument>,
@@ -47,7 +92,23 @@ export class AdminService {
 
     @InjectModel(Salon.name)
     private readonly salonModel: Model<SalonDocument>,
-  ) {}
+  ) {
+    this.support_glimmer_transporter = nodemailer.createTransport({
+      host: this.config.get<string>('SMTP_HOST'),
+      port: this.config.get<number>('SMTP_PORT'),
+      secure: this.config.get<string>('SMTP_SECURE') === 'true',
+      auth: {
+        user: this.config.get<string>('SMTP_SUPPORT_USER'),
+        pass: this.config.get<string>('SMTP_SUPPORT_PASS'),
+      },
+    });
+
+    // verify on startup
+    this.support_glimmer_transporter
+      .verify()
+      .then(() => this.logger.log('✅ SMTP configuration is valid'))
+      .catch((err) => this.logger.error('❌ SMTP configuration error', err));
+  }
 
   async addRecommendedProduct(
     salonId: string,
@@ -571,5 +632,35 @@ export class AdminService {
       throw new NotFoundException(`Product with id "${productId}" not found.`);
     }
     return updated;
+  }
+
+  async sendEmail(opts: SendMailOptions) {
+    try {
+      const { to, viewModel } = opts;
+
+      const subject = `Order Confirmation - Order #${viewModel.order.id}`;
+      const templatePath = join(
+        __dirname,
+        '..',
+        'admin',
+        'views',
+        'email',
+        'order-confirmation.ejs',
+      );
+      const htmlContent = await ejs.renderFile(templatePath, viewModel);
+      const from = this.config.get<string>('SMTP_SUPPORT_USER');
+      const info = await this.support_glimmer_transporter.sendMail({
+        from: `Glimmer ${from}`,
+        to,
+
+        subject: subject,
+        html: htmlContent,
+      });
+      this.logger.log(`Email sent: ${info.messageId}`);
+      return { messageId: info.messageId, response: info.response };
+    } catch (err) {
+      this.logger.error('Failed to send email', err);
+      throw err;
+    }
   }
 }
