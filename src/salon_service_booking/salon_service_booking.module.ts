@@ -11,6 +11,9 @@ import { SalonServicesCategoriesRepository } from 'src/salon_service_categories/
 import { SalonService } from 'src/salon/salon.service';
 import { SalonServiceSchema } from 'src/schemas/salon/salon_service.schema';
 import { SalonServiceCategories, SalonServiceCategoriesSchema } from 'src/schemas/salon/salon_service_categories.schema';
+import { BookingGateway } from './salon_service_booking_gateway';
+import { NotificationModule } from 'src/notification/notification.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -22,6 +25,7 @@ import { SalonServiceCategories, SalonServiceCategoriesSchema } from 'src/schema
     MongooseModule.forFeature([
       { name: SalonServiceCategories.name, schema: SalonServiceCategoriesSchema },
     ]),
+    NotificationModule,
   ],
   controllers: [SalonServiceBookingController],
   providers: [
@@ -31,6 +35,7 @@ import { SalonServiceCategories, SalonServiceCategoriesSchema } from 'src/schema
     SalonServicesCategoriesRepository,
     JwtService,
     S3Service,
+    BookingGateway,
   ],
   exports: [SalonServiceBookingRepository],
 })

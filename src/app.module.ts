@@ -30,6 +30,7 @@ import { SalonServiceCatgegoriesModule } from './salon_service_categories/salon_
 import { SalonServiceModule } from './salon_service/salon_service.module';
 import { SalonServiceBookingModule } from './salon_service_booking/salon_service_booking.module';
 import { AdminService } from './admin/admin.service';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AdminService } from './admin/admin.service';
     ProductItemModule,
     AdminModule,
     NotificationsModule,
+    NotificationModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [

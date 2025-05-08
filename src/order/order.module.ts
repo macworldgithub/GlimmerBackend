@@ -18,6 +18,8 @@ import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 import { AdminService } from 'src/admin/admin.service';
 import { AdminModule } from 'src/admin/admin.module';
 import { S3Service } from 'src/aws/s3.service';
+import { OrderGateway } from './order.gateway';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   imports: [
@@ -27,10 +29,11 @@ import { S3Service } from 'src/aws/s3.service';
       { name: StoreOrder.name, schema: StoreOrderSchema },
       { name: Product.name, schema: ProductSchema },
     ]),
-    AdminModule
+    AdminModule,
+    NotificationModule,
   ],
   controllers: [OrderController ],
-  providers: [OrderService, JwtService,S3Service, OrderRepository, ProductRepository ,AdminService],
+  providers: [OrderService, JwtService,S3Service, OrderRepository, ProductRepository ,AdminService, OrderGateway],
   exports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },

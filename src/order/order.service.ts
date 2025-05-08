@@ -31,12 +31,17 @@ import {
   RecommendedProductsDocument,
   RecommendedProducts,
 } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
+import { OrderGateway } from './order.gateway';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     private order_repository: OrderRepository,
     private product_repository: ProductRepository,
+
+    private readonly notificationService: NotificationService,
+    private readonly orderGateway: OrderGateway,
 
     private readonly adminService: AdminService,
 
@@ -59,6 +64,17 @@ export class OrderService {
     });
 
     let order = await newOrder.save();
+
+    const message = `New order received from ${order.customerName}`;
+    const userId = order.productList?.[0]?.storeId;
+
+    if (!userId) {
+      console.warn("No storeId found in order.productList");
+    }
+
+    await this.notificationService.create(userId, message, order);
+
+    this.orderGateway.sendOrderNotification(order);
     return { order: order, message: 'SucessFully Created Order' };
   }
 

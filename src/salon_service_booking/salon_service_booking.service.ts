@@ -4,11 +4,16 @@ import { CreateSalonServiceBookingDto, UpdateSalonServiceBookingStatusDto } from
 import { SalonServicesRepository } from 'src/salon_service/salon_service.repository';
 import { SalonServicesCategoriesRepository } from 'src/salon_service_categories/salon_service_categories.repository';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
+import { NotificationService } from 'src/notification/notification.service';
+import { BookingGateway } from './salon_service_booking_gateway';
 @Injectable()
 export class SalonServiceBookingService {
   constructor(private readonly bookingRepository: SalonServiceBookingRepository,
     private readonly salonServiceRepository: SalonServicesRepository,
     private readonly salonServiceCategoryRepository: SalonServicesCategoriesRepository,
+
+    private readonly notificationService: NotificationService,
+    private readonly bookingGateway: BookingGateway,
   ) {}
 
   async createBooking(bookingData:CreateSalonServiceBookingDto) {
@@ -18,7 +23,6 @@ export class SalonServiceBookingService {
       throw new NotFoundException(`Service with ID ${serviceId} not found.`);
     }
     const cat = await this.salonServiceCategoryRepository.findById(service.categoryId);
-    console.log(cat)
     let total = service.discountPercentage ? service.actualPrice - (service.actualPrice * service.discountPercentage) / 100 : service.actualPrice;
 
     if(total!=finalPrice){
@@ -44,7 +48,21 @@ export class SalonServiceBookingService {
       paymentMethod:paymentMethod,
       ...otherData,
     };
-    return this.bookingRepository.create(newBooking);
+    const savedBooking = await this.bookingRepository.create(newBooking);
+
+    //  Send notification
+    await this.notificationService.create(
+      savedBooking.salonId, // userId becomes salonId
+      `New booking received from ${savedBooking.customerName || 'a customer'}`, // message
+      savedBooking, // booking object
+    );
+
+    console.log('Saved Bookkiing: ', savedBooking)
+    
+    //  Emit WebSocket booking notification
+    this.bookingGateway.sendBookingNotification(savedBooking);
+
+    return savedBooking;
   }
 
   async getAllBookings(query:any) {
