@@ -12,6 +12,7 @@ import { AdminController } from './admin.controller';
 import { S3Service } from 'src/aws/s3.service';
 import { OrderService } from 'src/order/order.service';
 import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   providers: [AdminService ,S3Service],
@@ -31,6 +32,8 @@ import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
       { name: Salon.name, schema: SalonSchema }
 
     ]),
+
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
   ],
 })
 export class AdminModule {}
