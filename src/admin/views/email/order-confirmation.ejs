@@ -5,7 +5,7 @@
   <title>Order Confirmation</title>
   <style type="text/css">
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       background-color: #f4f4f7;
       margin: 0;
       padding: 0;
@@ -20,41 +20,40 @@
       max-width: 600px;
       margin: 0 auto;
       background-color: #FFFFFF;
-      border-radius: 4px;
+      border-radius: 6px;
       overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     .email-header {
-      background-color: #3869D4;
-      padding: 20px;
+      background-color: #FFF8E1;
+      padding: 30px 20px;
       text-align: center;
       color: #FFFFFF;
     }
     .email-header img.logo {
-      max-width: 150px;
+      max-width: 140px;
       margin-bottom: 10px;
     }
-    .banner {
-      width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto 20px auto;
-      border-radius: 4px;
-    }
     .email-body {
-      padding: 20px;
+      padding: 30px 20px;
     }
     h1 {
-      margin-top: 0;
+      margin: 0 0 10px;
       font-size: 24px;
-      font-weight: bold;
+      font-weight: 700;
+      color: #000000;
     }
     p {
-      margin: .4em 0;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0 0 10px;
+      color: #000000;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      font-size: 14px;
     }
     th, td {
       padding: 12px 15px;
@@ -62,21 +61,41 @@
       border-bottom: 1px solid #EAEAEC;
     }
     th {
-      background-color: #F9FAFB;
+      background-color: #f9fafc;
       font-weight: 600;
     }
     .product-img {
-      width: 60px;
+      width: 50px;
       height: auto;
       vertical-align: middle;
       border-radius: 4px;
       margin-right: 10px;
     }
     .footer {
-      padding: 20px;
+      padding: 25px 20px;
       text-align: center;
       font-size: 12px;
       color: #A8AAAF;
+      background-color: #f9fafc;
+    }
+    .cta-button {
+      display: inline-block;
+      margin-top: 25px;
+      background-color: #8212eb;
+      color: #ffffff !important;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .totals {
+      font-weight: bold;
+      text-align: right;
+    }
+    .totals td {
+      border: none;
+      padding-top: 10px;
     }
   </style>
 </head>
@@ -92,20 +111,14 @@
           alt="Glimmer Logo"
           class="logo"
         />
-        <!-- Banner -->
-        <img
-          src="https://picsum.photos/600/200"
-          alt="Store Banner"
-          class="banner"
-        />
         <h1>Thank you for your order, <%= customer.name %>!</h1>
-        <p>Order #<%= order.id %> &bull; Placed on <%= order.date %></p>
+        <p>Order #<%= order.id %> &bull; <%= order.date %></p>
       </div>
 
       <!-- Body -->
       <div class="email-body">
         <p>Hi <%= customer.name %>,</p>
-        <p>We’re processing your order and will let you know once it ships. Below is a summary of what you purchased:</p>
+        <p>We’re excited to let you know we’ve received your order. Here’s a summary:</p>
 
         <table>
           <thead>
@@ -121,7 +134,7 @@
               <tr>
                 <td>
                   <img src="<%= item.image %>" alt="<%= item.name %>" class="product-img" />
-                  <span><%= item.name %></span>
+                  <%= item.name %>
                 </td>
                 <td><%= item.quantity %></td>
                 <td>PKR <%= item.price.toFixed(2) %></td>
@@ -129,24 +142,27 @@
               </tr>
             <% }) %>
           </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="3" style="text-align: right; font-weight: bold;">Subtotal:</td>
-              <td>PKR <%= order.subtotal.toFixed(2) %></td>
-            </tr>
-            <tr>
-              <td colspan="3" style="text-align: right; font-weight: bold;">Shipping:</td>
-              <td>PKR <%= order.shipping.toFixed(2) %></td>
-            </tr>
-            <tr>
-              <td colspan="3" style="text-align: right; font-size: 16px; font-weight: bold;">Total:</td>
-              <td style="font-size: 16px; font-weight: bold;">PKR <%= order.total.toFixed(2) %></td>
-            </tr>
-          </tfoot>
         </table>
 
-        <p>If you have any questions, just reply to this email or reach out to our support team at <a href="mailto:support@glimmer.com.pk">support@glimmer.com.pk</a>.</p>
-        <p>Thanks for shopping with us!</p>
+        <table class="totals" width="100%">
+          <tr>
+            <td>Subtotal:</td>
+            <td>PKR <%= order.subtotal.toFixed(2) %></td>
+          </tr>
+          <tr>
+            <td>Shipping:</td>
+            <td>PKR <%= order.shipping.toFixed(2) %></td>
+          </tr>
+          <tr style="font-size: 16px;">
+            <td>Total:</td>
+            <td>PKR <%= order.total.toFixed(2) %></td>
+          </tr>
+        </table>
+
+        <a href="https://glimmer.com.pk" class="cta-button">Visit Our Store</a>
+
+        <p style="margin-top: 25px;">If you have any questions, reply to this email or contact our support team at <a href="mailto:support@glimmer.com.pk">support@glimmer.com.pk</a>.</p>
+        <p>Thanks again for choosing Glimmer!</p>
       </div>
 
       <!-- Footer -->

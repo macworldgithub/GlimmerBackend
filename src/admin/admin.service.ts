@@ -43,7 +43,7 @@ export interface SalonHighlights {
 interface OrderItem {
   productId: string;
   storeId: string;
-  storeName: string;
+  // storeName: string;
 
   name: string;
   image: string;
@@ -74,6 +74,43 @@ export interface SendMailOptions {
   to: string;
   viewModel: OrderViewModel;
 }
+
+interface Booking {
+  id: string;                         // _id
+  date: string;                      // bookingDate
+  time: string;                      // bookingTime
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  serviceName: string;
+  serviceDescription: string;
+  categoryName: string;
+  subCategoryName: string;
+  subSubCategoryName: string;
+  duration: number;
+  isDiscounted: boolean;
+  discountPercentage: number;
+  actualPrice: number;
+  finalPrice: number;
+  paymentMethod: string;
+  bookingStatus: string;
+  isPaid: boolean;
+}
+
+interface BookingViewModel {
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  booking: Booking;
+}
+
+export interface SendBookingMailOptions {
+  to: string;
+  viewModel: BookingViewModel;
+}
+
 @Injectable()
 export class AdminService {
   private support_glimmer_transporter: nodemailer.Transporter;
@@ -663,4 +700,35 @@ export class AdminService {
       throw err;
     }
   }
-}
+
+  async sendBookingEmail(opts: SendBookingMailOptions) {
+    try {
+      const { to, viewModel } = opts;
+  
+      const subject = `Booking Confirmation - Booking #${viewModel.booking.id}`;
+      const templatePath = join(
+        __dirname,
+        '..',
+        'admin',
+        'views',
+        'email',
+        'booking-confirmation.ejs',
+      );
+      const htmlContent = await ejs.renderFile(templatePath, viewModel);
+      const from = this.config.get<string>('SMTP_SUPPORT_USER');
+  
+      const info = await this.support_glimmer_transporter.sendMail({
+        from: `Glimmer ${from}`,
+        to,
+        subject,
+        html: htmlContent,
+      });
+  
+      this.logger.log(`Booking email sent: ${info.messageId}`);
+      return { messageId: info.messageId, response: info.response };
+    } catch (err) {
+      this.logger.error('Failed to send booking email', err);
+      throw err;
+    }
+  }
+}  

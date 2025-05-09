@@ -438,4 +438,26 @@ export class AdminController {
       throw new InternalServerErrorException('Failed to send email');
     }
   }
+
+  @Post('send-booking-confirmation-email')
+  @ApiOperation({
+    summary: 'Send booking confirmation e-mail to the customer',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Email sent successfully',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to send email',
+  })
+  async sendBooking(@Body() dto: any) {
+    try {
+      return await this.adminService.sendBookingEmail(dto);
+    } catch {
+      throw new InternalServerErrorException('Failed to send email');
+    }
+  }
 }
+
+

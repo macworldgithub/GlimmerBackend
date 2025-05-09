@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Booking Confirmation</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #f4f4f7;
+      margin: 0;
+      padding: 0;
+      color: #51545E;
+    }
+    .email-wrapper {
+      width: 100%;
+      background-color: #f4f4f7;
+      padding: 20px;
+    }
+    .email-content {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #FFFFFF;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .email-header {
+      background-color: #FFF8E1;
+      padding: 30px 20px;
+      text-align: center;
+      color: #000;
+    }
+    .email-body {
+      padding: 30px 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 10px;
+      font-weight: 700;
+    }
+    p {
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0 0 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #EAEAEC;
+    }
+    th {
+      background-color: #f9fafc;
+      font-weight: 600;
+    }
+    .cta-button {
+      display: inline-block;
+      margin-top: 25px;
+      background-color: #8212eb;
+      color: #ffffff !important;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    .footer {
+      padding: 25px 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #A8AAAF;
+      background-color: #f9fafc;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-content">
+
+      <!-- Header -->
+      <div class="email-header">
+        <img
+          src="https://via.placeholder.com/150x50?text=Glimmer+Logo"
+          alt="Glimmer Logo"
+          style="max-width: 140px; margin-bottom: 10px;"
+        />
+        <h1>Thank you for your booking, <%= customer.name %>!</h1>
+        <p>Booking #<%= booking.id %> &bull; <%= new Date(booking.bookingDate).toLocaleDateString('en-GB') %></p>
+      </div>
+
+      <!-- Body -->
+      <div class="email-body">
+        <p><strong>Service:</strong> <%= booking.serviceName %></p>
+        <p><strong>Date:</strong> <%= new Date(booking.bookingDate).toLocaleDateString('en-GB') %></p> 
+        <p><strong>Time:</strong> <%= booking.bookingTime %></p>
+        <p><strong>Duration:</strong> <%= booking.serviceDuration %> hour(s)</p>
+        <p><strong>Category:</strong> <%= booking.categoryName %> / <%= booking.subCategoryName %> / <%= booking.subSubCategoryName %></p>
+        <p><strong>Price:</strong> PKR <%= booking.finalPrice.toFixed(2) %> 
+          <% if (booking.isDiscounted) { %>
+            (Discounted from PKR <%= booking.actualPrice.toFixed(2) %> - <%= booking.discountPercentage %>%)
+          <% } %>
+        </p>
+        <p><strong>Payment Method:</strong> <%= booking.paymentMethod %></p>
+        <p><strong>Status:</strong> <%= booking.bookingStatus %> <% if (booking.isPaid) { %> (Paid) <% } else { %> (Unpaid) <% } %></p>
+
+        <a href="https://glimmer.com.pk/salons" class="cta-button">Visit Our Salons</a>
+
+        <p style="margin-top: 25px;">If you have any questions, contact us at <a href="mailto:support@glimmer.com.pk">support@glimmer.com.pk</a>.</p>
+        <p>Thank you for booking with Glimmer!</p>
+      </div>
+
+      <!-- Footer -->  
+      <div class="footer">
+        <p>© <%= new Date().getFullYear() %> Glimmer. All rights reserved.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
