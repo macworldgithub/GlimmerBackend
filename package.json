@@ -28,7 +28,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-socket.io": "^10.0.0",
     "@nestjs/swagger": "^8.1.0",
-    "@nestjs/websockets": "^10.0.0",
+    "@nestjs/websockets": "^10.4.17",
     "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
@@ -41,7 +41,7 @@
     "nodemailer": "^6.10.0",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
-    "socket.io": "^4.7.2",
+    "socket.io": "^4.8.1",
     "uuid": "^11.0.4"
   },
   "devDependencies": {
