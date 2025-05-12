@@ -78,9 +78,7 @@ export class ProductRepository {
       .exec();
   }
 
-  async delete_product_by_store_id_product_id(
-    _id: Types.ObjectId,
-  ) {
+  async delete_product_by_store_id_product_id(_id: Types.ObjectId) {
     return this.product_model.deleteOne({ _id }).exec();
   }
 
@@ -152,7 +150,7 @@ export class ProductRepository {
 
   async bulk_update_product_prices(
     discount: number,
-    productIds: Types.ObjectId[]
+    productIds: Types.ObjectId[],
   ): Promise<any> {
     try {
       // Fetch all products for the store
@@ -165,6 +163,10 @@ export class ProductRepository {
 
       // Prepare bulk update queries
       const updatedProducts = store_products.map((product) => {
+        const hasDiscountedPrice = product.discounted_price != null;
+        const priceToDiscount = hasDiscountedPrice
+          ? product.discounted_price
+          : product.base_price;
         const newPrice =
           product.base_price - (product.base_price * discount) / 100;
 
@@ -172,9 +174,9 @@ export class ProductRepository {
           updateOne: {
             filter: { _id: product._id },
             update: {
-              $set: {
-                base_price: newPrice,
-              },
+              $set: hasDiscountedPrice
+              ? { discounted_price: newPrice }
+              : { base_price: newPrice },
             },
           },
         };
