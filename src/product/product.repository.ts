@@ -167,8 +167,7 @@ export class ProductRepository {
         const priceToDiscount = hasDiscountedPrice
           ? product.discounted_price
           : product.base_price;
-        const newPrice =
-          product.base_price - (product.base_price * discount) / 100;
+         const newPrice = priceToDiscount - (priceToDiscount * discount) / 100;
 
         return {
           updateOne: {
