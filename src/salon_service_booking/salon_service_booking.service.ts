@@ -53,7 +53,7 @@ export class SalonServiceBookingService {
     //  Send notification
     await this.notificationService.create(
       savedBooking.salonId, // userId becomes salonId
-      `New booking received from ${savedBooking.customerName || 'a customer'}`, // message
+      `A new salon appointment has been booked by ${savedBooking.customerName || 'a customer'}. Please review the details. Salon ID: ${savedBooking.salonId}`, // message
       savedBooking, // booking object
     );
 

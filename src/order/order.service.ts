@@ -65,7 +65,7 @@ export class OrderService {
 
     let order = await newOrder.save();
 
-    const message = `New order received from ${order.customerName}`;
+    const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
     const userId = order.productList?.[0]?.storeId;
 
     if (!userId) {
