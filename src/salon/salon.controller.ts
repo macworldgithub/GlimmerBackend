@@ -3,6 +3,7 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  Delete,
   HttpCode,
   HttpStatus,
   Post,
@@ -77,5 +78,14 @@ export class SalonController {
   @ApiQuery({ name: 'id', type: String, required: true })
   async get_a_salon_by_id(@Query() query: any) {
     return this.salon_service.getSalonById(query);
+  }
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SALON)
+  @Delete('/delete')
+  @ApiOperation({ summary: 'Delete a salon by authenticated user' })
+  async delete_salon(@Req() req: AuthPayloadRequest) {
+    return this.salon_service.deleteSalon(req.user);
   }
 }

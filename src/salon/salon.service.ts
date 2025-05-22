@@ -158,6 +158,29 @@ export class SalonService {
     console.log(ser)
     return ser;
   }
+  async deleteSalon(salon_payload: AuthPayload) {
+    try {
+      const salon = await this.salon_repository.get_salon_by_id(salon_payload._id);
+      if (!salon) {
+        throw new NotFoundException('Salon not found');
+      }
+
+      const images = [salon.image1, salon.image2, salon.image3, salon.image4].filter((image): image is string => !!image);
+      if (images.length > 0) {
+        await Promise.all(images.map((image) => this.s3_service.deleteFileByUrl(image)));
+      }
+
+      const result = await this.salon_repository.delete_salon_by_id(new Types.ObjectId(salon_payload._id));
+      if (result.deletedCount === 0) {
+        throw new BadRequestException('Salon could not be deleted');
+      }
+
+      return { message: 'Salon deleted successfully' };
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
 }
 
 // const existingSalon = await this.salon_repository.get_salon_by_id(
