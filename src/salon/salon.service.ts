@@ -10,6 +10,7 @@ import { CreateSalonDto, UpdateSaloonDto } from './dto/salon.dto';
 import { Salon } from 'src/schemas/salon/salon.schema';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { Types } from 'mongoose';
+import { SalonStatus } from './enums/salon_status.enum';
 
 @Injectable()
 export class SalonService {
@@ -176,6 +177,44 @@ export class SalonService {
       }
 
       return { message: 'Salon deleted successfully' };
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException(e);
+    }
+  }
+  async updateSalonStatus(status: SalonStatus, salon_payload: AuthPayload): Promise<Salon> {
+    try {
+      if (!Object.values(SalonStatus).includes(status)) {
+        throw new BadRequestException('Invalid status value');
+      }
+
+      const salon = await this.salon_repository.get_salon_by_id(salon_payload._id);
+      if (!salon) {
+        throw new BadRequestException('Salon not found');
+      }
+
+      const updatedSalon = await this.salon_repository.update_salon(
+        new Types.ObjectId(salon_payload._id),
+        { status },
+      );
+      if (!updatedSalon) {
+        throw new BadRequestException('Salon status could not be updated');
+      }
+
+      if (updatedSalon.image1) {
+        updatedSalon.image1 = await this.s3_service.get_image_url(updatedSalon.image1);
+      }
+      if (updatedSalon.image2) {
+        updatedSalon.image2 = await this.s3_service.get_image_url(updatedSalon.image2);
+      }
+      if (updatedSalon.image3) {
+        updatedSalon.image3 = await this.s3_service.get_image_url(updatedSalon.image3);
+      }
+      if (updatedSalon.image4) {
+        updatedSalon.image4 = await this.s3_service.get_image_url(updatedSalon.image4);
+      }
+
+      return new Salon(updatedSalon);
     } catch (e) {
       console.log(e);
       throw new InternalServerErrorException(e);

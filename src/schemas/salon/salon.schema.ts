@@ -4,7 +4,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { OmitType, PartialType } from '@nestjs/swagger';
 import { HydratedDocument } from 'mongoose';
 import { CreateSalonDto } from 'src/salon/dto/salon.dto';
-
+import { SalonStatus } from 'src/salon/enums/salon_status.enum';
 export type SalonDocument = HydratedDocument<Salon>;
 
 @Schema({ timestamps: true })
@@ -51,6 +51,9 @@ export class Salon {
   @Prop({ type: Boolean, required: false, default: false })
   recommendedSalon!: boolean;
 
+  @Prop({ type: String, enum: SalonStatus, default: SalonStatus.ACTIVE })
+  status: SalonStatus;
+
   constructor(obj: Salon) {
     this._id = obj._id.toString();
     this.salon_name = obj.salon_name;
@@ -67,6 +70,7 @@ export class Salon {
     this.image4 = obj.image4;
   }
 }
+
 
 export const SalonSchema = SchemaFactory.createForClass(Salon);
 

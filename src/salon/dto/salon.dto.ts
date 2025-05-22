@@ -1,5 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { SalonStatus } from '../enums/salon_status.enum';
+import { IsEnum } from 'class-validator';
+
 
 export class CreateSalonDto {
   @ApiProperty({ description: 'The name of the salon' })
@@ -144,4 +147,14 @@ export class UpdateSaloonDto {
   })
   @IsOptional()
   image4?: Express.Multer.File;
+}
+
+export class UpdateSalonStatusDto {
+  @ApiProperty({
+    description: 'New status of the salon',
+    enum: SalonStatus,
+    example: SalonStatus.ACTIVE,
+  })
+  @IsEnum(SalonStatus)
+  status!: SalonStatus;
 }

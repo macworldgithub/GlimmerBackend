@@ -6,6 +6,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Patch,
+
   Post,
   Put,
   Query,
@@ -16,8 +18,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { CreateSalonDto, UpdateSaloonDto } from 'src/salon/dto/salon.dto';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags,ApiBody } from '@nestjs/swagger';
+import { CreateSalonDto, UpdateSaloonDto,UpdateSalonStatusDto } from 'src/salon/dto/salon.dto';
 import { SalonService } from './salon.service';
 import { FileSizeValidationPipe, SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
@@ -87,5 +89,22 @@ export class SalonController {
   @ApiOperation({ summary: 'Delete a salon by authenticated user' })
   async delete_salon(@Req() req: AuthPayloadRequest) {
     return this.salon_service.deleteSalon(req.user);
+  }
+
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SALON)
+  @Patch('/update_status')
+  @ApiOperation({ summary: 'Update the status of the authenticated user\'s salon' })
+  @ApiBody({
+    type: UpdateSalonStatusDto,
+    description: 'New status for the salon',
+  })
+  async update_salon_status(
+    @Body() updateSalonStatusDto: UpdateSalonStatusDto,
+    @Req() req: AuthPayloadRequest,
+  ) {
+    return this.salon_service.updateSalonStatus(updateSalonStatusDto.status, req.user);
   }
 }
