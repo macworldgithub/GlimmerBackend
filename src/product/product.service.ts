@@ -22,6 +22,8 @@ import { ProductFiles } from './types/update_product.type';
 import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
 
 import { v4 as uuidv4 } from 'uuid';
+import { SubmitRatingDto } from './dtos/request_dtos/rating.dto';
+
 
 @Injectable()
 export class ProductService {
@@ -520,6 +522,108 @@ export class ProductService {
       return new Product(product);
     } catch (e) {
       throw new InternalServerErrorException(e);
+    }
+  }
+ async submit_product_rating(
+    product_id: string,
+    user_id: string,
+    rating_dto: SubmitRatingDto,
+  ): Promise<Product> {
+    try {
+      const product = await this.product_repository.get_product_by_id(
+        new Types.ObjectId(product_id),
+        { average_rating: 1, total_ratings: 1, rating_distribution: 1 },
+      );
+      if (!product) {
+        throw new BadRequestException('Product does not exist');
+      }
+
+      // Update rating distribution
+      const ratingField = this.getRatingField(rating_dto.rating);
+      const update: { $inc: { [key: string]: number; total_ratings: number }; $set?: { average_rating: number } } = {
+        $inc: {
+          total_ratings: 1,
+          [`rating_distribution.${ratingField}`]: 1,
+        },
+      };
+
+      // Calculate new average rating
+      const newTotalRatings = product.total_ratings + 1;
+      const newAverageRating =
+        ((product.average_rating * product.total_ratings) + rating_dto.rating) /
+        newTotalRatings;
+
+      update.$set = {
+        average_rating: parseFloat(newAverageRating.toFixed(2)),
+      };
+
+      const updatedProduct = await this.product_repository.update_product_rating(
+        new Types.ObjectId(product_id),
+        update,
+      );
+
+      if (!updatedProduct) {
+        throw new BadRequestException('Failed to update rating');
+      }
+
+      return new Product(updatedProduct);
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to submit rating');
+    }
+  }
+
+  private getRatingField(rating: number): string {
+    switch (rating) {
+      case 5:
+        return 'five';
+      case 4:
+        return 'four';
+      case 3:
+        return 'three';
+      case 2:
+        return 'two';
+      case 1:
+        return 'one';
+      default:
+        throw new BadRequestException('Invalid rating value');
+    }
+  }
+
+ async get_product_rating(product_id: string): Promise<{
+    average_rating: number;
+    total_ratings: number;
+    rating_distribution: {
+      five: number;
+      four: number;
+      three: number;
+      two: number;
+      one: number;
+    };
+  }> {
+    try {
+      const product = await this.product_repository.get_product_by_id(
+        new Types.ObjectId(product_id),
+        { average_rating: 1, total_ratings: 1, rating_distribution: 1 },
+      );
+      if (!product) {
+        throw new BadRequestException('Product does not exist');
+      }
+      // Return a plain object to avoid class-transformer issues
+      return {
+        average_rating: product.average_rating,
+        total_ratings: product.total_ratings,
+        rating_distribution: {
+          five: product.rating_distribution.five,
+          four: product.rating_distribution.four,
+          three: product.rating_distribution.three,
+          two: product.rating_distribution.two,
+          one: product.rating_distribution.one,
+        },
+      };
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to retrieve rating');
     }
   }
 }

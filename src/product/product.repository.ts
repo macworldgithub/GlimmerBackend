@@ -191,4 +191,16 @@ export class ProductRepository {
       throw new Error('Failed to update product prices');
     }
   }
+  async update_product_rating(
+    id: Types.ObjectId,
+    update: any,
+  ) {
+    return this.product_model
+      .findByIdAndUpdate(
+        id,
+        update,
+        { new: true, runValidators: true },
+      )
+      .exec();
+  }
 }

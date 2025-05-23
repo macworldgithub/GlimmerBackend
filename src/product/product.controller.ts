@@ -31,6 +31,7 @@ import {
 import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { ProductFiles } from './types/update_product.type';
 import { Types } from 'mongoose';
+import { SubmitRatingDto } from './dtos/request_dtos/rating.dto';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -185,5 +186,38 @@ export class ProductController {
   @Get('get_product_by_id')
   get_product_by_id(@Query('id') id: string) {
     return this.product_service.get_product_by_id(id);
+  }
+
+  
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Post('submit_rating')
+  submit_product_rating(
+    @Query('id') product_id: string,
+    @Body() rating_dto: SubmitRatingDto,
+    @Req() req: AuthPayloadRequest,
+  ) {
+    return this.product_service.submit_product_rating(
+      product_id,
+      req.user._id,
+      rating_dto,
+    );
+  }
+
+ @HttpCode(HttpStatus.OK)
+  @Get('get_rating')
+  get_product_rating(@Query('id') product_id: string): Promise<{
+    average_rating: number;
+    total_ratings: number;
+    rating_distribution: {
+      five: number;
+      four: number;
+      three: number;
+      two: number;
+      one: number;
+    };
+  }> {
+    return this.product_service.get_product_rating(product_id);
   }
 }

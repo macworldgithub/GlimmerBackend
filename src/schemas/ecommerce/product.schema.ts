@@ -92,6 +92,20 @@ export class Product {
   @Prop({ default: false })
   you_must_have_this?: boolean;
 
+  @Prop({ default: 0 })
+  average_rating: number;
+
+  @Prop({ default: 0 })
+  total_ratings: number;
+
+  @Prop({ type: { five: Number, four: Number, three: Number, two: Number, one: Number }, default: { five: 0, four: 0, three: 0, two: 0, one: 0 } })
+  rating_distribution: {
+    five: number;
+    four: number;
+    three: number;
+    two: number;
+    one: number;
+  };
   constructor(product: Product) {
     if (!product) return;
     this._id = product._id?.toString();
@@ -112,6 +126,8 @@ export class Product {
 
     this.type = product.type ?? null;
     this.size = product.size ?? null;
+
+ 
   }
 }
 
