@@ -188,8 +188,7 @@ export class ProductController {
     return this.product_service.get_product_by_id(id);
   }
 
-  
-  @HttpCode(HttpStatus.OK)
+@HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('submit_rating')
@@ -205,7 +204,7 @@ export class ProductController {
     );
   }
 
- @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.OK)
   @Get('get_rating')
   get_product_rating(@Query('id') product_id: string): Promise<{
     average_rating: number;
@@ -219,5 +218,41 @@ export class ProductController {
     };
   }> {
     return this.product_service.get_product_rating(product_id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('user_rating')
+  get_user_rating(
+    @Query('id') product_id: string,
+    @Req() req: AuthPayloadRequest,
+  ): Promise<number | null> {
+    return this.product_service.get_user_rating(product_id, req.user._id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Get('ratings')
+  get_product_ratings(@Query('id') product_id: string): Promise<
+    Array<{
+      _id: string;
+      rating: number;
+      customer: { name: string; email: string };
+      createdAt: Date;
+    }>
+  > {
+    return this.product_service.get_product_ratings(product_id);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.SUPERADMIN)
+  @Put('update_rating')
+  update_product_rating(
+    @Query('rating_id') rating_id: string,
+    @Body() body: { rating: number },
+  ) {
+    return this.product_service.update_product_rating(rating_id, body.rating);
   }
 }

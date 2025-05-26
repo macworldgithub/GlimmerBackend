@@ -20,6 +20,9 @@ import { ProductService } from 'src/product/product.service';
 import { ProductRepository } from 'src/product/product.repository';
 import { Product, ProductSchema } from 'src/schemas/ecommerce/product.schema';
 import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
+import { RatingRepository } from 'src/product/rating.repository'; 
+
+import { ProductModule } from 'src/product/product.module'; // Import ProductModule
 import {
   ProductSubCategory,
   ProductSubCategorySchema,
@@ -39,6 +42,7 @@ import {
     MongooseModule.forFeature([
       { name: StoreOrder.name, schema: StoreOrderSchema },
     ]),
+    ProductModule, // Import ProductModule for ProductService
   ],
   controllers: [StoreController],
   providers: [
@@ -50,6 +54,7 @@ import {
     ProductRepository,
     OrderRepository,
     ProductSubCategoryRepository,
+    RatingRepository
   ],
   exports: [
     MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),

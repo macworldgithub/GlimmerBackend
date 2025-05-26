@@ -11,20 +11,29 @@ import {
   ProductSubCategorySchema,
 } from 'src/schemas/ecommerce/product_sub_category.schema';
 import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
-
+import { Rating, RatingSchema } from 'src/schemas/ecommerce/rating.schema'; 
+import { RatingRepository } from 'src/product/rating.repository'; 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-    MongooseModule.forFeature([
-      { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
-    ]),
+    MongooseModule.forFeature([ { name: ProductSubCategory.name, schema: ProductSubCategorySchema }]),
+    MongooseModule.forFeature([ { name: Rating.name, schema: RatingSchema } ])
+  
   ],
+  // imports: [
+  //   MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
+  //   MongooseModule.forFeature([
+  //     { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
+  //     { name: Rating.name, schema: RatingSchema }, // Add Rating schema
+  //   ]),
+  // ],
   providers: [
     ProductService,
     ProductRepository,
     JwtService,
     S3Service,
     ProductSubCategoryRepository,
+    RatingRepository
   ],
   controllers: [ProductController],
   exports: [

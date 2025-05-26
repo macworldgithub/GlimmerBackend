@@ -14,6 +14,8 @@ import { PaginatedDataDto } from 'src/commons/dtos/request_dtos/pagination.dto';
 import { isMongoId, validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { S3Service } from 'src/aws/s3.service';
+import { RatingRepository } from 'src/product/rating.repository'; 
+
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -31,6 +33,7 @@ export class ProductService {
     private product_repository: ProductRepository,
     private sub_category_repository: ProductSubCategoryRepository,
     private s3_service: S3Service,
+    private rating_repository: RatingRepository,
   ) {}
 
   private static readonly GET_PRODUCT_IMAGE_PATH = (id: string) => {
@@ -524,73 +527,57 @@ export class ProductService {
       throw new InternalServerErrorException(e);
     }
   }
- async submit_product_rating(
-    product_id: string,
-    user_id: string,
-    rating_dto: SubmitRatingDto,
-  ): Promise<Product> {
-    try {
-      const product = await this.product_repository.get_product_by_id(
-        new Types.ObjectId(product_id),
-        { average_rating: 1, total_ratings: 1, rating_distribution: 1 },
-      );
-      if (!product) {
-        throw new BadRequestException('Product does not exist');
-      }
+async submit_product_rating(
+  product_id: string,
+  user_id: string,
+  rating_dto: SubmitRatingDto,
+): Promise<Product> {
+  try {
+    const productId = new Types.ObjectId(product_id);
+    const userId = new Types.ObjectId(user_id);
 
-      // Update rating distribution
-      const ratingField = this.getRatingField(rating_dto.rating);
-      const update: { $inc: { [key: string]: number; total_ratings: number }; $set?: { average_rating: number } } = {
-        $inc: {
-          total_ratings: 1,
-          [`rating_distribution.${ratingField}`]: 1,
-        },
-      };
-
-      // Calculate new average rating
-      const newTotalRatings = product.total_ratings + 1;
-      const newAverageRating =
-        ((product.average_rating * product.total_ratings) + rating_dto.rating) /
-        newTotalRatings;
-
-      update.$set = {
-        average_rating: parseFloat(newAverageRating.toFixed(2)),
-      };
-
-      const updatedProduct = await this.product_repository.update_product_rating(
-        new Types.ObjectId(product_id),
-        update,
-      );
-
-      if (!updatedProduct) {
-        throw new BadRequestException('Failed to update rating');
-      }
-
-      return new Product(updatedProduct);
-    } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException('Failed to submit rating');
+    // Check if user already rated
+    const existingRating = await this.rating_repository.get_user_rating(productId, userId);
+    if (existingRating) {
+      throw new BadRequestException('You have already rated this product');
     }
-  }
 
-  private getRatingField(rating: number): string {
-    switch (rating) {
-      case 5:
-        return 'five';
-      case 4:
-        return 'four';
-      case 3:
-        return 'three';
-      case 2:
-        return 'two';
-      case 1:
-        return 'one';
-      default:
-        throw new BadRequestException('Invalid rating value');
+    // Save rating
+    await this.rating_repository.create_rating({
+      productId,
+      userId,
+      rating: rating_dto.rating,
+    });
+
+    // Update product rating stats
+    const stats = await this.rating_repository.get_rating_stats(productId);
+    const update = {
+      $set: {
+        average_rating: stats.average_rating,
+        total_ratings: stats.total_ratings,
+        rating_distribution: stats.rating_distribution,
+      },
+    };
+
+    const updatedProduct = await this.product_repository.update_product_rating(
+      productId,
+      update,
+    );
+
+    if (!updatedProduct) {
+      throw new BadRequestException('Failed to update rating');
     }
-  }
 
- async get_product_rating(product_id: string): Promise<{
+    return new Product(updatedProduct);
+  } catch (e) {
+    console.error(e);
+    // Cast e to Error to safely access message
+    const errorMessage = e instanceof Error ? e.message : 'Failed to submit rating';
+    throw new InternalServerErrorException(errorMessage);
+  }
+}
+
+  async get_product_rating(product_id: string): Promise<{
     average_rating: number;
     total_ratings: number;
     rating_distribution: {
@@ -602,28 +589,84 @@ export class ProductService {
     };
   }> {
     try {
-      const product = await this.product_repository.get_product_by_id(
-        new Types.ObjectId(product_id),
-        { average_rating: 1, total_ratings: 1, rating_distribution: 1 },
-      );
-      if (!product) {
-        throw new BadRequestException('Product does not exist');
-      }
-      // Return a plain object to avoid class-transformer issues
-      return {
-        average_rating: product.average_rating,
-        total_ratings: product.total_ratings,
-        rating_distribution: {
-          five: product.rating_distribution.five,
-          four: product.rating_distribution.four,
-          three: product.rating_distribution.three,
-          two: product.rating_distribution.two,
-          one: product.rating_distribution.one,
-        },
-      };
+      const stats = await this.rating_repository.get_rating_stats(new Types.ObjectId(product_id));
+      return stats;
     } catch (e) {
       console.error(e);
       throw new InternalServerErrorException('Failed to retrieve rating');
+    }
+  }
+
+  async get_user_rating(product_id: string, user_id: string): Promise<number | null> {
+    try {
+      const rating = await this.rating_repository.get_user_rating(
+        new Types.ObjectId(product_id),
+        new Types.ObjectId(user_id),
+      );
+      return rating ? rating.rating : null;
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to retrieve user rating');
+    }
+  }
+
+  async get_product_ratings(product_id: string): Promise<
+    Array<{
+      _id: string;
+      rating: number;
+      customer: { name: string; email: string };
+      createdAt: Date;
+    }>
+  > {
+    try {
+      const ratings = await this.rating_repository.get_product_ratings(new Types.ObjectId(product_id));
+      return ratings.map((rating) => ({
+        _id: rating._id.toString(),
+        rating: rating.rating,
+        customer: {
+          name: (rating.userId as any).name,
+          email: (rating.userId as any).email,
+        },
+        createdAt: rating.createdAt,
+      }));
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to retrieve product ratings');
+    }
+  }
+
+  async update_product_rating(rating_id: string, rating: number): Promise<Product> {
+    try {
+      const ratingObj = await this.rating_repository.update_rating(
+        new Types.ObjectId(rating_id),
+        rating,
+      );
+      if (!ratingObj) {
+        throw new BadRequestException('Rating not found');
+      }
+
+      const stats = await this.rating_repository.get_rating_stats(ratingObj.productId);
+      const update = {
+        $set: {
+          average_rating: stats.average_rating,
+          total_ratings: stats.total_ratings,
+          rating_distribution: stats.rating_distribution,
+        },
+      };
+
+      const updatedProduct = await this.product_repository.update_product_rating(
+        ratingObj.productId,
+        update,
+      );
+
+      if (!updatedProduct) {
+        throw new BadRequestException('Failed to update product rating');
+      }
+
+      return new Product(updatedProduct);
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to update rating');
     }
   }
 }
