@@ -17,7 +17,9 @@ export class SalonServiceCategoriesService {
 
   async findAll() {
     return await this.salonServicesRepository.findAll();
+
   }
+
 
   async findOne(id: string) {
     return await this.salonServicesRepository.findById(id);
