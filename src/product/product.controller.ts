@@ -278,4 +278,25 @@ async get_all_store_products(
   ) {
     return this.product_service.update_product_rating(rating_id, body.rating);
   }
+
+  // Add this endpoint at the end of the ProductController class
+  @HttpCode(HttpStatus.OK)
+  @Get('get_all_products_for_admin')
+  async get_all_products_for_admin(
+    @Query('page_no') page_no: number,
+    @Query('category') category?: string,
+    @Query('sub_category') sub_category?: string,
+    @Query('item') item?: string,
+    @Query('store') store?: string,
+    @Query('name') name?: string,
+  ) {
+    return this.product_service.get_all_products_for_admin(
+      page_no,
+      category,
+      sub_category,
+      item,
+      store,
+      name,
+    );
+  }
 }
