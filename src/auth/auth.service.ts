@@ -249,7 +249,9 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new BadRequestException('Incorrect email or password');
       }
-
+      if (store.store_image) {
+        store.store_image = await this.s3_service.get_image_url(store.store_image);
+      }
       const payload: AuthPayload = {
         _id: store._id.toString(),
         email: store.email,

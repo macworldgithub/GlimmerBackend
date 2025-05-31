@@ -270,61 +270,193 @@ export class AdminService {
   /**
    * Retrieve the recommended products for a specific salonId.
    */
-  async getRecommendedProducts(salonId: string): Promise<any[]> {
-    const recommendedRecord = await this.recommendedProductsModel.findOne({
-      salonId,
-    });
-    if (!recommendedRecord) {
-      throw new NotFoundException(`Salon with id ${salonId} not found`);
+  // async getRecommendedProducts(salonId: string): Promise<any[]> {
+  //   const recommendedRecord = await this.recommendedProductsModel.findOne({
+  //     salonId,
+  //   });
+  //   if (!recommendedRecord) {
+  //     throw new NotFoundException(`Salon with id ${salonId} not found`);
+  //   }
+
+  //   const result = [];
+
+  //   for (const product of recommendedRecord.productList) {
+  //     const productFromDatabase = await this.productModel.findById(
+  //       product.productId,
+  //     );
+  //     if (productFromDatabase) {
+  //       // Update the product with values from the recommendedRecord
+  //       if (productFromDatabase.image1) {
+  //         productFromDatabase.image1 = await this.s3_service.get_image_url(
+  //           productFromDatabase.image1,
+  //         );
+  //       }
+  //       if (productFromDatabase.image2) {
+  //         productFromDatabase.image2 = await this.s3_service.get_image_url(
+  //           productFromDatabase.image2,
+  //         );
+  //       }
+  //       if (productFromDatabase.image3) {
+  //         productFromDatabase.image3 = await this.s3_service.get_image_url(
+  //           productFromDatabase.image3,
+  //         );
+  //       }
+  //       const matched = recommendedRecord?.productList?.find(
+  //         (item) => item.productId === productFromDatabase.id,
+  //       );
+
+  //       productFromDatabase.rate_of_salon = matched?.rate;
+  //       productFromDatabase.ref_of_salon = salonId;
+  //       result.push(productFromDatabase);
+  //     }
+  //   }
+
+  //   return result;
+  // } //Checked
+async getRecommendedProducts(salonId?: string): Promise<any[]> {
+    const filter = salonId ? { salonId } : {};
+    const recommendedRecords = await this.recommendedProductsModel.find(filter);
+
+    if (!recommendedRecords || recommendedRecords.length === 0) {
+      throw new NotFoundException(`No recommended products found`);
     }
 
     const result = [];
 
-    for (const product of recommendedRecord.productList) {
-      const productFromDatabase = await this.productModel.findById(
-        product.productId,
-      );
-      if (productFromDatabase) {
-        // Update the product with values from the recommendedRecord
-        if (productFromDatabase.image1) {
-          productFromDatabase.image1 = await this.s3_service.get_image_url(
-            productFromDatabase.image1,
-          );
-        }
-        if (productFromDatabase.image2) {
-          productFromDatabase.image2 = await this.s3_service.get_image_url(
-            productFromDatabase.image2,
-          );
-        }
-        if (productFromDatabase.image3) {
-          productFromDatabase.image3 = await this.s3_service.get_image_url(
-            productFromDatabase.image3,
-          );
-        }
-        const matched = recommendedRecord?.productList?.find(
-          (item) => item.productId === productFromDatabase.id,
-        );
+    for (const record of recommendedRecords) {
+      const salonId = record.salonId;
+      const productList = [];
 
-        productFromDatabase.rate_of_salon = matched?.rate;
-        productFromDatabase.ref_of_salon = salonId;
-        result.push(productFromDatabase);
+      for (const product of record.productList) {
+        const productFromDatabase = await this.productModel.findById(
+          product.productId,
+        ).lean();
+        if (productFromDatabase) {
+          if (productFromDatabase.image1) {
+            productFromDatabase.image1 = await this.s3_service.get_image_url(
+              productFromDatabase.image1,
+            );
+          }
+          if (productFromDatabase.image2) {
+            productFromDatabase.image2 = await this.s3_service.get_image_url(
+              productFromDatabase.image2,
+            );
+          }
+          if (productFromDatabase.image3) {
+            productFromDatabase.image3 = await this.s3_service.get_image_url(
+              productFromDatabase.image3,
+            );
+          }
+          const matched = record.productList.find(
+            (item) => item.productId === productFromDatabase._id.toString(),
+          );
+
+          const latestSale = product.saleRecords.reduce((latest, current) =>
+            new Date(latest.soldAt) > new Date(current.soldAt) ? latest : current,
+            product.saleRecords[0] || {}
+          );
+          const price = latestSale.price || productFromDatabase.base_price || 0;
+
+          const updatedProduct = {
+            ...productFromDatabase,
+            productId: product.productId,
+            productName: product.productName,
+            rate: matched?.rate,
+            soldUnits: product.soldUnits,
+            saleRecords: product.saleRecords,
+            ref_of_salon: salonId,
+            price,
+          };
+          productList.push(updatedProduct);
+        }
       }
+
+      result.push({
+        salonId,
+        productList,
+      });
     }
-
+    console.log('hello',result)
     return result;
-  } //Checked
+  }
 
-  async getAllRecommendedProducts(salonId?: string): Promise<any> {
+  // async getAllRecommendedProducts(salonId?: string): Promise<any> {
+  //   const filter = salonId ? { salonId } : {};
+  //   const recommendedRecord = await this.recommendedProductsModel.find(filter);
+
+  //   if (!recommendedRecord || recommendedRecord.length === 0) {
+  //     throw new NotFoundException(`No recommended products found`);
+  //   }
+
+  //   return recommendedRecord;
+  // }
+
+  async getAllRecommendedProducts(salonId?: string): Promise<any[]> {
     const filter = salonId ? { salonId } : {};
-    const recommendedRecord = await this.recommendedProductsModel.find(filter);
+    const recommendedRecords = await this.recommendedProductsModel.find(filter);
 
-    if (!recommendedRecord || recommendedRecord.length === 0) {
+    if (!recommendedRecords || recommendedRecords.length === 0) {
       throw new NotFoundException(`No recommended products found`);
     }
 
-    return recommendedRecord;
-  }
+    const result = [];
 
+    for (const record of recommendedRecords) {
+      const salonId = record.salonId;
+      const productList = [];
+
+      for (const product of record.productList) {
+        const productFromDatabase = await this.productModel.findById(
+          product.productId,
+        ).lean();
+        if (productFromDatabase) {
+          if (productFromDatabase.image1) {
+            productFromDatabase.image1 = await this.s3_service.get_image_url(
+              productFromDatabase.image1,
+            );
+          }
+          if (productFromDatabase.image2) {
+            productFromDatabase.image2 = await this.s3_service.get_image_url(
+              productFromDatabase.image2,
+            );
+          }
+          if (productFromDatabase.image3) {
+            productFromDatabase.image3 = await this.s3_service.get_image_url(
+              productFromDatabase.image3,
+            );
+          }
+          const matched = record.productList.find(
+            (item) => item.productId === productFromDatabase._id.toString(),
+          );
+
+          const latestSale = product.saleRecords.reduce((latest, current) =>
+            new Date(latest.soldAt) > new Date(current.soldAt) ? latest : current,
+            product.saleRecords[0] || {}
+          );
+          const price = latestSale.price || productFromDatabase.base_price || 0;
+
+          const updatedProduct = {
+            ...productFromDatabase,
+            productId: product.productId,
+            productName: product.productName,
+            rate: matched?.rate,
+            soldUnits: product.soldUnits,
+            saleRecords: product.saleRecords,
+            ref_of_salon: salonId,
+            price,
+          };
+          productList.push(updatedProduct);
+        }
+      }
+
+      result.push({
+        salonId,
+        productList,
+      });
+    }
+
+    return result;
+  }
   async createSaleRecord(
     salonId: string,
     productId: string,
