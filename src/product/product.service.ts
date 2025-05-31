@@ -15,6 +15,7 @@ import { isMongoId, validate } from 'class-validator';
 import { DeleteResponse } from 'src/commons/dtos/response_dtos/delete.dto';
 import { S3Service } from 'src/aws/s3.service';
 import { RatingRepository } from 'src/product/rating.repository'; 
+import { Roles } from 'src/auth/enums/roles.enum';
 
 import {
   CreateProductDto,
@@ -173,89 +174,170 @@ export class ProductService {
     }
   }
 
+  // async get_all_store_products(
+  //   // store_payload: AuthPayload,
+  //   page_no: number,
+  //   category?: string,
+  //   sub_category?: string,
+  //   item?: string,
+  //   store?: string,
+  //   name?: string,
+  //   projection?: ProductProjection,
+  // ): Promise<{ products: Product[]; total: number }> {
+  //   try {
+  //     const params = new PaginatedDataDto(page_no);
+
+  //     const is_valid = await validate(params, {
+  //       validationError: { target: false },
+  //     });
+  //     if (is_valid.length) {
+  //       throw new BadRequestException('Incorrect page no value');
+  //     }
+
+  //     if (
+  //       category &&
+  //       sub_category &&
+  //       (!isMongoId(category) || !isMongoId(sub_category))
+  //     )
+  //       throw new BadRequestException('invalid category or sub category!');
+  //     let filters: FilterQuery<Product> = {};
+
+  //     if (category) {
+  //       filters.category = new Types.ObjectId(category);
+  //     }
+  //     if (sub_category) {
+  //       filters.sub_category = new Types.ObjectId(sub_category);
+  //     }
+  //     if (item && item !== 'all') {
+  //       filters.item = new Types.ObjectId(item);
+  //     }
+  //     if (store) {
+  //       filters.store = new Types.ObjectId(store);
+  //     }
+  //     if (name) {
+  //       filters.name = { $regex: name, $options: 'i' };
+  //     }
+  //     const products_res = await this.product_repository.get_all_store_products(
+  //       // new Types.ObjectId(store_payload._id),
+  //       page_no,
+  //       projection,
+  //       filters,
+  //     );
+
+  //     if (!products_res) {
+  //       throw new BadRequestException('Product doesnot exist');
+  //     }
+
+  //     const products = await Promise.all(
+  //       products_res.map(async (prod) => {
+  //         if (prod.image1) {
+  //           prod.image1 = await this.s3_service.get_image_url(prod.image1);
+  //         }
+  //         if (prod.image2) {
+  //           prod.image2 = await this.s3_service.get_image_url(prod.image2);
+  //         }
+  //         if (prod.image3) {
+  //           prod.image3 = await this.s3_service.get_image_url(prod.image3);
+  //         }
+
+  //         return prod;
+  //       }),
+  //     );
+
+  //     const total =
+  //       await this.product_repository.get_total_no_products_by_store_id({
+  //         // store: new Types.ObjectId(store_payload._id),
+  //         ...filters,
+  //       });
+
+  //     return { products: products.map((prod) => new Product(prod)), total };
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
+
   async get_all_store_products(
-    // store_payload: AuthPayload,
-    page_no: number,
-    category?: string,
-    sub_category?: string,
-    item?: string,
-    store?: string,
-    name?: string,
-    projection?: ProductProjection,
-  ): Promise<{ products: Product[]; total: number }> {
-    try {
-      const params = new PaginatedDataDto(page_no);
+  store_payload: AuthPayload,
+  page_no: number,
+  category?: string,
+  sub_category?: string,
+  item?: string,
+  name?: string,
+  projection?: ProductProjection,
+): Promise<{ products: Product[]; total: number }> {
+  try {
+    const params = new PaginatedDataDto(page_no);
 
-      const is_valid = await validate(params, {
-        validationError: { target: false },
-      });
-      if (is_valid.length) {
-        throw new BadRequestException('Incorrect page no value');
-      }
-
-      if (
-        category &&
-        sub_category &&
-        (!isMongoId(category) || !isMongoId(sub_category))
-      )
-        throw new BadRequestException('invalid category or sub category!');
-      let filters: FilterQuery<Product> = {};
-
-      if (category) {
-        filters.category = new Types.ObjectId(category);
-      }
-      if (sub_category) {
-        filters.sub_category = new Types.ObjectId(sub_category);
-      }
-      if (item && item !== 'all') {
-        filters.item = new Types.ObjectId(item);
-      }
-      if (store) {
-        filters.store = new Types.ObjectId(store);
-      }
-      if (name) {
-        filters.name = { $regex: name, $options: 'i' };
-      }
-      const products_res = await this.product_repository.get_all_store_products(
-        // new Types.ObjectId(store_payload._id),
-        page_no,
-        projection,
-        filters,
-      );
-
-      if (!products_res) {
-        throw new BadRequestException('Product doesnot exist');
-      }
-
-      const products = await Promise.all(
-        products_res.map(async (prod) => {
-          if (prod.image1) {
-            prod.image1 = await this.s3_service.get_image_url(prod.image1);
-          }
-          if (prod.image2) {
-            prod.image2 = await this.s3_service.get_image_url(prod.image2);
-          }
-          if (prod.image3) {
-            prod.image3 = await this.s3_service.get_image_url(prod.image3);
-          }
-
-          return prod;
-        }),
-      );
-
-      const total =
-        await this.product_repository.get_total_no_products_by_store_id({
-          // store: new Types.ObjectId(store_payload._id),
-          ...filters,
-        });
-
-      return { products: products.map((prod) => new Product(prod)), total };
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
+    const is_valid = await validate(params, {
+      validationError: { target: false },
+    });
+    if (is_valid.length) {
+      throw new BadRequestException('Incorrect page no value');
     }
-  }
 
+    if (
+      category &&
+      sub_category &&
+      (!isMongoId(category) || !isMongoId(sub_category))
+    ) {
+      throw new BadRequestException('invalid category or sub category!');
+    }
+
+    let filters: FilterQuery<Product> = {};
+    // Only filter by store if the user is a STORE role
+    if (store_payload.role === Roles.STORE) {
+      filters.store = new Types.ObjectId(store_payload._id);
+    }
+
+    if (category) {
+      filters.category = new Types.ObjectId(category);
+    }
+    if (sub_category) {
+      filters.sub_category = new Types.ObjectId(sub_category);
+    }
+    if (item && item !== 'all') {
+      filters.item = new Types.ObjectId(item);
+    }
+    if (name) {
+      filters.name = { $regex: name, $options: 'i' };
+    }
+
+    const products_res = await this.product_repository.get_all_store_products(
+      page_no,
+      projection,
+      filters,
+    );
+
+    if (!products_res) {
+      throw new BadRequestException('Product does not exist');
+    }
+
+    const products = await Promise.all(
+      products_res.map(async (prod) => {
+        if (prod.image1) {
+          prod.image1 = await this.s3_service.get_image_url(prod.image1);
+        }
+        if (prod.image2) {
+          prod.image2 = await this.s3_service.get_image_url(prod.image2);
+        }
+        if (prod.image3) {
+          prod.image3 = await this.s3_service.get_image_url(prod.image3);
+        }
+        return prod;
+      }),
+    );
+
+    const total = await this.product_repository.get_total_no_products_by_store_id({
+      ...filters,
+    });
+
+    return { products: products.map((prod) => new Product(prod)), total };
+  } catch (e) {
+    console.log(e);
+    throw new InternalServerErrorException(e);
+  }
+}
   async update_store_product(
     id: string,
     store_payload: AuthPayload,
@@ -363,7 +445,7 @@ export class ProductService {
         discount,
         productIds
       );
-  
+      console.log(bulkWriteResult)
       if (bulkWriteResult.modifiedCount === 0) {
         throw new BadRequestException('No products were updated');
       }

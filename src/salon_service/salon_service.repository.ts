@@ -12,7 +12,7 @@ import {
 } from 'src/schemas/salon/salon_service_categories.schema';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
 import { name } from 'ejs';
-
+import { BadRequestException } from '@nestjs/common';
 @Injectable()
 export class SalonServicesRepository {
   constructor(
@@ -104,38 +104,86 @@ export class SalonServicesRepository {
       .exec();
     return service;
   }
-
-  async applyBulkDiscount(id: string[], discountPercentage: any) {
-    const service = await this.salonServiceModel
-      .updateMany(
-        { _id: { $in: id } },
-        {
-          $set: {
-            discountPercentage: discountPercentage,
-            hasDiscount: true,
-          },
-        },
-      )
-      .exec();
-
-    return service;
+async applyDiscount(id: string, discountPercentage: any) {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new BadRequestException(`Invalid service ID: ${id}`);
   }
-  async applyDiscount(id: string, discountPercentage: any) {
-    console.log(discountPercentage, id);
-    const service = await this.salonServiceModel
-      .findByIdAndUpdate(
-        id,
-        {
-          discountPercentage: parseFloat(discountPercentage),
+
+  console.log("Applying discount:", { id, discountPercentage });
+  const service = await this.salonServiceModel
+    .findByIdAndUpdate(
+      id,
+      {
+        discountPercentage: parseFloat(discountPercentage),
+        hasDiscount: true,
+      },
+      { new: true }
+    )
+    .exec();
+
+  if (!service) {
+    throw new NotFoundException(`Salon Service with ID ${id} not found`);
+  }
+
+  return service;
+}
+
+async applyBulkDiscount(id: string[], discountPercentage: any) {
+  const invalidIds = id.filter(id => !Types.ObjectId.isValid(id));
+  if (invalidIds.length > 0) {
+    throw new BadRequestException(`Invalid service IDs: ${invalidIds.join(", ")}`);
+  }
+
+  console.log("Applying bulk discount to IDs:", id, "Discount:", discountPercentage);
+  const result = await this.salonServiceModel
+    .updateMany(
+      { _id: { $in: id } },
+      {
+        $set: {
+          discountPercentage: discountPercentage,
           hasDiscount: true,
         },
-        {
-          new: true,
-        },
-      )
-      .exec();
-    return service;
+      }
+    )
+    .exec();
+
+  if (result.modifiedCount === 0) {
+    throw new NotFoundException(`No services found with IDs: ${id.join(", ")}`);
   }
+
+  return { message: `Updated ${result.modifiedCount} services`, result };
+}
+  // async applyBulkDiscount(id: string[], discountPercentage: any) {
+  //   const service = await this.salonServiceModel
+  //     .updateMany(
+  //       { _id: { $in: id } },
+  //       {
+  //         $set: {
+  //           discountPercentage: discountPercentage,
+  //           hasDiscount: true,
+  //         },
+  //       },
+  //     )
+  //     .exec();
+
+  //   return service;
+  // }
+  // async applyDiscount(id: string, discountPercentage: any) {
+  //   console.log(discountPercentage, id);
+  //   const service = await this.salonServiceModel
+  //     .findByIdAndUpdate(
+  //       id,
+  //       {
+  //         discountPercentage: parseFloat(discountPercentage),
+  //         hasDiscount: true,
+  //       },
+  //       {
+  //         new: true,
+  //       },
+  //     )
+  //     .exec();
+  //   return service;
+  // }
 
   async removeDiscount(id: string) {
     const service = await this.salonServiceModel

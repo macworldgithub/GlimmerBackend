@@ -83,31 +83,54 @@ export class ProductController {
     return this.product_service.get_store_product_by_id(id, req.user);
   }
 
-  @HttpCode(HttpStatus.OK)
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Role(Roles.STORE)
-  @Get('get_all_store_products')
-  async get_all_store_products(
-    // @Req() req: AuthPayloadRequest,
-    @Query('page_no') page_no: number,
-    @Query('category') category?: string,
-    @Query('sub_category') sub_category?: string,
-    @Query('item') item?: string,
-    @Query('store') store?: string,
-    @Query('name') name?: string,
-  ) {
-    return this.product_service.get_all_store_products(
-      // req.user,
-      page_no,
-      category,
-      sub_category,
-      item,
-      store,
-      name,
-    );
-  }
+  // @HttpCode(HttpStatus.OK)
+  // // @ApiBearerAuth()
+  // // @UseGuards(AuthGuard, RolesGuard)
+  // // @Role(Roles.STORE)
+  // @Get('get_all_store_products')
+  // async get_all_store_products(
+  //   // @Req() req: AuthPayloadRequest,
+  //   @Query('page_no') page_no: number,
+  //   @Query('category') category?: string,
+  //   @Query('sub_category') sub_category?: string,
+  //   @Query('item') item?: string,
+  //   @Query('store') store?: string,
+  //   @Query('name') name?: string,
+  // ) {
+  //   return this.product_service.get_all_store_products(
+  //     // req.user,
+  //     page_no,
+  //     category,
+  //     sub_category,
+  //     item,
+  //     store,
+  //     name,
+  //   );
+  // }
 
+
+  @HttpCode(HttpStatus.OK)
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
+@Role(Roles.STORE)
+@Get('get_all_store_products')
+async get_all_store_products(
+  @Req() req: AuthPayloadRequest,
+  @Query('page_no') page_no: number,
+  @Query('category') category?: string,
+  @Query('sub_category') sub_category?: string,
+  @Query('item') item?: string,
+  @Query('name') name?: string,
+) {
+  return this.product_service.get_all_store_products(
+    req.user, // Pass the authenticated user's payload
+    page_no,
+    category,
+    sub_category,
+    item,
+    name,
+  );
+}
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @Put('bulk_update_product_prices')
