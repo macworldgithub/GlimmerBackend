@@ -34,9 +34,10 @@ import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(
-      'mongodb+srv://salman:4lanHyMRdCrtXDJ7@sign365.nglnioh.mongodb.net/',
-    ),
+    // MongooseModule.forRoot(
+    //   'mongodb+srv://salman:4lanHyMRdCrtXDJ7@sign365.nglnioh.mongodb.net/',
+    // ),
+    MongooseModule.forRoot(`${process.env.DATABASE}`),
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     ProductModule,
     OrderModule,
@@ -66,7 +67,7 @@ import { NotificationModule } from './notification/notification.module';
     OrderRepository,
     FirebaseService,
     SalonService,
-    AdminService
+    AdminService,
   ],
 })
 export class AppModule {}
