@@ -20,6 +20,7 @@ import { ApiBearerAuth, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/enums/roles.enum';
 import { Role } from 'src/auth/roles.decorator';
+import { Roles as Roless } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { ProductService } from './product.service';
 import { AuthPayloadRequest } from './interfaces/auth_payload_request.interface';
@@ -32,6 +33,7 @@ import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.p
 import { ProductFiles } from './types/update_product.type';
 import { Types } from 'mongoose';
 import { SubmitRatingDto } from './dtos/request_dtos/rating.dto';
+import { MultiRolesGuard } from 'src/auth/multi-roles.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @ApiTags('Ecommerce Products')
@@ -111,8 +113,8 @@ export class ProductController {
 
   @HttpCode(HttpStatus.OK)
 @ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
-@Role(Roles.STORE)
+@UseGuards(AuthGuard, MultiRolesGuard)
+@Roless([Roles.STORE,Roles.SUPERADMIN])
 @Get('get_all_store_products')
 async get_all_store_products(
   @Req() req: AuthPayloadRequest,
