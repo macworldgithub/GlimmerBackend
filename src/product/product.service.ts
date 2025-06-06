@@ -471,115 +471,220 @@ export class ProductService {
     }
   }
 
+  // async get_all_products(
+  //   page_no: number,
+  //   category?: string,
+  //   sub_category?: string,
+  //   item?: string,
+  //   name?: string,
+  //   minPrice?: number,
+  //   maxPrice?: number,
+  //   sortBy?: string,
+  //   order?: 'asc' | 'desc',
+  //   projection?: ProductProjection,
+  // ): Promise<{ products: Product[]; total: number }> {
+  //   try {
+  //     const params = new PaginatedDataDto(page_no);
+
+  //     const is_valid = await validate(params, {
+  //       validationError: { target: false },
+  //     });
+  //     if (is_valid.length) {
+  //       throw new BadRequestException('Incorrect page no value');
+  //     }
+
+  //     if (
+  //       category &&
+  //       sub_category &&
+  //       (!isMongoId(category) || !isMongoId(sub_category))
+  //     )
+  //       throw new BadRequestException('invalid category or sub category!');
+  //     if (item && !isMongoId(item))
+  //       throw new BadRequestException('invalid item!');
+  //     let filters: any = {};
+
+  //     if (category) {
+  //       filters.category = new Types.ObjectId(category);
+  //     }
+  //     if (sub_category) {
+  //       filters.sub_category = new Types.ObjectId(sub_category);
+  //     }
+  //     if (item && item !== 'all') {
+  //       filters.item = new Types.ObjectId(item);
+  //     }
+  //     if (name && name.trim() !== '') {
+  //       filters.name = { $regex: new RegExp(name.trim(), 'i') };
+  //     }
+  //     const parsedMin = Number(minPrice);
+  //     const parsedMax = Number(maxPrice);
+
+  //     if (!isNaN(parsedMin) || !isNaN(parsedMax)) {
+  //       const priceFilter: any = {};
+
+  //       if (!isNaN(parsedMin)) {
+  //         priceFilter.$gte = parsedMin;
+  //       }
+  //       if (!isNaN(parsedMax)) {
+  //         priceFilter.$lte = parsedMax;
+  //       }
+
+  //       filters.$or = [
+  //         { discounted_price: priceFilter },
+  //         {
+  //           $and: [
+  //             { discounted_price: { $exists: false } },
+  //             { base_price: priceFilter },
+  //           ],
+  //         },
+  //       ];
+  //     }
+  //     console.log(filters);
+  //     const products_res = await this.product_repository.get_all_products(
+  //       page_no,
+  //       projection,
+  //       filters,
+  //     );
+
+  //     const products = await Promise.all(
+  //       products_res.map(async (prod) => {
+  //         if (prod.image1) {
+  //           prod.image1 = await this.s3_service.get_image_url(prod.image1);
+  //         }
+  //         if (prod.image2) {
+  //           prod.image2 = await this.s3_service.get_image_url(prod.image2);
+  //         }
+  //         if (prod.image3) {
+  //           prod.image3 = await this.s3_service.get_image_url(prod.image3);
+  //         }
+
+  //         return prod;
+  //       }),
+  //     );
+
+  //     if (sortBy === 'price') {
+  //       products.sort((a, b) => {
+  //         const priceA = a.discounted_price ?? a.base_price ?? 0;
+  //         const priceB = b.discounted_price ?? b.base_price ?? 0;
+  //         return order === 'desc' ? priceB - priceA : priceA - priceB;
+  //       });
+  //     }
+
+  //     const total =
+  //       await this.product_repository.get_total_no_products_by_store_id({
+  //         ...filters,
+  //       });
+
+  //     return { products: products.map((prod) => new Product(prod)), total };
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
   async get_all_products(
-    page_no: number,
-    category?: string,
-    sub_category?: string,
-    item?: string,
-    name?: string,
-    minPrice?: number,
-    maxPrice?: number,
-    sortBy?: string,
-    order?: 'asc' | 'desc',
-    projection?: ProductProjection,
-  ): Promise<{ products: Product[]; total: number }> {
-    try {
-      const params = new PaginatedDataDto(page_no);
+  page_no: number,
+  category?: string,
+  sub_category?: string,
+  item?: string,
+  name?: string,
+  minPrice?: number,
+  maxPrice?: number,
+  sortBy?: string,
+  order?: 'asc' | 'desc',
+  projection?: ProductProjection,
+): Promise<{ products: Product[]; total: number }> {
+  try {
+    const params = new PaginatedDataDto(page_no);
 
-      const is_valid = await validate(params, {
-        validationError: { target: false },
-      });
-      if (is_valid.length) {
-        throw new BadRequestException('Incorrect page no value');
-      }
-
-      if (
-        category &&
-        sub_category &&
-        (!isMongoId(category) || !isMongoId(sub_category))
-      )
-        throw new BadRequestException('invalid category or sub category!');
-      if (item && !isMongoId(item))
-        throw new BadRequestException('invalid item!');
-      let filters: any = {};
-
-      if (category) {
-        filters.category = new Types.ObjectId(category);
-      }
-      if (sub_category) {
-        filters.sub_category = new Types.ObjectId(sub_category);
-      }
-      if (item && item !== 'all') {
-        filters.item = new Types.ObjectId(item);
-      }
-      if (name && name.trim() !== '') {
-        filters.name = { $regex: new RegExp(name.trim(), 'i') };
-      }
-      const parsedMin = Number(minPrice);
-      const parsedMax = Number(maxPrice);
-
-      if (!isNaN(parsedMin) || !isNaN(parsedMax)) {
-        const priceFilter: any = {};
-
-        if (!isNaN(parsedMin)) {
-          priceFilter.$gte = parsedMin;
-        }
-        if (!isNaN(parsedMax)) {
-          priceFilter.$lte = parsedMax;
-        }
-
-        filters.$or = [
-          { discounted_price: priceFilter },
-          {
-            $and: [
-              { discounted_price: { $exists: false } },
-              { base_price: priceFilter },
-            ],
-          },
-        ];
-      }
-      console.log(filters);
-      const products_res = await this.product_repository.get_all_products(
-        page_no,
-        projection,
-        filters,
-      );
-
-      const products = await Promise.all(
-        products_res.map(async (prod) => {
-          if (prod.image1) {
-            prod.image1 = await this.s3_service.get_image_url(prod.image1);
-          }
-          if (prod.image2) {
-            prod.image2 = await this.s3_service.get_image_url(prod.image2);
-          }
-          if (prod.image3) {
-            prod.image3 = await this.s3_service.get_image_url(prod.image3);
-          }
-
-          return prod;
-        }),
-      );
-
-      if (sortBy === 'price') {
-        products.sort((a, b) => {
-          const priceA = a.discounted_price ?? a.base_price ?? 0;
-          const priceB = b.discounted_price ?? b.base_price ?? 0;
-          return order === 'desc' ? priceB - priceA : priceA - priceB;
-        });
-      }
-
-      const total =
-        await this.product_repository.get_total_no_products_by_store_id({
-          ...filters,
-        });
-
-      return { products: products.map((prod) => new Product(prod)), total };
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException(e);
+    const is_valid = await validate(params, {
+      validationError: { target: false },
+    });
+    if (is_valid.length) {
+      throw new BadRequestException('Incorrect page no value');
     }
+
+    if (
+      category &&
+      sub_category &&
+      (!isMongoId(category) || !isMongoId(sub_category))
+    )
+      throw new BadRequestException('invalid category or sub category!');
+    if (item && !isMongoId(item))
+      throw new BadRequestException('invalid item!');
+    let filters: any = {};
+
+    if (category) {
+      filters.category = new Types.ObjectId(category);
+    }
+    if (sub_category) {
+      filters.sub_category = new Types.ObjectId(sub_category);
+    }
+    if (item && item !== 'all') {
+      filters.item = new Types.ObjectId(item);
+    }
+    if (name && name.trim() !== '') {
+      filters.name = { $regex: new RegExp(name.trim(), 'i') };
+    }
+    const parsedMin = Number(minPrice);
+    const parsedMax = Number(maxPrice);
+
+    if (!isNaN(parsedMin) || !isNaN(parsedMax)) {
+      const priceFilter: any = {};
+
+      if (!isNaN(parsedMin)) {
+        priceFilter.$gte = parsedMin;
+      }
+      if (!isNaN(parsedMax)) {
+        priceFilter.$lte = parsedMax;
+      }
+
+      filters.$or = [
+        { discounted_price: priceFilter },
+        {
+          $and: [
+            { discounted_price: { $exists: false } },
+            { base_price: priceFilter },
+          ],
+        },
+      ];
+    }
+    console.log(filters);
+
+    const products_res = await this.product_repository.get_all_products(
+      page_no,
+      projection,
+      filters,
+      sortBy, // Pass sortBy to repository
+      order,  // Pass order to repository
+    );
+
+    const products = await Promise.all(
+      products_res.map(async (prod) => {
+        if (prod.image1) {
+          prod.image1 = await this.s3_service.get_image_url(prod.image1);
+        }
+        if (prod.image2) {
+          prod.image2 = await this.s3_service.get_image_url(prod.image2);
+        }
+        if (prod.image3) {
+          prod.image3 = await this.s3_service.get_image_url(prod.image3);
+        }
+        return prod;
+      }),
+    );
+
+    // Removed client-side sorting for price, as it's now handled in the repository
+
+    const total =
+      await this.product_repository.get_total_no_products_by_store_id({
+        ...filters,
+      });
+
+    return { products: products.map((prod) => new Product(prod)), total };
+  } catch (e) {
+    console.log(e);
+    throw new InternalServerErrorException(e);
   }
+}
 
   async get_product_by_id(
     id: string,

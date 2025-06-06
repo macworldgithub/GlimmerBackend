@@ -57,26 +57,65 @@ export class ProductRepository {
     .limit(DEFAULT_DOCUMENTS_LIMITS)
     .exec();
 }
-  async get_all_products(
-    page_no: number,
-    projection?: ProductProjection,
-    filters: Partial<Product> = {},
-  ) {
-    const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
+  // async get_all_products(
+  //   page_no: number,
+  //   projection?: ProductProjection,
+  //   filters: Partial<Product> = {},
+  // ) {
+  //   const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
 
-    return this.product_model
-      .find(
-        {
-          ...filters,
-        },
-        projection,
-      )
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(DEFAULT_DOCUMENTS_LIMITS)
-      .exec();
+  //   return this.product_model
+  //     .find(
+  //       {
+  //         ...filters,
+  //       },
+  //       projection,
+  //     )
+  //     .sort({ createdAt: -1 })
+  //     .skip(skip)
+  //     .limit(DEFAULT_DOCUMENTS_LIMITS)
+  //     .exec();
+  // }
+
+  async get_all_products(
+  page_no: number,
+  projection?: ProductProjection,
+  filters: Partial<Product> = {},
+  sortBy?: string, // Add sortBy parameter
+  order?: 'asc' | 'desc', // Add order parameter
+) {
+  const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
+
+  let sortOptions: any = { createdAt: -1, _id: -1 }; // Default sort with secondary key for stability
+
+  if (sortBy === 'price') {
+    // Sort by discounted_price or base_price
+    sortOptions = [
+      { discounted_price: order === 'desc' ? -1 : 1 },
+      { base_price: order === 'desc' ? -1 : 1 },
+      { _id: order === 'desc' ? -1 : 1 }, // Secondary sort for stability
+    ];
+  } else if (sortBy) {
+    sortOptions = { [sortBy]: order === 'desc' ? -1 : 1, _id: order === 'desc' ? -1 : 1 };
+  } else {
+    // When no sortBy, respect the order for createdAt
+    sortOptions = { createdAt: order === 'desc' ? -1 : 1, _id: order === 'desc' ? -1 : 1 };
   }
 
+  console.log('MongoDB query:', { filters, sortOptions, skip, limit: DEFAULT_DOCUMENTS_LIMITS });
+
+  return this.product_model
+    .find(
+      {
+        ...filters,
+      },
+      projection,
+    )
+    .sort(sortOptions)
+    .skip(skip)
+    .limit(DEFAULT_DOCUMENTS_LIMITS)
+    .exec();
+}
   async delete_product_by_store_id_product_id(_id: Types.ObjectId) {
     return this.product_model.deleteOne({ _id }).exec();
   }
