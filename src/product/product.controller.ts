@@ -301,4 +301,25 @@ async get_all_store_products(
       name,
     );
   }
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Role(Roles.STORE)
+  @Get('get_store_product_count')
+  async get_store_product_count(@Req() req: AuthPayloadRequest) {
+    return this.product_service.get_store_product_count(req.user);
+  }
+  
+  // Add this new endpoint within the ProductController class, after the existing endpoints
+@HttpCode(HttpStatus.OK)
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
+@Role(Roles.SUPERADMIN)
+@Get('get_all_rated_products')
+async get_all_rated_products(
+  @Query('page_no') page_no: number,
+  @Query('page_size') page_size: number = 8,
+) {
+  return this.product_service.get_all_rated_products(page_no, page_size);
+}
 }

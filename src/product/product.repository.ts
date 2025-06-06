@@ -36,27 +36,7 @@ export class ProductRepository {
       .exec();
   }
 
-  // async get_all_store_products(
-  //   // store_id: Types.ObjectId,
-  //   page_no: number,
-  //   projection?: ProductProjection,
-  //   filters: Partial<Product> = {},
-  // ) {
-  //   const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
-
-  //   return this.product_model
-  //     .find(
-  //       {
-  //         // store: store_id,
-  //         ...filters,
-  //       },
-  //       projection,
-  //     )
-  //     .sort({ created_at: -1 })
-  //     .skip(skip)
-  //     .limit(DEFAULT_DOCUMENTS_LIMITS)
-  //     .exec();
-  // }
+ 
 
   async get_all_store_products(
   page_no: number,
@@ -223,4 +203,16 @@ export class ProductRepository {
       )
       .exec();
   }
+  async get_store_product_count(store_id: Types.ObjectId): Promise<number> {
+  try {
+    return this.product_model.countDocuments({ store: store_id }).exec();
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to count store products');
+  }
+}
+// Add this new method within the ProductRepository class
+async get_all_rated_products(pipeline: any[]): Promise<any[]> {
+  return this.product_model.aggregate(pipeline).exec();
+}
 }

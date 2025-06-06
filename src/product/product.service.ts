@@ -717,42 +717,40 @@ async submit_product_rating(
     }
   }
 
-  async update_product_rating(rating_id: string, rating: number): Promise<Product> {
-    try {
-      const ratingObj = await this.rating_repository.update_rating(
-        new Types.ObjectId(rating_id),
-        rating,
-      );
-      if (!ratingObj) {
-        throw new BadRequestException('Rating not found');
-      }
-
-      const stats = await this.rating_repository.get_rating_stats(ratingObj.productId);
-      const update = {
-        $set: {
-          average_rating: stats.average_rating,
-          total_ratings: stats.total_ratings,
-          rating_distribution: stats.rating_distribution,
-        },
-      };
-
-      const updatedProduct = await this.product_repository.update_product_rating(
-        ratingObj.productId,
-        update,
-      );
-
-      if (!updatedProduct) {
-        throw new BadRequestException('Failed to update product rating');
-      }
-
-      return new Product(updatedProduct);
-    } catch (e) {
-      console.error(e);
-      throw new InternalServerErrorException('Failed to update rating');
+async update_product_rating(rating_id: string, rating: number): Promise<Product> {
+  try {
+    const ratingObj = await this.rating_repository.update_rating(
+      new Types.ObjectId(rating_id),
+      rating,
+    );
+    if (!ratingObj) {
+      throw new BadRequestException('Rating not found');
     }
-  }
 
-  // Add this method to the ProductService class
+    const stats = await this.rating_repository.get_rating_stats(ratingObj.productId);
+    const update = {
+      $set: {
+        average_rating: stats.average_rating,
+        total_ratings: stats.total_ratings,
+        rating_distribution: stats.rating_distribution,
+      },
+    };
+
+    const updatedProduct = await this.product_repository.update_product_rating(
+      ratingObj.productId,
+      update,
+    );
+
+    if (!updatedProduct) {
+      throw new BadRequestException('Failed to update product rating');
+    }
+
+    return new Product(updatedProduct);
+  } catch (e) {
+    console.error(e);
+    throw new InternalServerErrorException('Failed to update rating');
+  }
+}
   async get_all_products_for_admin(
     page_no: number,
     category?: string,
@@ -833,4 +831,142 @@ async submit_product_rating(
       throw new InternalServerErrorException(e);
     }
   }
+  async get_store_product_count(store_payload: AuthPayload): Promise<number> {
+  try {
+    const count = await this.product_repository.get_store_product_count(
+      new Types.ObjectId(store_payload._id)
+    );
+    return count;
+  } catch (e) {
+    console.error(e);
+    throw new InternalServerErrorException('Failed to retrieve store product count');
+  }
+}
+
+async get_all_rated_products(
+  page_no: number,
+  page_size: number,
+): Promise<{ products: any[]; total: number }> {
+  try {
+    const params = new PaginatedDataDto(page_no);
+
+    const is_valid = await validate(params, {
+      validationError: { target: false },
+    });
+    if (is_valid.length) {
+      throw new BadRequestException('Incorrect page number value');
+    }
+
+    if (page_size < 1) {
+      throw new BadRequestException('Page size must be at least 1');
+    }
+
+    const skip = (page_no - 1) * page_size;
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: '_id',
+          foreignField: 'productId',
+          as: 'ratings',
+        },
+      },
+      {
+        $match: {
+          'ratings.0': { $exists: true },
+        },
+      },
+      {
+        $unwind: '$ratings',
+      },
+      {
+        $lookup: {
+          from: 'customers',
+          localField: 'ratings.userId',
+          foreignField: '_id',
+          as: 'ratings.customer',
+        },
+      },
+      {
+        $unwind: '$ratings.customer',
+      },
+      {
+        $sort: {
+          'ratings.createdAt': -1, // Sort by createdAt only in descending order
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          productName: { $first: '$name' },
+          image1: { $first: '$image1' },
+          image2: { $first: '$image2' },
+          image3: { $first: '$image3' },
+          ratings: {
+            $push: {
+              _id: { $toString: '$ratings._id' },
+              rating: '$ratings.rating',
+              customer: {
+                name: '$ratings.customer.name',
+                email: '$ratings.customer.email',
+              },
+              createdAt: '$ratings.createdAt',
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          productId: { $toString: '$_id' },
+          productName: 1,
+          image1: 1,
+          image2: 1,
+          image3: 1,
+          ratings: 1,
+        },
+      },
+      { $skip: skip },
+      { $limit: page_size },
+    ];
+
+    const products = await this.product_repository.get_all_rated_products(pipeline);
+    const totalPipeline = [
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: '_id',
+          foreignField: 'productId',
+          as: 'ratings',
+        },
+      },
+      {
+        $match: {
+          'ratings.0': { $exists: true },
+        },
+      },
+      {
+        $unwind: '$ratings',
+      },
+      {
+        $count: 'total',
+      },
+    ];
+    const totalResult = await this.product_repository.get_all_rated_products(totalPipeline);
+    const total = totalResult[0]?.total || 0;
+
+    const productsWithUrls = await Promise.all(
+      products.map(async (prod) => {
+        if (prod.image1) prod.image1 = await this.s3_service.get_image_url(prod.image1);
+        if (prod.image2) prod.image2 = await this.s3_service.get_image_url(prod.image2);
+        if (prod.image3) prod.image3 = await this.s3_service.get_image_url(prod.image3);
+        return prod;
+      }),
+    );
+
+    return { products: productsWithUrls, total };
+  } catch (e) {
+    console.log(e);
+    throw new InternalServerErrorException(e);
+  }
+}
 }

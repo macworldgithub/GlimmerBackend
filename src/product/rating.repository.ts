@@ -31,15 +31,16 @@ export class RatingRepository {
       .exec();
   }
 
-  async update_rating(ratingId: Types.ObjectId, rating: number) {
-    return this.rating_model
-      .findByIdAndUpdate(
-        ratingId,
-        { rating },
-        { new: true, runValidators: true },
-      )
-      .exec();
-  }
+  
+async update_rating(ratingId: Types.ObjectId, rating: number) {
+  return this.rating_model
+    .findByIdAndUpdate(
+      ratingId,
+      { rating }, // Update only the rating field
+      { new: true, runValidators: true },
+    )
+    .exec();
+}
 
   async get_rating_stats(productId: Types.ObjectId) {
     const stats = await this.rating_model
@@ -118,4 +119,6 @@ export class RatingRepository {
       rating_distribution: { five: 0, four: 0, three: 0, two: 0, one: 0 },
     };
   }
+
+  
 }
