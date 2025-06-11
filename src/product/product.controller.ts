@@ -159,8 +159,8 @@ async get_all_store_products(
 
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Role(Roles.STORE)
+  @UseGuards(AuthGuard, MultiRolesGuard)
+@Roless([Roles.STORE,Roles.SUPERADMIN])
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'image1', maxCount: 1 },

@@ -338,103 +338,214 @@ export class ProductService {
     throw new InternalServerErrorException(e);
   }
 }
+  // async update_store_product(
+  //   id: string,
+  //   store_payload: AuthPayload,
+  //   update_product_dto: UpdateProductDto,
+  //   files: ProductFiles,
+  //   requestBody: any,
+  // ): Promise<Product> {
+  //   try {
+  //     update_product_dto.size = this.extractDynamicFields(requestBody, 'size');
+  //     update_product_dto.type = this.extractDynamicFields(requestBody, 'type');
+
+  //     const store_product =
+  //       await this.product_repository.get_product_by_store_id_product_id(
+  //         new Types.ObjectId(id),
+  //         new Types.ObjectId(store_payload._id),
+  //         { name: 1, image2: 1, image1: 1, image3: 1 },
+  //       );
+  //     if (!store_product) throw new BadRequestException('Product not found');
+
+  //     const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
+
+  //     let product_temp: any = structuredClone(update_product_dto);
+  //     console.log(files, 'files', update_product_dto);
+
+  //     if (files?.image1?.length) {
+  //       if (store_product.image1) {
+  //         product_temp.image1 = (
+  //           await this.s3_service.upload_file_by_key(
+  //             files.image1[0],
+  //             store_product.image1,
+  //           )
+  //         ).Key;
+  //       } else {
+  //         product_temp.image1 = (
+  //           await this.s3_service.upload_file(files.image1[0], path)
+  //         ).Key;
+  //       }
+  //     } else {
+  //       delete product_temp.image1;
+  //     }
+  //     if (files?.image2?.length) {
+  //       if (store_product.image2) {
+  //         product_temp.image2 = (
+  //           await this.s3_service.upload_file_by_key(
+  //             files.image2[0],
+  //             store_product.image2,
+  //           )
+  //         ).Key;
+  //       } else {
+  //         product_temp.image2 = (
+  //           await this.s3_service.upload_file(files.image2[0], path)
+  //         ).Key;
+  //       }
+  //     } else {
+  //       delete product_temp.image2;
+  //     }
+  //     if (files?.image3?.length) {
+  //       if (store_product.image3) {
+  //         product_temp.image3 = (
+  //           await this.s3_service.upload_file_by_key(
+  //             files.image3[0],
+  //             store_product.image3,
+  //           )
+  //         ).Key;
+  //       } else {
+  //         product_temp.image3 = (
+  //           await this.s3_service.upload_file(files.image3[0], path)
+  //         ).Key;
+  //       }
+  //     } else {
+  //       delete product_temp.image3;
+  //     }
+
+  //     console.log(product_temp);
+  //     const product = await this.product_repository.update_product(
+  //       new Types.ObjectId(id),
+  //       new Types.ObjectId(store_payload._id),
+  //       product_temp,
+  //     );
+  //     if (!product) {
+  //       throw new BadRequestException('Product doesnot exist');
+  //     }
+  //     if (product.image1) {
+  //       product.image1 = await this.s3_service.get_image_url(product.image1);
+  //     }
+  //     if (product.image2) {
+  //       product.image2 = await this.s3_service.get_image_url(product.image2);
+  //     }
+  //     if (product.image3) {
+  //       product.image3 = await this.s3_service.get_image_url(product.image3);
+  //     }
+  //     return new Product(product);
+  //   } catch (e) {
+  //     console.log(e, 'udpate');
+  //     throw new InternalServerErrorException(e);
+  //   }
+  // }
   async update_store_product(
-    id: string,
-    store_payload: AuthPayload,
-    update_product_dto: UpdateProductDto,
-    files: ProductFiles,
-    requestBody: any,
-  ): Promise<Product> {
-    try {
-      update_product_dto.size = this.extractDynamicFields(requestBody, 'size');
-      update_product_dto.type = this.extractDynamicFields(requestBody, 'type');
+  id: string,
+  store_payload: AuthPayload,
+  update_product_dto: UpdateProductDto,
+  files: ProductFiles,
+  requestBody: any,
+): Promise<Product> {
+  try {
+    update_product_dto.size = this.extractDynamicFields(requestBody, 'size');
+    update_product_dto.type = this.extractDynamicFields(requestBody, 'type');
 
-      const store_product =
-        await this.product_repository.get_product_by_store_id_product_id(
-          new Types.ObjectId(id),
-          new Types.ObjectId(store_payload._id),
-          { name: 1, image2: 1, image1: 1, image3: 1 },
-        );
-      if (!store_product) throw new BadRequestException('Product not found');
+    // Determine if the user is a Super Admin
+    const isSuperAdmin = store_payload.role === Roles.SUPERADMIN;
 
-      const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
-
-      let product_temp: any = structuredClone(update_product_dto);
-      console.log(files, 'files', update_product_dto);
-
-      if (files?.image1?.length) {
-        if (store_product.image1) {
-          product_temp.image1 = (
-            await this.s3_service.upload_file_by_key(
-              files.image1[0],
-              store_product.image1,
-            )
-          ).Key;
-        } else {
-          product_temp.image1 = (
-            await this.s3_service.upload_file(files.image1[0], path)
-          ).Key;
-        }
-      } else {
-        delete product_temp.image1;
-      }
-      if (files?.image2?.length) {
-        if (store_product.image2) {
-          product_temp.image2 = (
-            await this.s3_service.upload_file_by_key(
-              files.image2[0],
-              store_product.image2,
-            )
-          ).Key;
-        } else {
-          product_temp.image2 = (
-            await this.s3_service.upload_file(files.image2[0], path)
-          ).Key;
-        }
-      } else {
-        delete product_temp.image2;
-      }
-      if (files?.image3?.length) {
-        if (store_product.image3) {
-          product_temp.image3 = (
-            await this.s3_service.upload_file_by_key(
-              files.image3[0],
-              store_product.image3,
-            )
-          ).Key;
-        } else {
-          product_temp.image3 = (
-            await this.s3_service.upload_file(files.image3[0], path)
-          ).Key;
-        }
-      } else {
-        delete product_temp.image3;
-      }
-
-      console.log(product_temp);
-      const product = await this.product_repository.update_product(
+    // Fetch the product based on role
+    let store_product;
+    if (isSuperAdmin) {
+      // For Super Admin, fetch the product by ID only (no store restriction)
+      store_product = await this.product_repository.get_product_by_id(
+        new Types.ObjectId(id),
+        { name: 1, image2: 1, image1: 1, image3: 1 },
+      );
+    } else {
+      // For Store user, fetch the product with store restriction
+      store_product = await this.product_repository.get_product_by_store_id_product_id(
         new Types.ObjectId(id),
         new Types.ObjectId(store_payload._id),
-        product_temp,
+        { name: 1, image2: 1, image1: 1, image3: 1 },
       );
-      if (!product) {
-        throw new BadRequestException('Product doesnot exist');
-      }
-      if (product.image1) {
-        product.image1 = await this.s3_service.get_image_url(product.image1);
-      }
-      if (product.image2) {
-        product.image2 = await this.s3_service.get_image_url(product.image2);
-      }
-      if (product.image3) {
-        product.image3 = await this.s3_service.get_image_url(product.image3);
-      }
-      return new Product(product);
-    } catch (e) {
-      console.log(e, 'udpate');
-      throw new InternalServerErrorException(e);
     }
+
+    if (!store_product) throw new BadRequestException('Product not found');
+
+    const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
+
+    let product_temp: any = structuredClone(update_product_dto);
+    console.log(files, 'files', update_product_dto);
+
+    if (files?.image1?.length) {
+      if (store_product.image1) {
+        product_temp.image1 = (
+          await this.s3_service.upload_file_by_key(
+            files.image1[0],
+            store_product.image1,
+          )
+        ).Key;
+      } else {
+        product_temp.image1 = (
+          await this.s3_service.upload_file(files.image1[0], path)
+        ).Key;
+      }
+    } else {
+      delete product_temp.image1;
+    }
+    if (files?.image2?.length) {
+      if (store_product.image2) {
+        product_temp.image2 = (
+          await this.s3_service.upload_file_by_key(
+            files.image2[0],
+            store_product.image2,
+          )
+        ).Key;
+      } else {
+        product_temp.image2 = (
+          await this.s3_service.upload_file(files.image2[0], path)
+        ).Key;
+      }
+    } else {
+      delete product_temp.image2;
+    }
+    if (files?.image3?.length) {
+      if (store_product.image3) {
+        product_temp.image3 = (
+          await this.s3_service.upload_file_by_key(
+            files.image3[0],
+            store_product.image3,
+          )
+        ).Key;
+      } else {
+        product_temp.image3 = (
+          await this.s3_service.upload_file(files.image3[0], path)
+        ).Key;
+      }
+    } else {
+      delete product_temp.image3;
+    }
+
+    console.log(product_temp);
+    const product = await this.product_repository.update_product(
+      new Types.ObjectId(id),
+      isSuperAdmin ? undefined : new Types.ObjectId(store_payload._id), // Pass store_id only for Store users
+      product_temp,
+    );
+    if (!product) {
+      throw new BadRequestException('Product does not exist');
+    }
+    if (product.image1) {
+      product.image1 = await this.s3_service.get_image_url(product.image1);
+    }
+    if (product.image2) {
+      product.image2 = await this.s3_service.get_image_url(product.image2);
+    }
+    if (product.image3) {
+      product.image3 = await this.s3_service.get_image_url(product.image3);
+    }
+    return new Product(product);
+  } catch (e) {
+    console.log(e, 'udpate');
+    throw new InternalServerErrorException(e);
   }
+}
 
   async bulk_update_product_prices(
     discount: number,

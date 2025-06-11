@@ -120,20 +120,38 @@ export class ProductRepository {
     return this.product_model.deleteOne({ _id }).exec();
   }
 
+  // async update_product(
+  //   id: Types.ObjectId,
+  //   store_id: Types.ObjectId,
+  //   product_dto: UpdateProductDto,
+  // ) {
+  //   return this.product_model
+  //     .findByIdAndUpdate(
+  //       { _id: id, store: store_id },
+  //       product_dto,
+  //       { new: true, runValidators: true }, // `new: true` ensures we get the updated document
+  //     )
+  //     .exec();
+  // }
+
   async update_product(
-    id: Types.ObjectId,
-    store_id: Types.ObjectId,
-    product_dto: UpdateProductDto,
-  ) {
-    return this.product_model
-      .findByIdAndUpdate(
-        { _id: id, store: store_id },
-        product_dto,
-        { new: true, runValidators: true }, // `new: true` ensures we get the updated document
-      )
-      .exec();
+  id: Types.ObjectId,
+  store_id: Types.ObjectId | undefined,
+  product_dto: UpdateProductDto,
+) {
+  const filter: any = { _id: id };
+  if (store_id) {
+    filter.store = store_id; // Add store filter only if store_id is provided
   }
 
+  return this.product_model
+    .findOneAndUpdate(
+      filter,
+      product_dto,
+      { new: true, runValidators: true }, // `new: true` ensures we get the updated document
+    )
+    .exec();
+}
   async get_many_products_by_ids_groupedby_store(
     product_ids: Types.ObjectId[],
     session?: ClientSession | null,
@@ -186,50 +204,94 @@ export class ProductRepository {
       .exec();
   }
 
+  // async bulk_update_product_prices(
+  //   discount: number,
+  //   productIds: Types.ObjectId[],
+  // ): Promise<any> {
+  //   try {
+  //     // Fetch all products for the store
+  //     const store_products = await this.product_model.find({
+  //       _id: { $in: productIds },
+  //     });
+  //     console.log(store_products)
+  //     if (!store_products.length)
+  //       throw new Error('No products found for this store');
+
+  //     // Prepare bulk update queries
+  //     const updatedProducts = store_products.map((product) => {
+  //       // const hasDiscountedPrice = product.discounted_price != null;
+  //       const hasDiscountedPrice = product.discounted_price != 0;
+  //       const priceToDiscount = hasDiscountedPrice
+  //         ? product.discounted_price
+  //         : product.base_price;
+  //        const newPrice = priceToDiscount - (priceToDiscount * discount) / 100;
+
+  //       return {
+  //         updateOne: {
+  //           filter: { _id: product._id },
+  //           update: {
+  //             $set: hasDiscountedPrice
+  //             ? { discounted_price: newPrice }
+  //             : { base_price: newPrice },
+  //           },
+  //         },
+  //       };
+  //     });
+      
+  //     // Perform bulk update
+  //     const bulkWriteResult =
+  //       await this.product_model.bulkWrite(updatedProducts);
+
+  //     return bulkWriteResult; // Returning the result from bulkWrite
+  //   } catch (e) {
+  //     console.error(e);
+  //     throw new Error('Failed to update product prices');
+  //   }
+  // }
   async bulk_update_product_prices(
-    discount: number,
-    productIds: Types.ObjectId[],
-  ): Promise<any> {
-    try {
-      // Fetch all products for the store
-      const store_products = await this.product_model.find({
-        _id: { $in: productIds },
-      });
-      console.log(store_products)
-      if (!store_products.length)
-        throw new Error('No products found for this store');
+  discount: number,
+  productIds: Types.ObjectId[],
+): Promise<any> {
+  try {
+    // Fetch all products for the store
+    const store_products = await this.product_model.find({
+      _id: { $in: productIds },
+    });
+    console.log(store_products);
 
-      // Prepare bulk update queries
-      const updatedProducts = store_products.map((product) => {
-        // const hasDiscountedPrice = product.discounted_price != null;
-        const hasDiscountedPrice = product.discounted_price != 0;
-        const priceToDiscount = hasDiscountedPrice
-          ? product.discounted_price
-          : product.base_price;
-         const newPrice = priceToDiscount - (priceToDiscount * discount) / 100;
+    if (!store_products.length) {
+      throw new Error('No products found for this store');
+    }
 
-        return {
-          updateOne: {
-            filter: { _id: product._id },
-            update: {
-              $set: hasDiscountedPrice
-              ? { discounted_price: newPrice }
-              : { base_price: newPrice },
+    // Prepare bulk update queries
+    const updatedProducts = store_products.map((product) => {
+      // Use base_price as the reference price for discount calculation
+      const referencePrice =  product.base_price;
+
+      // Calculate the new discounted price
+      const newDiscountedPrice = referencePrice - (referencePrice * discount) / 100;
+
+      return {
+        updateOne: {
+          filter: { _id: product._id },
+          update: {
+            $set: {
+              discounted_price: newDiscountedPrice, // Always update discounted_price
             },
           },
-        };
-      });
-      
-      // Perform bulk update
-      const bulkWriteResult =
-        await this.product_model.bulkWrite(updatedProducts);
+        },
+      };
+    });
 
-      return bulkWriteResult; // Returning the result from bulkWrite
-    } catch (e) {
-      console.error(e);
-      throw new Error('Failed to update product prices');
-    }
+    // Perform bulk update
+    const bulkWriteResult = await this.product_model.bulkWrite(updatedProducts);
+
+    return bulkWriteResult; // Returning the result from bulkWrite
+  } catch (e) {
+    console.error(e);
+    throw new Error('Failed to update product prices');
   }
+}
   async update_product_rating(
     id: Types.ObjectId,
     update: any,
