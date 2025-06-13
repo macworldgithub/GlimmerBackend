@@ -31,6 +31,7 @@ import { SalonServiceModule } from './salon_service/salon_service.module';
 import { SalonServiceBookingModule } from './salon_service_booking/salon_service_booking.module';
 import { AdminService } from './admin/admin.service';
 import { NotificationModule } from './notification/notification.module';
+import { PostexModule } from './postex/postex.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { NotificationModule } from './notification/notification.module';
     AdminModule,
     NotificationsModule,
     NotificationModule,
+    PostexModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [
