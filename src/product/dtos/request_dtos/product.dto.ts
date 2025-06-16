@@ -23,7 +23,7 @@ export class CreateProductDto {
 
   // req-dto-decorators
   @IsInt()
-  @Min(1)
+  @Min(0)
   @Max(Infinity)
   @Transform(({ value }) => parseInt(value, 10))
   quantity: number;
