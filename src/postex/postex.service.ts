@@ -222,4 +222,22 @@ export class PostexService {
       );
     }
   }
+
+  // src/order/postex.service.ts
+  async getPaymentStatus(trackingNumber: string) {
+    try {
+      const url = `https://api.postex.pk/services/integration/api/order/v1/payment-status/${trackingNumber}`;
+      const response = await axios.get(url, {
+        headers: {
+          token: this.token,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to retrieve payment status: ${error.response?.data?.statusMessage || error.message}`,
+      );
+    }
+  }
 }
