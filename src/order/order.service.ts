@@ -33,6 +33,10 @@ import {
 } from 'src/schemas/recommendedProducts/recommendedproducts.schema';
 import { OrderGateway } from './order.gateway';
 import { NotificationService } from 'src/notification/notification.service';
+import {
+  Transaction,
+  TransactionDocument,
+} from 'src/schemas/transactions/transaction.schema';
 
 @Injectable()
 export class OrderService {
@@ -46,6 +50,8 @@ export class OrderService {
     private readonly adminService: AdminService,
 
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
+    @InjectModel(Transaction.name)
+    private readonly transactionModel: Model<TransactionDocument>,
 
     // @InjectConnection() private readonly connection: Connection
   ) {}
@@ -53,17 +59,25 @@ export class OrderService {
   async create_order(
     order_dto: CreateOrderDto,
   ): Promise<{ order: Order; message: string }> {
-    const newOrder = new this.orderModel({
+    
+    const transaction = await this.transactionModel.create({
+      transactionId: order_dto.payment.transactionId || `COD-${Date.now()}`,
+      customerEmail: order_dto.customerEmail,
+      amount: order_dto.discountedTotal.toString(),
+      currency: 'PKR',
+      status: order_dto.payment.status,
+      paymentGateway: order_dto.payment.gateway,
+    });
+
+    const order = await this.orderModel.create({
       ShippingInfo: order_dto.ShippingInfo,
       customerName: order_dto.customerName,
       customerEmail: order_dto.customerEmail,
       productList: order_dto.productList,
       total: order_dto.total,
       discountedTotal: order_dto.discountedTotal,
-      paymentMethod: order_dto.paymentMethod,
+      transaction: transaction._id,
     });
-
-    let order = await newOrder.save();
 
     const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
     const userId = order.productList?.[0]?.storeId;

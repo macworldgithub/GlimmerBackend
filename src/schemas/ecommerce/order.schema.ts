@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type OrderDocument = Order & Document;
 
@@ -139,12 +139,8 @@ export class Order {
   @Prop({ required: true })
   discountedTotal!: number;
 
-  @Prop({
-    required: true,
-    enum: ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'],
-    default: 'COD',
-  })
-  paymentMethod!: string;
+  @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true }) // 👈 Reference to Transaction collection
+  transaction?: Types.ObjectId;
 
   @Prop({
     required: true,
