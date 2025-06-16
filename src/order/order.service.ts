@@ -69,7 +69,7 @@ export class OrderService {
     const userId = order.productList?.[0]?.storeId;
 
     if (!userId) {
-      console.warn("No storeId found in order.productList");
+      console.warn('No storeId found in order.productList');
     }
 
     await this.notificationService.create(userId, message, order);
