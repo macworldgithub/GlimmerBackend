@@ -491,4 +491,50 @@ export class AuthService {
       throw new InternalServerErrorException(e);
     }
   }
+
+  async resetPassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    try {
+      // Check if the email exists for either store or salon
+      const store = await this.store_repository.get_store_by_email(email);
+      const salon = await this.salon_repository.get_salon_by_email(email);
+
+      let user;
+      if (store?.email) {
+        user = store;
+      } else if (salon?.email) {
+        user = salon;
+      } else {
+        throw new BadRequestException('No account found with this email');
+      }
+
+      // Verify current password
+      const isPasswordValid = await comparePassword(currentPassword, user.password);
+      if (!isPasswordValid) {
+        throw new BadRequestException('Incorrect current password');
+      }
+
+      // Hash the new password
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Update the password based on user type
+      if (store) {
+        await this.store_repository.update_store(store._id, { password: hashedPassword });
+      } else if (salon) {
+        await this.salon_repository.update_salon(salon._id, { password: hashedPassword });
+      }
+
+      
+
+      return { message: 'Password reset successfully' };
+    } catch (e) {
+      console.error(e);
+      throw new InternalServerErrorException('Failed to reset password');
+    }
+  }
 }
+
+
