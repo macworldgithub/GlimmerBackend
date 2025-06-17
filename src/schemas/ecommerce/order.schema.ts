@@ -124,6 +124,7 @@ export const CompleteOrderSchema = SchemaFactory.createForClass(CompleteOrder);
 
 @Schema({ timestamps: true })
 export class Order {
+  
   @Prop({ required: true })
   customerName!: string;
 
@@ -138,6 +139,8 @@ export class Order {
 
   @Prop({ required: true })
   discountedTotal!: number;
+  @Prop({ type: [String], default: [] })
+trackingNumbers?: string[];
 
   @Prop({
     required: true,
