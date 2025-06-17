@@ -99,12 +99,18 @@ export class JazzcashService {
     const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT;
     const returnUrl = process.env.JAZZCASH_RETURN_URL;
 
+    const txnExpiryDateTime = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes later
+      .toISOString()
+      .replace(/[-:.TZ]/g, '')
+      .slice(0, 14);
+
     const txnDateTime = new Date()
       .toISOString()
       .replace(/[-:.TZ]/g, '')
       .slice(0, 14); // yyyyMMddHHmmss
 
     const params = {
+      pp_TxnType: 'MPAY',
       pp_Version: '1.1',
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
@@ -114,10 +120,10 @@ export class JazzcashService {
       pp_Amount: (discountedTotal * 100).toString(), // in paisa
       pp_BillReference: 'billRef',
       pp_Description: 'Order Payment',
-      pp_TxnExpiryDateTime: '', // optional, add if required
+      pp_TxnExpiryDateTime: txnExpiryDateTime,
       pp_ReturnURL: returnUrl,
       pp_Language: 'EN',
-      pp_SecureHashSecret: integritySalt,
+
       pp_PosEntryMode: '1',
     };
 
