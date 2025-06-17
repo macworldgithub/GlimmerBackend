@@ -21,6 +21,11 @@ import { S3Service } from 'src/aws/s3.service';
 import { OrderGateway } from './order.gateway';
 import { NotificationModule } from 'src/notification/notification.module';
 
+import {
+  Transaction,
+  TransactionSchema,
+} from 'src/schemas/transactions/transaction.schema';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -28,12 +33,21 @@ import { NotificationModule } from 'src/notification/notification.module';
       { name: OrderItem.name, schema: OrderItemSchema },
       { name: StoreOrder.name, schema: StoreOrderSchema },
       { name: Product.name, schema: ProductSchema },
+      { name: Transaction.name, schema: TransactionSchema },
     ]),
     AdminModule,
     NotificationModule,
   ],
-  controllers: [OrderController ],
-  providers: [OrderService, JwtService,S3Service, OrderRepository, ProductRepository ,AdminService, OrderGateway],
+  controllers: [OrderController],
+  providers: [
+    OrderService,
+    JwtService,
+    S3Service,
+    OrderRepository,
+    ProductRepository,
+    AdminService,
+    OrderGateway,
+  ],
   exports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },

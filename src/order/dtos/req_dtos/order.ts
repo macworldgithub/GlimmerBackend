@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -40,7 +40,7 @@ class SizeDto {
   unit?: string;
 }
 
-class ProductDto {
+export class ProductDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -100,7 +100,7 @@ class ProductDto {
 
   @IsOptional()
   ref_of_salon!: string;
-  
+
   @IsOptional()
   rate_of_salon!: number;
 }
@@ -180,6 +180,34 @@ class CompleteOrderDto {
   rate_of_salon!: number;
 }
 
+export class PaymentDto {
+  @ApiPropertyOptional({
+    description: 'Transaction reference returned by gateway',
+  })
+  @IsOptional()
+  @IsString()
+  transactionId?: string;
+
+  @ApiProperty({ enum: ['Success', 'Failed', 'Pending'], default: 'Pending' })
+  @IsEnum(['Success', 'Failed', 'Pending'])
+  status!: string;
+
+  @ApiProperty({ enum: ['COD', 'Jazzcash', 'Bank'] })
+  gateway!: string;
+
+  @ApiPropertyOptional({
+    description: 'Amount paid via this method (if partial allowed)',
+  })
+  @IsOptional()
+  @IsNumber()
+  amount?: number;
+
+  @ApiPropertyOptional({ description: 'Generated bill reference' })
+  @IsOptional()
+  @IsString()
+  reference?: string;
+}
+
 export class CreateOrderDto {
   @ApiProperty()
   @IsString()
@@ -207,12 +235,10 @@ export class CreateOrderDto {
   @IsNotEmpty()
   discountedTotal!: number;
 
-  @ApiProperty({
-    enum: ['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'],
-  })
-  @IsEnum(['Credit Card', 'Debit Card', 'PayPal', 'Bank Transfer', 'COD'])
-  @IsNotEmpty()
-  paymentMethod!: string;
+  @ApiProperty({ type: PaymentDto })
+  @ValidateNested()
+  @Type(() => PaymentDto)
+  payment!: PaymentDto;
 
   @ApiProperty({ type: ShippingInfoDto })
   @ValidateNested()

@@ -32,6 +32,7 @@ import { SalonServiceBookingModule } from './salon_service_booking/salon_service
 import { AdminService } from './admin/admin.service';
 import { NotificationModule } from './notification/notification.module';
 import { PostexModule } from './postex/postex.module';
+import { JazzcashModule } from './jazzcash/jazzcash.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { PostexModule } from './postex/postex.module';
     NotificationsModule,
     NotificationModule,
     PostexModule,
+    JazzcashModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [
