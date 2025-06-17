@@ -108,4 +108,10 @@ export class AuthController {
   sign_in_admin(@Body() signin_dto: StoreSignInDto) {
     return this.auth_service.admin_signin(signin_dto);
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password')
+  async resetPassword(@Body() body: { email: string; currentPassword: string; newPassword: string }) {
+    return this.auth_service.resetPassword(body.email, body.currentPassword, body.newPassword);
+  }
 }

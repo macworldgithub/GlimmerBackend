@@ -34,7 +34,8 @@ export class Store {
 
   @Prop({ required: false, default: null })
   address?: string;
-
+  @Prop({ required: false, default: null }) // New field
+  cityName?: string;
   @Prop({ required: false, default: null })
   store_image?: string;
 
@@ -51,6 +52,7 @@ export class Store {
     this.country = obj.country;
     this.address = obj.address;
     this.store_image = obj.store_image;
+    this.cityName = obj.cityName; // Include new field in constructor
     this.created_at = obj.created_at;
   }
 }
