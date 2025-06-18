@@ -105,7 +105,7 @@ export class JazzcashService {
 
     const params = {
       pp_Version: '1.1',
-      pp_TxnType: 'MWALLET',
+      pp_TxnType: 'MPAY',
       pp_Language: 'EN',
       pp_MerchantID: merchantId,
       pp_Password: password,
@@ -119,8 +119,8 @@ export class JazzcashService {
       pp_Description: 'Payment for order',
       pp_ReturnURL: returnUrl,
       pp_PosEntryMode: '1',
-      pp_MobileNumber: '03149856502', // ← required for MWALLET
-      pp_CNIC: '4250156667561', // ← required for MWALLET
+      // pp_MobileNumber: '03149856502', // ← required for MWALLET
+      // pp_CNIC: '4250156667561', // ← required for MWALLET
     };
 
     //@ts-ignore
