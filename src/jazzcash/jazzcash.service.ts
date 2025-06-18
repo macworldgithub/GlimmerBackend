@@ -114,6 +114,7 @@ export class JazzcashService {
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
       pp_TxnExpiryDateTime: txnExpiryDateTime,
+      pp_TranExpiryDateTime: txnExpiryDateTime,
       pp_BillReference: 'billRef',
       pp_Description: 'Payment for order',
       pp_ReturnURL: returnUrl,
