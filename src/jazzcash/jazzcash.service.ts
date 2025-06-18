@@ -66,7 +66,7 @@ export class JazzcashService {
     } = orderDto;
 
     const transaction = await this.transactionModel.create({
-      transactionId: payment.transactionId || `JAZZ-${Date.now()}`,
+      transactionId: "T20250618104305",
       customerEmail,
       amount: discountedTotal.toString(),
       currency: 'PKR',

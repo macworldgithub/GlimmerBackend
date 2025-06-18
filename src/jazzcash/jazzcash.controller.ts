@@ -16,11 +16,11 @@ import { JazzCashCallbackDto } from './dto/req/jazz_cash_callback.dt';
 export class JazzcashController {
   constructor(private readonly jazzcashservice: JazzcashService) {}
 
-
   @Post('initiate-payment')
   async initiatePayment(@Body() order_dto: CreateOrderDto) {
     // Create order + generate JazzCash fields
-    const paymentData = await this.jazzcashservice.createOrderAndInitiatePayment(order_dto);
+    const paymentData =
+      await this.jazzcashservice.createOrderAndInitiatePayment(order_dto);
     return paymentData;
   }
 
