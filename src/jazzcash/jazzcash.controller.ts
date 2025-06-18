@@ -27,7 +27,20 @@ export class JazzcashController {
   @Post('payment-callback')
   async paymentCallback(@Body() body: any, @Res() res: Response) {
     const result = await this.jazzcashservice.handleCallback(body);
-    //@ts-ignore
-    res.status(HttpStatus.OK).send(result.message);
+
+    if (result.status === 'success') {
+      //@ts-ignore
+      return res.status(HttpStatus.OK).render('success', {
+        txnRefNo: body.pp_TxnRefNo,
+        transactionID: body.pp_TransactionID,
+      });
+    } else {
+      //@ts-ignore
+
+      return res.status(HttpStatus.OK).render('failed', {
+        txnRefNo: body.pp_TxnRefNo,
+        transactionID: body.pp_TransactionID,
+      });
+    }
   }
 }
