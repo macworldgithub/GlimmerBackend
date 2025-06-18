@@ -21,37 +21,25 @@ export class JazzcashService {
     params: Record<string, any>,
     integritySalt: string,
   ): string {
-    const orderedKeys = [
-      'pp_Amount',
-      'pp_BillReference',
-      'pp_Description',
-      'pp_Language',
-      'pp_MerchantID',
-      'pp_Password',
-      'pp_ReturnURL',
-      'pp_TxnCurrency',
-      'pp_TxnDateTime',
-      'pp_TxnExpiryDateTime',
-      'pp_TxnRefNo',
-      'pp_TxnType',
-      'pp_Version',
-      'pp_PosEntryMode',
-      'pp_MobileNumber',
-      'pp_CNIC',
-      'ppmpf_1',
-      'ppmpf_2',
-      'ppmpf_3',
-      'ppmpf_4',
-      'ppmpf_5',
-    ];
+    // 1. Filter and sort all pp_ keys (except pp_SecureHash)
+    const sortedKeys = Object.keys(params)
+      .filter((key) => key.startsWith('pp_') && key !== 'pp_SecureHash')
+      .sort();
 
-    const rawString = orderedKeys.map((key) => params[key] || '').join('&');
-    const stringToHash = integritySalt + '&' + rawString;
+    // 2. Build the string to hash
+    const paramString = sortedKeys
+      .map((key) => `${params[key] || ''}`)
+      .join('&');
+    const stringToHash = `${integritySalt}&${paramString}`;
 
-    return crypto
+    // 3. Create HMAC SHA256 hash
+    const hash = crypto
       .createHmac('sha256', integritySalt)
       .update(stringToHash)
-      .digest('hex');
+      .digest('hex')
+      .toUpperCase(); // ✅ Convert to uppercase
+
+    return hash;
   }
 
   async createOrderAndInitiatePayment(orderDto: CreateOrderDto) {
