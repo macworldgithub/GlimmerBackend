@@ -65,8 +65,24 @@ export class JazzcashService {
       payment,
     } = orderDto;
 
+    const generateTransactionId = () => {
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, '0');
+
+      const year = now.getFullYear();
+      const month = pad(now.getMonth() + 1);
+      const day = pad(now.getDate());
+      const hours = pad(now.getHours());
+      const minutes = pad(now.getMinutes());
+      const seconds = pad(now.getSeconds());
+
+      return `T${year}${month}${day}${hours}${minutes}${seconds}`;
+    };
+
+    const transactionId = generateTransactionId();
+
     const transaction = await this.transactionModel.create({
-      transactionId: "T20250618104305",
+      transactionId,
       customerEmail,
       amount: discountedTotal.toString(),
       currency: 'PKR',
