@@ -113,7 +113,7 @@ export class JazzcashService {
       pp_Amount: (discountedTotal * 100).toString(), // paisa
       pp_TxnCurrency: 'PKR',
       pp_TxnDateTime: txnDateTime,
-      pp_TxnExpiryDateTime: txnExpiryDateTime,
+
       pp_TranExpiryDateTime: txnExpiryDateTime,
       pp_BillReference: 'billRef',
       pp_Description: 'Payment for order',
