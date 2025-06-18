@@ -17,47 +17,40 @@ export class JazzcashService {
     private readonly transactionModel: Model<TransactionDocument>,
   ) {}
 
-  private generatePaymentHash(params: Record<string, any>): string {
-    const {
-      pp_Amount,
-      pp_BillReference,
-      pp_MerchantID,
-      pp_PosEntryMode,
-      pp_TxnRefNo,
-      pp_TxnCurrency,
-      pp_TxnDateTime,
-      pp_Version,
-      pp_Language,
-      pp_ReturnURL,
-      pp_SecureHashSecret,
-    } = params;
+  private generatePaymentHash(
+    params: Record<string, any>,
+    integritySalt: string,
+  ): string {
+    const orderedKeys = [
+      'pp_Amount',
+      'pp_BillReference',
+      'pp_Description',
+      'pp_Language',
+      'pp_MerchantID',
+      'pp_Password',
+      'pp_ReturnURL',
+      'pp_TxnCurrency',
+      'pp_TxnDateTime',
+      'pp_TxnExpiryDateTime',
+      'pp_TxnRefNo',
+      'pp_TxnType',
+      'pp_Version',
+      'pp_PosEntryMode',
+      'pp_MobileNumber',
+      'pp_CNIC',
+      'ppmpf_1',
+      'ppmpf_2',
+      'ppmpf_3',
+      'ppmpf_4',
+      'ppmpf_5',
+    ];
 
-    const rawString =
-      pp_SecureHashSecret +
-      '&' +
-      pp_Amount +
-      '&' +
-      pp_BillReference +
-      '&' +
-      pp_MerchantID +
-      '&' +
-      pp_PosEntryMode +
-      '&' +
-      pp_TxnRefNo +
-      '&' +
-      pp_TxnCurrency +
-      '&' +
-      pp_TxnDateTime +
-      '&' +
-      pp_Version +
-      '&' +
-      pp_Language +
-      '&' +
-      pp_ReturnURL;
+    const rawString = orderedKeys.map((key) => params[key] || '').join('&');
+    const stringToHash = integritySalt + '&' + rawString;
 
     return crypto
-      .createHmac('sha256', pp_SecureHashSecret)
-      .update(rawString)
+      .createHmac('sha256', integritySalt)
+      .update(stringToHash)
       .digest('hex');
   }
 
@@ -72,17 +65,15 @@ export class JazzcashService {
       payment,
     } = orderDto;
 
-    // 1. Create Transaction
     const transaction = await this.transactionModel.create({
       transactionId: payment.transactionId || `JAZZ-${Date.now()}`,
       customerEmail,
       amount: discountedTotal.toString(),
       currency: 'PKR',
-      status: 'Pending', // status pending before payment
+      status: 'Pending',
       paymentGateway: 'JazzCash',
     });
 
-    // 2. Create Order
     const order = await this.orderModel.create({
       ShippingInfo,
       customerName,
@@ -93,49 +84,51 @@ export class JazzcashService {
       transaction: transaction._id,
     });
 
-    // 4. Prepare Payment Params
-    const merchantId = process.env.JAZZCASH_MERCHANT_ID;
-    const password = process.env.JAZZCASH_PASSWORD;
-    const integritySalt = process.env.JAZZCASH_INTEGRITY_SALT;
+    const merchantId = 'MC157333';
+    const password = 'd5vz0zx2ya';
+    const integritySalt = '1z054y2ssy';
     const returnUrl = process.env.JAZZCASH_RETURN_URL;
-
-    const txnExpiryDateTime = new Date(Date.now() + 30 * 60 * 1000) // 30 minutes later
-      .toISOString()
-      .replace(/[-:.TZ]/g, '')
-      .slice(0, 14);
 
     const txnDateTime = new Date()
       .toISOString()
       .replace(/[-:.TZ]/g, '')
-      .slice(0, 14); // yyyyMMddHHmmss
+      .slice(0, 14);
+
+    const txnExpiryDateTime = new Date(Date.now() + 30 * 60000)
+      .toISOString()
+      .replace(/[-:.TZ]/g, '')
+      .slice(0, 14);
 
     const params = {
-      pp_TxnType: 'MPAY',
       pp_Version: '1.1',
-      pp_TxnCurrency: 'PKR',
-      pp_TxnDateTime: txnDateTime,
+      pp_TxnType: 'MPAY',
+      pp_Language: 'EN',
       pp_MerchantID: merchantId,
       pp_Password: password,
-      pp_TxnRefNo: transaction.transactionId, // transaction ID here
-      pp_Amount: (discountedTotal * 100).toString(), // in paisa
-      pp_BillReference: 'billRef',
-      pp_Description: 'Order Payment',
+      pp_TxnRefNo: transaction.transactionId,
+      pp_Amount: (discountedTotal * 100).toString(), // paisa
+      pp_TxnCurrency: 'PKR',
+      pp_TxnDateTime: txnDateTime,
       pp_TxnExpiryDateTime: txnExpiryDateTime,
+      pp_BillReference: 'billRef',
+      pp_Description: 'Payment for order',
       pp_ReturnURL: returnUrl,
-      pp_Language: 'EN',
-
       pp_PosEntryMode: '1',
+      pp_MobileNumber: '03001234567', // ← required for MWALLET
+      pp_CNIC: '4250156667561', // ← required for MWALLET
     };
 
-    // 5. Generate Secure Hash
-    const pp_SecureHash = this.generatePaymentHash(params);
+    //@ts-ignore
+    const pp_SecureHash = this.generatePaymentHash(params, integritySalt);
 
     return {
       paymentParams: {
         ...params,
         pp_SecureHash,
       },
-      message: 'Order created and JazzCash payment initiated.',
+      redirectUrl:
+        'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/',
+      message: 'Redirect to JazzCash for payment',
     };
   }
 
