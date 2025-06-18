@@ -161,14 +161,22 @@ export class JazzcashService {
     };
   }
 
-  async handleCallback(query: any) {
-    const { pp_TxnRefNo, pp_ResponseCode, pp_TransactionID } = query;
+  async handleCallback(body: any) {
+    const { pp_TxnRefNo, pp_ResponseCode, pp_TransactionID } = body;
 
     if (pp_ResponseCode === '000') {
-      this.updateTransactionStatus(pp_TxnRefNo, pp_TransactionID, 'Success');
+      await this.updateTransactionStatus(
+        pp_TxnRefNo,
+        pp_TransactionID,
+        'Success',
+      );
       return { status: 'success', message: 'Payment confirmed' };
     } else {
-      this.updateTransactionStatus(pp_TxnRefNo, pp_TransactionID, 'Failed');
+      await this.updateTransactionStatus(
+        pp_TxnRefNo,
+        pp_TransactionID,
+        'Failed',
+      );
       return { status: 'failed', message: 'Payment failed' };
     }
   }

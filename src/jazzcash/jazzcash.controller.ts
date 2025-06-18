@@ -24,9 +24,9 @@ export class JazzcashController {
     return paymentData;
   }
 
-  @Get('payment-callback')
-  async paymentCallback(@Query() query: any, @Res() res: Response) {
-    const result = await this.jazzcashservice.handleCallback(query);
+  @Post('payment-callback')
+  async paymentCallback(@Body() body: any, @Res() res: Response) {
+    const result = await this.jazzcashservice.handleCallback(body);
     //@ts-ignore
     res.status(HttpStatus.OK).send(result.message);
   }
