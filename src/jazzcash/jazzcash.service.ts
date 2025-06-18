@@ -115,8 +115,7 @@ export class JazzcashService {
       pp_TxnDateTime: txnDateTime,
 
       pp_TranExpiryDateTime: txnExpiryDateTime,
-      //@ts-ignore
-      pp_BillReference: order._id.toString(),
+      pp_BillReference: 'billRef',
       pp_Description: 'Payment for order',
       pp_ReturnURL: returnUrl,
       pp_PosEntryMode: '1',
