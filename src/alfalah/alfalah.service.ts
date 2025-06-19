@@ -30,7 +30,6 @@ export class AlfalahService {
   }
 
   async createPaymentAndOrder(orderDto: CreateOrderDto) {
-    
     const {
       customerName,
       customerEmail,
@@ -89,7 +88,7 @@ export class AlfalahService {
           name: 'Laila',
           url: 'https://www.glimmer.com.pk',
         },
-        returnUrl: `https://api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
+        returnUrl: `https://www.api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
       },
       order: {
         currency: 'PKR',
