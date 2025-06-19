@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import { Transaction } from '../transactions/transaction.schema';
 
 export type OrderDocument = Order & Document;
 
@@ -142,8 +143,8 @@ export class Order {
   @Prop({ type: [String], default: [] })
 trackingNumbers?: string[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true }) // 👈 Reference to Transaction collection
-  transaction?: Types.ObjectId;
+    @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true })
+  transaction?: Transaction | Types.ObjectId; // ✅ updated type
 
   @Prop({
     required: true,

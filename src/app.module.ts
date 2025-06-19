@@ -33,6 +33,7 @@ import { AdminService } from './admin/admin.service';
 import { NotificationModule } from './notification/notification.module';
 import { PostexModule } from './postex/postex.module';
 import { JazzcashModule } from './jazzcash/jazzcash.module';
+import { AlfalahModule } from './alfalah/alfalah.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { JazzcashModule } from './jazzcash/jazzcash.module';
     NotificationModule,
     PostexModule,
     JazzcashModule,
+    AlfalahModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [

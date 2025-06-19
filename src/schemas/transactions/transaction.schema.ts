@@ -23,6 +23,15 @@ export class Transaction {
 
   @Prop()
   paymentGateway!: string; // e.g. 'JazzCash', 'BankX'
+
+  @Prop()
+  gatewayOrderId?: string;
+
+  @Prop()
+  gatewaySessionId?: string;
+
+  @Prop()
+  successIndicator?: string;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
