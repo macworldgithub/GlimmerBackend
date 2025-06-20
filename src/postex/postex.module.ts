@@ -41,5 +41,6 @@ import { Store, StoreSchema } from 'src/schemas/ecommerce/store.schema'; // Impo
       { name: Store.name, schema: StoreSchema }, // Add Store schema
     ]),
   ],
+  exports: [PostexService]
 })
 export class PostexModule {}

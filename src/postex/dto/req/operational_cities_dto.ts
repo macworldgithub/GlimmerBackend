@@ -4,10 +4,10 @@ import { IsOptional, IsString, IsIn } from 'class-validator';
 
 export class OperationalCityQueryDto {
   @ApiPropertyOptional({
-    enum: ['Pickup', 'Delivery'],
+    enum: ['pickup', 'delivery'],
     description: 'Filter city type',
   })
   @IsOptional()
-  @IsIn(['Pickup', 'Delivery'])
+  @IsIn(['pickup', 'delivery'])
   operationalCityType?: string;
 }

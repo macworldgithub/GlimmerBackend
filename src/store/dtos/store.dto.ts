@@ -43,6 +43,14 @@ export class CreateStoreDto {
   @IsOptional()
   address?: string;
 
+  @IsString()
+  @IsNotEmpty()
+  cityName: string;
+
+  @IsString()
+  @IsOptional() // Changed to optional
+  pickupAddressCode?: string;
+
   @IsOptional()
   @ApiPropertyOptional({
     description: '3rd image file of the product',

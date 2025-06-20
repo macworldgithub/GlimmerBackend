@@ -9,11 +9,14 @@ import { DEFAULT_DOCUMENTS_LIMITS } from 'src/constants/common.constants';
 export class StoreRepository {
   constructor(@InjectModel(Store.name) private store_model: Model<Store>) {}
 
-  async create_store(store_dto: CreateStoreDto) {
-    const store = new this.store_model(store_dto);
-    return store.save();
-  }
-
+  // async create_store(store_dto: CreateStoreDto) {
+  //   const store = new this.store_model(store_dto);
+  //   return store.save();
+  // }
+  async create_store(store_dto: CreateStoreDto & { pickupAddressCode?: string }) {
+  const store = new this.store_model(store_dto);
+  return store.save();
+}
   async get_store_by_email(email: string, projection?: StoreProjection) {
     return this.store_model.findOne({ email }, projection).exec();
   }

@@ -41,7 +41,8 @@ export class Store {
 
   @Prop({ type: Date, default: new Date() })
   created_at: Date;
-
+@Prop({ required: false, default: null })
+pickupAddressCode?: string;
   constructor(obj: Store) {
     this._id = obj._id.toString();
     this.store_name = obj.store_name;
@@ -52,7 +53,8 @@ export class Store {
     this.country = obj.country;
     this.address = obj.address;
     this.store_image = obj.store_image;
-    this.cityName = obj.cityName; // Include new field in constructor
+    this.cityName = obj.cityName; 
+    this.pickupAddressCode = obj.pickupAddressCode; 
     this.created_at = obj.created_at;
   }
 }

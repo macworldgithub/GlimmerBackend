@@ -34,6 +34,7 @@ import { SalonRepository } from 'src/salon/salon.repository';
 import { CreateSalonDto } from 'src/salon/dto/salon.dto';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
 import { SalonService } from 'src/salon/salon.service';
+import { PostexService } from 'src/postex/postex.service';
 import mongoose from 'mongoose';
 
 @Injectable()
@@ -46,6 +47,7 @@ export class AuthService {
     private s3_service: S3Service,
     private firebase_service: FirebaseService,
     private admin_repository: AdminRepository,
+    private postexService: PostexService, // Inject PostexService
   ) {}
 
   async salon_signup(
@@ -181,54 +183,116 @@ export class AuthService {
       throw new BadRequestException(e);
     }
   }
-  async store_signup(
-    create_store_dto: CreateStoreDto,
-  ): Promise<StoreSignUpResponseDto> {
-    try {
-      const is_email_available = await this.store_repository.get_store_by_email(
-        create_store_dto.email,
-      );
+  // async store_signup(
+  //   create_store_dto: CreateStoreDto,
+  // ): Promise<StoreSignUpResponseDto> {
+  //   try {
+  //     const is_email_available = await this.store_repository.get_store_by_email(
+  //       create_store_dto.email,
+  //     );
 
-      if (is_email_available?.email) {
-        throw new BadRequestException('Email Already exists!');
-      }
+  //     if (is_email_available?.email) {
+  //       throw new BadRequestException('Email Already exists!');
+  //     }
 
-      create_store_dto.password = await hashPassword(create_store_dto.password);
-      const store_image_temp = create_store_dto.store_image;
-      delete create_store_dto.store_image;
+  //     create_store_dto.password = await hashPassword(create_store_dto.password);
+  //     const store_image_temp = create_store_dto.store_image;
+  //     delete create_store_dto.store_image;
 
-      const inserted_store =
-        await this.store_repository.create_store(create_store_dto);
+  //     const inserted_store =
+  //       await this.store_repository.create_store(create_store_dto);
 
-      if (store_image_temp) {
-        const path = StoreService.GET_STORE_IMAGE_PATH(
-          inserted_store._id.toString(),
-        );
-        const store_image = (
-          await this.s3_service.upload_file_by_key(store_image_temp, path)
-        ).Key;
-        this.store_repository.update_store(inserted_store._id, { store_image });
-        inserted_store.store_image =
-          await this.s3_service.get_image_url(store_image);
-      }
+  //     if (store_image_temp) {
+  //       const path = StoreService.GET_STORE_IMAGE_PATH(
+  //         inserted_store._id.toString(),
+  //       );
+  //       const store_image = (
+  //         await this.s3_service.upload_file_by_key(store_image_temp, path)
+  //       ).Key;
+  //       this.store_repository.update_store(inserted_store._id, { store_image });
+  //       inserted_store.store_image =
+  //         await this.s3_service.get_image_url(store_image);
+  //     }
 
-      if (!inserted_store._id) {
-        throw new InternalServerErrorException();
-      }
+  //     if (!inserted_store._id) {
+  //       throw new InternalServerErrorException();
+  //     }
 
-      const token = await this.jwt_service.signAsync({
-        _id: inserted_store._id.toString(),
-        email: inserted_store.email,
-        role: Roles.STORE,
-      });
+  //     const token = await this.jwt_service.signAsync({
+  //       _id: inserted_store._id.toString(),
+  //       email: inserted_store.email,
+  //       role: Roles.STORE,
+  //     });
 
-      return { store: new Store(inserted_store), token, role: Roles.STORE };
-    } catch (e) {
-      console.log(e);
-      throw new BadRequestException(e);
+  //     return { store: new Store(inserted_store), token, role: Roles.STORE };
+  //   } catch (e) {
+  //     console.log(e);
+  //     throw new BadRequestException(e);
+  //   }
+  // }
+  async store_signup(create_store_dto: CreateStoreDto): Promise<StoreSignUpResponseDto> {
+  try {
+    const is_email_available = await this.store_repository.get_store_by_email(create_store_dto.email);
+
+    if (is_email_available?.email) {
+      throw new BadRequestException('Email Already exists!');
     }
-  }
 
+    create_store_dto.password = await hashPassword(create_store_dto.password);
+    const store_image_temp = create_store_dto.store_image;
+    delete create_store_dto.store_image;
+
+    // Ensure cityName and address are provided for address creation
+    if (!create_store_dto.cityName || !create_store_dto.address) {
+      throw new BadRequestException('City Name and Address are required to create a pickup address');
+    }
+
+    // Check if the address already exists
+    let pickupAddressCode = await this.postexService.getMerchantAddress(create_store_dto.cityName, create_store_dto.address);
+
+    // If no existing address, create a new one
+    if (!pickupAddressCode) {
+      pickupAddressCode = await this.postexService.createMerchantAddress({
+        address: create_store_dto.address,
+        cityName: create_store_dto.cityName,
+        vendor_name: create_store_dto.vendor_name,
+      } as any);
+      if (!pickupAddressCode) {
+        throw new BadRequestException('Failed to create pickup address');
+      }
+    }
+
+    // Create store with the obtained pickupAddressCode
+    const inserted_store = await this.store_repository.create_store({
+      ...create_store_dto,
+      pickupAddressCode, // Dynamically set pickupAddressCode
+    });
+
+    if (store_image_temp) {
+      const path = StoreService.GET_STORE_IMAGE_PATH(inserted_store._id.toString());
+      const store_image = (
+        await this.s3_service.upload_file_by_key(store_image_temp, path)
+      ).Key;
+      await this.store_repository.update_store(inserted_store._id, { store_image });
+      inserted_store.store_image = await this.s3_service.get_image_url(store_image);
+    }
+
+    if (!inserted_store._id) {
+      throw new InternalServerErrorException();
+    }
+
+    const token = await this.jwt_service.signAsync({
+      _id: inserted_store._id.toString(),
+      email: inserted_store.email,
+      role: Roles.STORE,
+    });
+
+    return { store: new Store(inserted_store), token, role: Roles.STORE };
+  } catch (e: any) {
+    console.log(e);
+    throw new BadRequestException(e.message || 'An error occurred during signup');
+  }
+}
   async store_signin(
     signin_dto: StoreSignInDto,
   ): Promise<StoreSignUpResponseDto> {

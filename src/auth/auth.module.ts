@@ -14,10 +14,12 @@ import { AdminRepository } from 'src/admin/admin.repository';
 import { Admin, AdminSchema } from 'src/schemas/admin/admin.schema';
 import { SalonRepository } from 'src/salon/salon.repository';
 import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
+import { PostexModule } from '../postex/postex.module'; // Import PostexModule
 // import { SalonModule } from 'src/salon/salon.module';
 
 @Module({
   imports: [
+    PostexModule,
     StoreModule,
     MongooseModule.forFeature([
       { name: Customer.name, schema: CustomerSchema },

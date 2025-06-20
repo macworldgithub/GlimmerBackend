@@ -1,4 +1,3 @@
-// // src/order/postex.controller.ts
 // import {
 //   Controller,
 //   Post,
@@ -8,6 +7,8 @@
 //   Get,
 //   Query,
 //   Put,
+//   HttpException,
+//   HttpStatus,
 // } from '@nestjs/common';
 // import { PostexService } from './postex.service';
 // import { PostexOrderDto } from './dto/req/postex.order.dto';
@@ -23,62 +24,7 @@
 // export class PostexController {
 //   constructor(private readonly postexService: PostexService) {}
 
-//   @Post('order/:id')
-//   @ApiParam({
-//     name: 'id',
-//     required: true,
-//     description: 'MongoDB ObjectId of the order',
-//     schema: { type: 'string', example: '665cba3456abcde123456789' },
-//   })
-//   @ApiResponse({
-//     status: 200,
-//     description: 'Order successfully registered with PostEx',
-//     content: {
-//       'application/json': {
-//         example: {
-//           statusCode: '200',
-//           statusMessage: 'ORDER HAS BEEN CREATED',
-//           dist: {
-//             trackingNumber: 'CX-12345678901',
-//             orderStatus: 'UnBooked',
-//             orderDate: '2025-06-13 12:00:00',
-//           },
-//         },
-//       },
-//     },
-//   })
-//   @ApiResponse({ status: 404, description: 'Order not found' })
-//   async createOrder(@Param('id') orderId: PostexOrderDto) {
-//     return await this.postexService.createPostexOrder(orderId);
-//   }
-
-
-// import {
-//   Controller,
-//   Post,
-//   Body,
-//   Param,
-//   Patch,
-//   Get,
-//   Query,
-//   Put,
-//   HttpException,HttpStatus
-// } from '@nestjs/common';
-// import { PostexService } from './postex.service';
-// import { PostexOrderDto } from './dto/req/postex.order.dto';
-// import { ApiBody, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
-// import { UpdateDeliveryStatusDto } from './dto/req/update_delivery_status.dto';
-// import { OperationalCityQueryDto } from './dto/req/operational_cities_dto';
-// import { ListOrdersQueryDto } from './dto/req/list_order_query_dto';
-// import { TrackOrderParamDto } from './dto/req/track_order_param_dto';
-// import { CancelOrderDto } from './dto/req/cancel_order_dto';
-// import { PaymentStatusParamDto } from './dto/req/payment-status-param.dto';
-
-// @Controller('postex')
-// export class PostexController {
-//   constructor(private readonly postexService: PostexService) {}
-
-// @Post('order')
+//   @Post('order')
 //   @ApiBody({ type: PostexOrderDto })
 //   @ApiResponse({
 //     status: 200,
@@ -105,7 +51,7 @@
 //         HttpStatus.BAD_REQUEST,
 //       );
 //     }
-//     return await this.postexService.createPostexOrder(orderIdDto); // Pass the full DTO
+//     return await this.postexService.createPostexOrder(orderIdDto);
 //   }
 
 //   @Patch('update-delivery-status')
@@ -390,42 +336,68 @@ export class PostexController {
   })
   @ApiResponse({ status: 404, description: 'Registered order not found' })
   async updateDeliveryStatus(@Body() dto: UpdateDeliveryStatusDto) {
-    return await this.postexService.updateDeliveryStatus(
-      dto.id,
-      dto.deliver_to_postex,
-    );
+    return await this.postexService.updateDeliveryStatus(dto.id, dto.deliver_to_postex);
   }
 
+  // @Get('operational-cities')
+  // @ApiQuery({
+  //   name: 'operationalCityType',
+  //   required: false,
+  //   enum: ['Pickup', 'Delivery'],
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'List of operational cities returned successfully',
+  //   content: {
+  //     'application/json': {
+  //       example: {
+  //         statusCode: '200',
+  //         statusMessage: 'SUCCESSFULLY OPERATED',
+  //         dist: [
+  //           {
+  //             operationalCityName: 'Lahore',
+  //             countryName: 'Pakistan',
+  //             isPickupCity: true,
+  //             isDeliveryCity: true,
+  //           },
+  //         ],
+  //       },
+  //     },
+  //   },
+  // })
+  // async getCities(@Query() query: OperationalCityQueryDto) {
+  //   return await this.postexService.getOperationalCities(query);
+  // }
   @Get('operational-cities')
-  @ApiQuery({
-    name: 'operationalCityType',
-    required: false,
-    enum: ['Pickup', 'Delivery'],
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'List of operational cities returned successfully',
-    content: {
-      'application/json': {
-        example: {
-          statusCode: '200',
-          statusMessage: 'SUCCESSFULLY OPERATED',
-          dist: [
-            {
-              operationalCityName: 'Lahore',
-              countryName: 'Pakistan',
-              isPickupCity: true,
-              isDeliveryCity: true,
-            },
-          ],
-        },
+@ApiQuery({
+  name: 'operationalCityType',
+  required: false, // Indicates the parameter is optional, allowing null or omission
+  enum: ['pickup', 'delivery'], // Changed to lowercase
+  description: 'A variable to filter cities for pickup or delivery',
+})
+@ApiResponse({
+  status: 200,
+  description: 'List of operational cities returned successfully',
+  content: {
+    'application/json': {
+      example: {
+        statusCode: '200',
+        statusMessage: 'SUCCESSFULLY OPERATED',
+        dist: [
+          {
+            operationalCityName: 'Lahore',
+            countryName: 'Pakistan',
+            isPickupCity: true,
+            isDeliveryCity: true,
+          },
+        ],
       },
     },
-  })
-  async getCities(@Query() query: OperationalCityQueryDto) {
-    return await this.postexService.getOperationalCities(query);
-  }
-
+  },
+})
+async getCities(@Query() query: OperationalCityQueryDto) {
+  return await this.postexService.getOperationalCities(query);
+}
   @Get('orders')
   @ApiQuery({
     name: 'orderStatusID',
@@ -484,6 +456,7 @@ export class PostexController {
     return await this.postexService.listOrders(query);
   }
 
+  @Get('track-order/:trackingNumber')
   @ApiParam({
     name: 'trackingNumber',
     required: true,
