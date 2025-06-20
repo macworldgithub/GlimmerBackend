@@ -310,7 +310,6 @@ async get_all_store_products(
     return this.product_service.get_store_product_count(req.user);
   }
   
-  // Add this new endpoint within the ProductController class, after the existing endpoints
 @HttpCode(HttpStatus.OK)
 @ApiBearerAuth()
 @UseGuards(AuthGuard, RolesGuard)
@@ -321,5 +320,19 @@ async get_all_rated_products(
   @Query('page_size') page_size: number = 8,
 ) {
   return this.product_service.get_all_rated_products(page_no, page_size);
+}
+
+
+@HttpCode(HttpStatus.OK)
+@ApiBearerAuth()
+@UseGuards(AuthGuard, RolesGuard)
+@Role(Roles.STORE)
+@Get('get_store_rated_products')
+async get_store_rated_products(
+  @Req() req: AuthPayloadRequest,
+  @Query('page_no') page_no: number,
+  @Query('page_size') page_size: number = 8,
+) {
+  return this.product_service.get_store_rated_products(req.user, page_no, page_size);
 }
 }
