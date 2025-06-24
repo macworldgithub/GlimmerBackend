@@ -61,14 +61,13 @@ export class OrderService {
   ): Promise<{ order: Order; message: string }> {
     
     const transaction = await this.transactionModel.create({
-      transactionId: order_dto.payment.transactionId || `COD-${Date.now()}`,
+      transactionId: order_dto.payment?.transactionId || `COD-${Date.now()}`,
       customerEmail: order_dto.customerEmail,
       amount: order_dto.discountedTotal.toString(),
       currency: 'PKR',
-      status: order_dto.payment.status,
-      paymentGateway: order_dto.payment.gateway,
+      status: order_dto.payment?.status || 'Pending',
+      paymentGateway: order_dto.payment?.gateway || 'COD',
     });
-
     const order = await this.orderModel.create({
       ShippingInfo: order_dto.ShippingInfo,
       customerName: order_dto.customerName,
