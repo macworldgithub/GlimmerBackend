@@ -4,7 +4,7 @@ import {
     OnGatewayConnection,
     OnGatewayDisconnect,
   } from '@nestjs/websockets';
-  import { Server } from 'socket.io';
+  import { Server, Socket } from 'socket.io';
   
   @WebSocketGateway({
     cors: {
@@ -16,7 +16,11 @@ import {
     server!: Server;
   
     handleConnection(client: any) {
-      console.log(`Client connected: ${client.id}`);
+      const storeId = this.getStoreIdFromTokenOrQuery(client); // implement this method
+  if (storeId) {
+    client.join(storeId.toString()); // Join room with storeId
+    console.log(`Store ${storeId} joined room`);
+  }
     }
   
     handleDisconnect(client: any) {
@@ -24,7 +28,24 @@ import {
     }
   
     sendOrderNotification(order: any) {
-      this.server.emit('newOrder', order); // emit to all connected clients
+      const storeId = order.productList?.[0]?.storeId;
+        if (!storeId) {
+          console.warn('No storeId found in order.productList');
+          return;
+        }
+        this.server.to(storeId.toString()).emit('newOrder', {
+        ...order,
+        storeId, // explicitly send storeId for frontend filtering if needed
+      });
     }
+    private getStoreIdFromTokenOrQuery(client: Socket): string | null {
+    const { storeId } = client.handshake.query;
+
+    if (storeId && typeof storeId === 'string') {
+      return storeId;
+    }
+
+    return null;
   }
+}
   
