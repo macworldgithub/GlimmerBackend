@@ -29,41 +29,31 @@ export class AlfalahService {
     this.password = this.config.get<string>('API_PASSWORD');
   }
 
-  async createPaymentAndOrder(orderDto: CreateOrderDto) {
+  async createOrderAndInitiateAlfalahPayment(orderDto: any) {
     const {
-      customerName,
       customerEmail,
+      discountedTotal,
+      customerName,
       ShippingInfo,
       productList,
       total,
-      discountedTotal,
     } = orderDto;
 
-    const generateTransactionId = () => {
-      const now = new Date();
-      const pad = (n: number) => n.toString().padStart(2, '0');
+    // Step 1: Generate gateway orderId
+    const gatewayOrderId = `ORDER-${Date.now()}`;
 
-      const year = now.getFullYear();
-      const month = pad(now.getMonth() + 1);
-      const day = pad(now.getDate());
-      const hours = pad(now.getHours());
-      const minutes = pad(now.getMinutes());
-      const seconds = pad(now.getSeconds());
-
-      return `T${year}${month}${day}${hours}${minutes}${seconds}`;
-    };
-
-    const transactionId = generateTransactionId();
-
+    // Step 2: Create DB transaction
     const transaction = await this.transactionModel.create({
-      transactionId,
+      transactionId: gatewayOrderId, // or generateTransactionId() if needed separately
       customerEmail,
       amount: discountedTotal.toString(),
       currency: 'PKR',
       status: 'Pending',
-      paymentGateway: 'Alfalah',
+      paymentGateway: 'Bank Alfalah',
+      gatewayOrderId,
     });
 
+    // Step 3: Create DB order
     const order = await this.orderModel.create({
       ShippingInfo,
       customerName,
@@ -72,29 +62,27 @@ export class AlfalahService {
       total,
       discountedTotal,
       transaction: transaction._id,
+      gatewayOrderId,
     });
 
-    //@ts-ignore
-    const alfalahOrderId = order._id.toString();
-
-    const url = `https://${this.host}/api/rest/version/100/merchant/${this.merchantId}/session`;
+    // Step 4: Prepare Alfalah session request
+    const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/session`;
 
     const body = {
       apiOperation: 'INITIATE_CHECKOUT',
-      checkoutMode: 'WEBSITE',
       interaction: {
         operation: 'PURCHASE',
+        returnUrl: `http://localhost:3000/alfalah/callback?orderId=${order._id}`,
         merchant: {
-          name: 'Laila',
+          name: 'Glimmer Store',
           url: 'https://www.glimmer.com.pk',
         },
-        returnUrl: `https://www.api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
       },
       order: {
         currency: 'PKR',
         amount: discountedTotal.toFixed(2),
-        id: alfalahOrderId,
-        description: 'Product Purchase',
+        id: order._id,
+        description: 'Glimmer product purchase',
       },
     };
 
@@ -109,73 +97,59 @@ export class AlfalahService {
       },
     });
 
-    // You can store `alfalahOrderId`, `successIndicator` in the transaction if needed
-    await transaction.updateOne({
-      gatewayOrderId: alfalahOrderId,
-      gatewaySessionId: data.session.id,
-      successIndicator: data.successIndicator,
-    });
-
+    // Step 5: Return session info to frontend
     return {
-      redirectUrl: `https://${this.host}/checkout/version/100/merchant/${this.merchantId}/session/${data.session.id}`,
-      alfalahOrderId,
       sessionId: data.session.id,
+      gatewayOrderId,
+      message: 'Redirect to Bank Alfalah checkout page',
     };
   }
 
-  async verifyAndFinalize(orderMongoId: string) {
-    // 1. Find the order with its linked transaction
-    const order = (await this.orderModel
-      .findById(orderMongoId)
-      .populate('transaction')) as Order & { transaction: Transaction };
+  async verifyAndFinalize(OrderId: string) {
+    const order = await this.orderModel
+      .findById(OrderId) // or .findOne({ _id: OrderId })
+      .populate('transaction');
 
-    if (!order) {
-      return { success: false, reason: 'Order not found' };
+    if (!order || !order.transaction) {
+      return { success: false, reason: 'Order or transaction not found' };
     }
 
     const transaction = order.transaction;
-    const gatewayOrderId = order?.transaction?.gatewayOrderId;
 
-    // 2. Ensure the transaction has an Alfalah order ID
-    if (!gatewayOrderId) {
-      return {
-        success: false,
-        reason: 'Missing gateway order ID on transaction',
-      };
-    }
-
-    const url = `https://${this.host}/api/rest/version/100/merchant/${this.merchantId}/order/${gatewayOrderId}`;
+    const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/order/${OrderId}`;
     const auth = Buffer.from(
       `merchant.${this.merchantId}:${this.password}`,
     ).toString('base64');
 
     try {
-      // 3. Call Alfalah API to verify payment status
       const { data } = await this.http.axiosRef.get(url, {
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
+        headers: { Authorization: `Basic ${auth}` },
       });
 
-      const tx = data.transaction?.[0];
-      const approved = tx?.response?.gatewayCode === 'APPROVED';
+      const tx = data?.transaction?.[0];
 
-      if (approved) {
+      if (!tx) {
+        return {
+          success: false,
+          reason: 'No transaction data returned from gateway',
+        };
+      }
+
+      const isApproved = tx.response?.gatewayCode === 'APPROVED';
+
+      if (isApproved) {
         const realTransactionId = tx.transaction?.id || 'UNKNOWN';
 
-        // 4. Update the transaction with success & real transaction ID
         //@ts-ignore
         await this.transactionModel.findByIdAndUpdate(transaction._id, {
           status: 'Success',
           realTransactionId,
-          transactionId: realTransactionId, // Replace your fake ID
+          transactionId: realTransactionId,
         });
 
-        return { order, transaction };
+        return { success: true, order, transaction };
       } else {
-        // 5. Payment failed — delete both order & transaction
         await Promise.all([
-          //@ts-ignore
           this.orderModel.findByIdAndDelete(order._id),
           //@ts-ignore
           this.transactionModel.findByIdAndDelete(transaction._id),
@@ -187,7 +161,7 @@ export class AlfalahService {
       return {
         success: false,
         reason: 'Payment verification failed',
-        error: error.message,
+        error: error.message || 'Unknown error',
       };
     }
   }
