@@ -72,7 +72,7 @@ export class AlfalahService {
       apiOperation: 'INITIATE_CHECKOUT',
       interaction: {
         operation: 'PURCHASE',
-        returnUrl: `http://localhost:3000/alfalah/callback?orderId=${order._id}`,
+        returnUrl: `https://www.api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
         merchant: {
           name: 'Glimmer Store',
           url: 'https://www.glimmer.com.pk',
