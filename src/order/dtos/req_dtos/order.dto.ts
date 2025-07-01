@@ -1,12 +1,13 @@
 // @ts-nocheck
 
-import { PartialType, PickType } from '@nestjs/swagger';
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
   IsInt,
   IsMongoId,
+  IsString,
   Max,
   Min,
   ValidateNested,
@@ -42,3 +43,16 @@ class TempOrderClass extends PickType(Order, [
   'order_items',
 ] as const) {}
 export class UpdateOrderDto extends PartialType(TempOrderClass) {}
+
+export class updateConfirmedOrderStatusDto {
+  @ApiProperty()
+  @IsString()
+  orderId: string;
+
+  @ApiProperty({
+    description: 'Order status',
+    enum: ['In Process', 'Delivered', 'Returned', 'Cancelled'],
+  })
+  @IsEnum(['In Process', 'Delivered', 'Returned', 'Cancelled'])
+  orderStatus: string;
+ }

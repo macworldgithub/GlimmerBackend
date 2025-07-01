@@ -17,7 +17,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/auth/enums/roles.enum';
 import { Role } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
-import { OrderReqDto } from './dtos/req_dtos/order.dto';
+import { OrderReqDto, updateConfirmedOrderStatusDto } from './dtos/req_dtos/order.dto';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 import { OrderService } from './order.service';
 import { UpdateStoreOrder } from 'src/schemas/ecommerce/store_order.schema';
@@ -156,6 +156,17 @@ export class OrderController {
   ) {
     return this.order_service.delete_order(order_id);
   }
+
+   @HttpCode(HttpStatus.OK)
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RolesGuard)
+    @Role(Roles.SUPERADMIN)
+    @Put('updateConfirmedOrderStatus')
+    async updateConfirmedOrderStatus(
+      @Body() updateData:updateConfirmedOrderStatusDto,
+    ) {
+      return this.order_service.updateConfirmedOrderStatus(updateData);
+    }
 
   // @HttpCode(HttpStatus.OK)
   // @ApiBearerAuth()

@@ -172,4 +172,12 @@ export class OrderRepository {
       .session(session)
       .exec();
   }
+
+  async findById(orderId: string): Promise<Order | null> {
+    return this.order_model.findOne({ _id:orderId }).exec();
+  }
+
+   async update(orderId: string, updateData: Partial<Order>): Promise<Order | null> {
+      return this.order_model.findOneAndUpdate({ _id:orderId  }, updateData, { new: true }).exec();
+    }
 }

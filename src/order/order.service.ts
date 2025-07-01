@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderReqDto } from './dtos/req_dtos/order.dto';
+import { OrderReqDto, updateConfirmedOrderStatusDto } from './dtos/req_dtos/order.dto';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { OrderStatus } from './enums/order_status.enum';
 import { OrderRepository } from './order.repository';
@@ -527,6 +527,35 @@ export class OrderService {
     }
   }
 
+  async updateConfirmedOrderStatus(updateData: updateConfirmedOrderStatusDto) {
+    const allowedStatuses = ['In Process', 'Delivered', 'Returned', 'Cancelled'];
+    
+    const order = await this.order_repository.findById(updateData.orderId);
+
+  if (!order) {
+    throw new NotFoundException(`Order with ID ${updateData.orderId} not found.`);
+  }
+
+  if (order.status !== 'Confirmed') {
+    throw new BadRequestException(
+      `Order status can only be updated if it is currently 'Confirmed'. Current status: ${order.status}`,
+    ); 
+  }
+
+  if (!allowedStatuses.includes(updateData.orderStatus)) {
+    throw new BadRequestException(
+      `Invalid status update. Allowed statuses are: ${allowedStatuses.join(', ')}`,
+    );
+  }
+  const updatedOrder = await this.order_repository.update(updateData.orderId, {
+    status: updateData.orderStatus,
+  });
+  if (!updatedOrder) {
+    throw new NotFoundException(`Order with ID ${updateData.orderId} could not be updated.`);
+  }
+
+    return updatedOrder;
+  }
   // async get_all_store_orders(page_no: number, store_payload: AuthPayload) {
   //   try {
   //     const orders = await this.order_repository.get_all_store_orders(
