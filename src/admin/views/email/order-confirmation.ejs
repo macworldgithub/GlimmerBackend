@@ -137,8 +137,8 @@
                   <%= item.name %>
                 </td>
                 <td><%= item.quantity %></td>
-                <td>PKR <%= item.price.toFixed(2) %></td>
-                <td>PKR <%= (item.price * item.quantity).toFixed(2) %></td>
+                <td>PKR <%= order.total.toFixed(2) %></td>
+                <td>PKR <%= order.subtotal.toFixed(2) %></td>
               </tr>
             <% }) %>
           </tbody>
@@ -146,16 +146,16 @@
 
         <table class="totals" width="100%">
           <tr>
-            <td>Subtotal:</td>
-            <td>PKR <%= order.subtotal.toFixed(2) %></td>
+            <td>Price:</td>
+            <td>PKR <%= order.total.toFixed(2) %></td>
           </tr>
           <tr>
             <td>Shipping:</td>
-            <td>PKR <%= order.shipping.toFixed(2) %></td>
+            <td>PKR 200</td>
           </tr>
           <tr style="font-size: 16px;">
             <td>Total:</td>
-            <td>PKR <%= order.total.toFixed(2) %></td>
+            <td>PKR <%= order.subtotal.toFixed(2) %></td>
           </tr>
         </table>
 
