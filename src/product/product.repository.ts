@@ -91,10 +91,10 @@ export class ProductRepository {
   if (sortBy === 'price') {
     // Sort by discounted_price or base_price
     sortOptions = [
-      { discounted_price: order === 'desc' ? -1 : 1 },
-      { base_price: order === 'desc' ? -1 : 1 },
-      { _id: order === 'desc' ? -1 : 1 }, // Secondary sort for stability
-    ];
+      ['discounted_price', order === 'desc' ? -1 : 1],
+      ['base_price', order === 'desc' ? -1 : 1],
+      ['_id', order === 'desc' ? -1 : 1],
+  ];
   } else if (sortBy) {
     sortOptions = { [sortBy]: order === 'desc' ? -1 : 1, _id: order === 'desc' ? -1 : 1 };
   } else {
