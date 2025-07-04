@@ -1,10 +1,9 @@
 // embedding.util.ts
-import { pipeline } from '@xenova/transformers';
-
 let embedder: any;
 
 export async function getEmbedding(text: string): Promise<number[]> {
   if (!embedder) {
+    const { pipeline } = await import('@xenova/transformers'); 
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
   }
 
@@ -15,6 +14,7 @@ export async function getEmbedding(text: string): Promise<number[]> {
 
   return output.data;
 }
+
 
 
 export function cosineSimilarity(a: number[], b: number[]): number {
