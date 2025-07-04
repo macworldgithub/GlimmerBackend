@@ -34,6 +34,7 @@ import { NotificationModule } from './notification/notification.module';
 import { PostexModule } from './postex/postex.module';
 import { JazzcashModule } from './jazzcash/jazzcash.module';
 import { AlfalahModule } from './alfalah/alfalah.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { AlfalahModule } from './alfalah/alfalah.module';
     PostexModule,
     JazzcashModule,
     AlfalahModule,
+    ChatModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [
