@@ -87,6 +87,8 @@ export class SalonServicesController {
   @ApiQuery({ name: 'salonId', type: String, required: false })
   @ApiQuery({ name: 'subCategoryName', type: String, required: false })
   @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
+  @ApiQuery({ name: 'sortBy', type: String, required: false })
+  @ApiQuery({ name: 'order', enum: ['asc', 'desc'], required: false })
   findAllActive(@Query() query: any) {
     return this.salonServicesService.findAllActive(query);
   }

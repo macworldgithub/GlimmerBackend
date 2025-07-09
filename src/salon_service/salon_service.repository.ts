@@ -30,14 +30,17 @@ export class SalonServicesRepository {
     return newService.save();
   }
 
-  async findAll(filter: any, page: any) {
+  async findAll(filter: any, page: any, sortBy?: string, order: 'asc' | 'desc' = 'desc') {
     const limit = 10;
     const skip = (page - 1) * limit;
+
+    const sortOptions: any = getSortOptions(sortBy, order);
+
     const total = await this.salonServiceModel.countDocuments(filter).exec();
     const totalPages = Math.ceil(total / limit);
     let services = await this.salonServiceModel
       .find(filter)
-      .sort({ createdAt: -1 })
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .exec();
@@ -332,5 +335,26 @@ async applyBulkDiscount(id: string[], discountPercentage: any) {
 
     // Return combined, deduped, and enriched results
     return enrichWithCategory(Array.from(resultsMap.values()));
+  }
+}
+
+function getSortOptions(sortBy?: string, order: 'asc' | 'desc' = 'desc') {
+  const direction = order === 'desc' ? -1 : 1;
+
+  if (sortBy === 'price') {
+    return {
+      adminSetPrice: direction,
+      _id: direction,
+    };
+  } else if (sortBy) {
+    return {
+      [sortBy]: direction,
+      _id: direction,
+    };
+  } else {
+    return {
+      createdAt: direction,
+      _id: direction,
+    };
   }
 }

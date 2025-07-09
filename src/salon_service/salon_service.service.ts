@@ -97,7 +97,11 @@ export class SalonServicesService {
       filter.subSubCategoryName = query.subSubCategoryName;
     }
     const page = parseInt(query.page_no, 10) || 1;
-    let ser = await this.salonServicesRepository.findAll(filter, page);
+
+    const sortBy = query.sortBy;
+    const order: 'asc' | 'desc' = query.order === 'asc' ? 'asc' : 'desc';
+
+    let ser = await this.salonServicesRepository.findAll(filter, page, sortBy, order);
     ser.services = await Promise.all(
       ser.services.map(async (e) => {
         if (e.image1) {
