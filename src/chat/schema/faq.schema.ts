@@ -11,6 +11,12 @@ export class Faq {
 
   @Prop({ required: true })
   answer!: string;
+
+  @Prop({ type: [Number], default: undefined })
+  vector?: number[];
+
+  @Prop({ type: [String], default: [] })
+  keywords?: string[];
 }
 
 export const FaqSchema = SchemaFactory.createForClass(Faq);

@@ -8,4 +8,8 @@ export class ChatMessageDto {
   @IsNotEmpty()
   @IsString()
   message!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  keyword!: string;
 }

@@ -7,6 +7,7 @@ import { Lead, LeadDocument } from './schema/lead.schema';
 import { ChatLog, ChatLogDocument } from './schema/chatlog.schema';
 import { Faq, FaqDocument } from './schema/faq.schema';
 import { CreateLeadDto } from 'src/commons/dtos/chat-lead.dto';
+import { cosineSimilarity, getEmbedding } from 'src/utils/embedding.util';
 
 @Injectable()
 export class ChatService {
@@ -26,18 +27,48 @@ export class ChatService {
     @InjectModel(ChatLog.name) private chatLogModel: Model<ChatLogDocument>,
   ) {}
 
-  async getBotResponse(userMessage: string): Promise<string> {
+  async getBotResponse(userMessage: string, keyword?: string): Promise<string> {
     const message = userMessage.toLowerCase().trim();
 
     if (message.includes('talk to representative')) {
       return 'Please provide your name, email, and phone number so we can connect you with our team.';
     }
 
-    const faq = await this.faqModel.findOne({
-      question: { $regex: message, $options: 'i' },
-    });
+    const faqs = await this.faqModel.find();
 
-    if (faq) return faq.answer;
+    const userVector = await getEmbedding(userMessage.toLowerCase().trim());
+
+    let bestMatch = null;
+    let highestScore = 0;
+
+    for (const faq of faqs) {
+      if (!faq.vector) {
+        const vector = await getEmbedding(faq.question);
+        await this.faqModel.updateOne({ _id: faq._id }, { $set: { vector } });
+        faq.vector = vector;
+      }
+
+      const sim = cosineSimilarity(userVector, faq.vector);
+      let keywordMatch = 0;
+      if (keyword && faq.keywords?.length) {
+        keywordMatch = faq.keywords.some((k) =>
+          k.toLowerCase().includes(keyword.toLowerCase()),
+        )
+          ? 0.25
+          : 0;
+      }
+
+      const finalScore = sim + keywordMatch;
+
+      if (finalScore > highestScore) {
+        highestScore = finalScore;
+        bestMatch = faq;
+      }
+    }
+
+    if (bestMatch && highestScore >= 0.75) {
+      return bestMatch.answer;
+    }
 
     return "Sorry, I didn't get that. Please try rephrasing or type 'Talk to representative'.";
   }

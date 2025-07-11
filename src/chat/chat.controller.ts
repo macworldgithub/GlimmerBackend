@@ -10,8 +10,8 @@ export class ChatController {
   @Post('message')
   async handleMessage(@Body() chatMessageDto: ChatMessageDto) {
     console.log('Chat DTO:', chatMessageDto);
-    const { message, sessionId } = chatMessageDto;
-    const botReply = await this.chatService.getBotResponse(message);
+    const { message, sessionId, keyword } = chatMessageDto;
+    const botReply = await this.chatService.getBotResponse(message, keyword);
     await this.chatService.saveChatLog(sessionId, message, 'user');
     await this.chatService.saveChatLog(sessionId, botReply, 'bot');
     return { reply: botReply };
