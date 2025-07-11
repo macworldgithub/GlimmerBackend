@@ -1,22 +1,22 @@
 // src/utils/embedding.util.ts
+import { Worker } from 'worker_threads';
+import path from 'path';
 
-let embedder: any = null;
+export function getEmbedding(text: string): Promise<number[]> {
+  return new Promise((resolve, reject) => {
+    const workerPath = path.resolve(__dirname, 'embedding.worker.js'); // use .js after build
+    const worker = new Worker(workerPath, {
+      workerData: { text },
+    });
 
-export async function getEmbedding(text: string): Promise<number[]> {
-  if (!embedder) {
-    // Dynamically import the ESM module inside the function
-    const { pipeline } = await import('@xenova/transformers');
-    embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-
-  const output = await embedder(text, {
-    pooling: 'mean',
-    normalize: true,
+    worker.on('message', resolve);
+    worker.on('error', reject);
+    worker.on('exit', (code) => {
+      if (code !== 0)
+        reject(new Error(`Worker stopped with exit code ${code}`));
+    });
   });
-
-  return Array.from(output.data);
 }
-
 export function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, ai, i) => sum + ai * b[i], 0);
   const normA = Math.sqrt(a.reduce((sum, ai) => sum + ai * ai, 0));
