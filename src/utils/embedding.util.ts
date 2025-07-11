@@ -1,10 +1,11 @@
 // src/utils/embedding.util.ts
-import { pipeline } from '@xenova/transformers';
 
 let embedder: any = null;
 
 export async function getEmbedding(text: string): Promise<number[]> {
   if (!embedder) {
+    // Dynamically import the ESM module inside the function
+    const { pipeline } = await import('@xenova/transformers');
     embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
   }
 
