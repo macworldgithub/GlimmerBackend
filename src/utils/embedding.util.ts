@@ -4,23 +4,19 @@ import * as path from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    const workerPath = path.join(__dirname, 'embedding.worker.js'); // Correctly compiled path
+    const workerPath = path.join(__dirname, '../workers/embedding.worker.mjs'); // adjust path
 
-    try {
-      const worker = new Worker(workerPath, {
-        workerData: { text },
-      });
+    const worker = new Worker(workerPath, {
+      workerData: { text },
+    });
 
-      worker.on('message', resolve);
-      worker.on('error', reject);
-      worker.on('exit', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Worker stopped with exit code ${code}`));
-        }
-      });
-    } catch (err) {
-      reject(err);
-    }
+    worker.on('message', resolve);
+    worker.on('error', reject);
+    worker.on('exit', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Worker stopped with exit code ${code}`));
+      }
+    });
   });
 }
 
