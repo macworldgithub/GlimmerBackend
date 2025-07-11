@@ -1,6 +1,6 @@
 // src/utils/embedding.util.ts
 import { Worker } from 'worker_threads';
-import path from 'path';
+import * as path from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
