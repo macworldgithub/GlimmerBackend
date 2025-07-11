@@ -4,19 +4,26 @@ import path from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    const workerPath = path.resolve(__dirname, 'embedding.worker.js'); // use .js after build
-    const worker = new Worker(workerPath, {
-      workerData: { text },
-    });
+    const workerPath = path.join(__dirname, 'embedding.worker.js'); // Correctly compiled path
 
-    worker.on('message', resolve);
-    worker.on('error', reject);
-    worker.on('exit', (code) => {
-      if (code !== 0)
-        reject(new Error(`Worker stopped with exit code ${code}`));
-    });
+    try {
+      const worker = new Worker(workerPath, {
+        workerData: { text },
+      });
+
+      worker.on('message', resolve);
+      worker.on('error', reject);
+      worker.on('exit', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Worker stopped with exit code ${code}`));
+        }
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
+
 export function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, ai, i) => sum + ai * b[i], 0);
   const normA = Math.sqrt(a.reduce((sum, ai) => sum + ai * ai, 0));
