@@ -1,10 +1,10 @@
-// src/utils/embedding.util.ts
 import { Worker } from 'worker_threads';
-import * as path from 'path';
+import path from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    const workerPath = path.join(__dirname, '../workers/embedding.worker.mjs'); // adjust path
+    // ✅ Corrected to actual build location
+    const workerPath = path.join(__dirname, 'embedding.worker.mjs');
 
     const worker = new Worker(workerPath, {
       workerData: { text },
@@ -13,12 +13,12 @@ export function getEmbedding(text: string): Promise<number[]> {
     worker.on('message', resolve);
     worker.on('error', reject);
     worker.on('exit', (code) => {
-      if (code !== 0) {
+      if (code !== 0)
         reject(new Error(`Worker stopped with exit code ${code}`));
-      }
     });
   });
 }
+
 
 export function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, ai, i) => sum + ai * b[i], 0);
