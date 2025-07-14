@@ -4,7 +4,7 @@ import * as path from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    const workerPath = path.join(__dirname, 'embedding.worker.cjs');
+    const workerPath = path.join(__dirname, 'embedding.worker.js');
 
     const worker = new Worker(workerPath, {
       workerData: { text },

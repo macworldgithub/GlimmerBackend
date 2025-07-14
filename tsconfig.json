@@ -25,5 +25,7 @@
     "strictBindCallApply": true /* Enable strict 'bind', 'call', and 'apply' methods on functions. */,
     "noImplicitThis": true /* Raise error on 'this' expressions with an implied 'any' type. */,
     "alwaysStrict": true
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
