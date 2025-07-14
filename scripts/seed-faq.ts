@@ -32,7 +32,7 @@ const faqs = [
   {
     question: "How do I book a service?",
     answer: "Simply choose your desired service and provider, then select a convenient date/time, enter your details, and confirm the booking through our platform.",
-    keywords: normalize(["book appointment", "book service", "how to book", "make a booking", "appointment process"])
+    keywords: normalize(["book appointment", "book service", "how to book", "make a booking", "appointment process", "service"])
   },
   {
     question: "Can I cancel or reschedule my booking?",
@@ -78,7 +78,7 @@ const faqs = [
   {
     question: "Can I return or cancel an order?",
     answer: "Returns: Initiate within 24 hours of delivery by emailing returns@glimmer.com.pk with your order number, name, and product details. Cancellations: Possible only within 24 hours of placing the order; after that, no changes are accepted.",
-    keywords: normalize(["return order", "cancel order", "how to return", "cancel my order", "order return process"])
+    keywords: normalize(["return order", "cancel order", "how to return", "cancel my order", "order return process", "cancel"])
   },
   {
     question: "What qualifies for exchange or refund?",

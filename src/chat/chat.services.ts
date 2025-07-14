@@ -7,7 +7,11 @@ import { Lead, LeadDocument } from './schema/lead.schema';
 import { ChatLog, ChatLogDocument } from './schema/chatlog.schema';
 import { Faq, FaqDocument } from './schema/faq.schema';
 import { CreateLeadDto } from 'src/commons/dtos/chat-lead.dto';
-import { cosineSimilarity, getEmbedding } from 'src/utils/embedding.util';
+import {
+  cosineSimilarity,
+  getEmbedding,
+  normalize,
+} from 'src/utils/embedding.util';
 
 @Injectable()
 export class ChatService {
@@ -27,38 +31,83 @@ export class ChatService {
     @InjectModel(ChatLog.name) private chatLogModel: Model<ChatLogDocument>,
   ) {}
 
+  private normalize(text: string): string[] {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/gi, '')
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
   async getBotResponse(userMessage: string, keyword?: string): Promise<string> {
     const message = userMessage.toLowerCase().trim();
-
-    if (message.includes('talk to representative')) {
-      return 'Please provide your name, email, and phone number so we can connect you with our team.';
-    }
-
+    const normalizedMsg = this.normalize(message).join(' ').trim();
     const faqs = await this.faqModel.find();
 
-    const userVector = await getEmbedding(userMessage.toLowerCase().trim());
+    // 1. Check for exact matches first
+    const exactMatch = faqs.find(
+      (faq) => this.normalize(faq.question).join(' ').trim() === normalizedMsg,
+    );
+    if (exactMatch) return exactMatch.answer;
 
-    let bestMatch = null;
+    // 2. Process keyword matching (with higher priority)
+    if (keyword) {
+      const normalizedKeyword = this.normalize(keyword).join(' ').trim();
+
+      // First look for exact keyword matches in any FAQ's keywords
+      const keywordExactMatch = faqs.find((faq) =>
+        faq.keywords?.some(
+          (k) => this.normalize(k).join(' ').trim() === normalizedKeyword,
+        ),
+      );
+      if (keywordExactMatch) return keywordExactMatch.answer;
+
+      // Then look for partial keyword matches
+      const keywordPartialMatches = faqs.filter((faq) =>
+        faq.keywords?.some(
+          (k) =>
+            this.normalize(k).join(' ').trim().includes(normalizedKeyword) ||
+            normalizedKeyword.includes(this.normalize(k).join(' ').trim()),
+        ),
+      );
+
+      // If we found multiple partial matches, return the one with the most specific match
+      if (keywordPartialMatches.length > 0) {
+        // Sort by match specificity (longer keywords are more specific)
+        keywordPartialMatches.sort((a, b) => {
+          const aMaxLen = Math.max(...(a.keywords || []).map((k) => k.length));
+          const bMaxLen = Math.max(...(b.keywords || []).map((k) => k.length));
+          return bMaxLen - aMaxLen;
+        });
+        return keywordPartialMatches[0].answer;
+      }
+    }
+
+    // 3. Semantic similarity fallback
+    const userVector = await getEmbedding(message);
+    let bestMatch: Faq | null = null;
     let highestScore = 0;
 
     for (const faq of faqs) {
       if (!faq.vector) {
-        const vector = await getEmbedding(faq.question);
+        const vector = await getEmbedding(faq.question.toLowerCase().trim());
         await this.faqModel.updateOne({ _id: faq._id }, { $set: { vector } });
         faq.vector = vector;
       }
 
-      const sim = cosineSimilarity(userVector, faq.vector);
-      let keywordMatch = 0;
+      const similarityScore = cosineSimilarity(userVector, faq.vector);
+
+      // Apply keyword bonus if relevant
+      let keywordBonus = 0;
       if (keyword && faq.keywords?.length) {
-        keywordMatch = faq.keywords.some((k) =>
-          k.toLowerCase().includes(keyword.toLowerCase()),
-        )
-          ? 0.25
-          : 0;
+        const normalizedKeyword = this.normalize(keyword).join(' ');
+        const hasKeywordMatch = faq.keywords.some((k) =>
+          this.normalize(k).join(' ').includes(normalizedKeyword),
+        );
+        if (hasKeywordMatch) keywordBonus = 0.3;
       }
 
-      const finalScore = sim + keywordMatch;
+      const finalScore = similarityScore + keywordBonus;
 
       if (finalScore > highestScore) {
         highestScore = finalScore;
@@ -66,11 +115,15 @@ export class ChatService {
       }
     }
 
-    if (bestMatch && highestScore >= 0.75) {
-      return bestMatch.answer;
+    // 4. Return the best result available
+    if (bestMatch && highestScore >= 0.65) return bestMatch.answer;
+
+    // 5. Fallback responses
+    if (keyword) {
+      return `We offer services related to "${keyword}". Could you be more specific about what you're looking for?`;
     }
 
-    return "Sorry, I didn't get that. Please try rephrasing or type 'Talk to representative'.";
+    return "We offer various salon services including makeup, haircuts, and skincare. Could you specify which service you're interested in?";
   }
 
   async saveLead(leadDto: CreateLeadDto): Promise<Lead> {

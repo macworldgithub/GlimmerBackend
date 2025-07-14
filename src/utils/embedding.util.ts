@@ -1,25 +1,17 @@
-// src/utils/embedding.util.ts
-import { Worker } from 'worker_threads';
-import * as path from 'path';
-
-export function getEmbedding(text: string): Promise<number[]> {
-  return new Promise((resolve, reject) => {
-    const workerPath = path.join(__dirname, 'embedding.worker.js');
-
-    const worker = new Worker(workerPath, {
-      workerData: { text },
-    });
-
-    worker.on('message', resolve);
-    worker.on('error', reject);
-    worker.on('exit', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Worker stopped with exit code ${code}`));
-      }
-    });
+export async function getEmbedding(text: string): Promise<number[]> {
+  const words = text.toLowerCase().split(/\s+/);
+  const embedding = new Array(300).fill(0);
+  
+  words.forEach(word => {
+    const hash = Array.from(word).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    for (let i = 0; i < embedding.length; i++) {
+      embedding[i] += (hash * (i + 1)) % 1;
+    }
   });
-}
 
+  const norm = Math.sqrt(embedding.reduce((sum, x) => sum + x * x, 0));
+  return embedding.map(x => x / norm);
+}
 
 export function cosineSimilarity(a: number[], b: number[]): number {
   const dot = a.reduce((sum, ai, i) => sum + ai * b[i], 0);
@@ -28,11 +20,6 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (normA * normB);
 }
 
-
 export function normalize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/gi, '')
-    .split(/\s+/)
-    .filter(word => word.length > 1); 
+  return text.toLowerCase().replace(/[^a-z0-9\s]/gi, "").split(/\s+/).filter(Boolean);
 }
