@@ -1,10 +1,12 @@
+// src/utils/embedding.util.ts
 import { Worker } from 'worker_threads';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    // ✅ Corrected to actual build location
-    const workerPath = path.join(__dirname, 'embedding.worker.js');
+    const workerPath = path.join(__dirname, 'embedding.worker.mjs');
 
     const worker = new Worker(workerPath, {
       workerData: { text },
@@ -13,8 +15,9 @@ export function getEmbedding(text: string): Promise<number[]> {
     worker.on('message', resolve);
     worker.on('error', reject);
     worker.on('exit', (code) => {
-      if (code !== 0)
+      if (code !== 0) {
         reject(new Error(`Worker stopped with exit code ${code}`));
+      }
     });
   });
 }
