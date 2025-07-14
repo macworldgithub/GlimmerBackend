@@ -1,12 +1,10 @@
 // src/utils/embedding.util.ts
 import { Worker } from 'worker_threads';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
 export function getEmbedding(text: string): Promise<number[]> {
   return new Promise((resolve, reject) => {
-    const workerPath = path.join(__dirname, 'embedding.worker.js');
+    const workerPath = path.join(__dirname, 'embedding.worker.cjs');
 
     const worker = new Worker(workerPath, {
       workerData: { text },
