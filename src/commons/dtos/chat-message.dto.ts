@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class ChatMessageDto {
   @IsNotEmpty()
@@ -9,7 +9,7 @@ export class ChatMessageDto {
   @IsString()
   message!: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  keyword!: string;
+  keyword?: string;
 }
