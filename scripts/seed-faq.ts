@@ -32,7 +32,7 @@ const faqs = [
   {
     question: "How do I book a service?",
     answer: "Simply choose your desired service and provider, then select a convenient date/time, enter your details, and confirm the booking through our platform.",
-    keywords: normalize(["book appointment", "book service", "how to book", "make a booking", "appointment process", "service"])
+    keywords: normalize(["book appointment", "book service", "how to book", "make a booking", "appointment process", "service", "service booking"])
   },
   {
     question: "Can I cancel or reschedule my booking?",
@@ -42,38 +42,39 @@ const faqs = [
       "reschedule",
       "how to cancel",
       "how to reschedule",
-      "change my booking"
+      "change my booking",
+      "reschedule my appointment"
     ])
   },
   {
     question: "What happens if I cancel too late?",
     answer: "If you cancel outside the allowed window, cancellation fees or penalties may apply based on the provider’s policy.",
-    keywords: normalize(["late cancellation", "cancellation fees", "penalty for cancel", "cancel too late", "cancel order", "order"])
+    keywords: normalize(["late cancellation", "cancellation fees", "penalty for cancel", "cancel too late", "cancel order", "order placed mistakenly", "order"])
   },
   {
     question: "Do I need to pay in advance?",
     answer: "Payment is processed when booking via the selected provider. You’ll receive confirmation via email or SMS once it’s complete.",
-    keywords: normalize(["advance payment", "pay before booking", "when do I pay", "payment time"])
+    keywords: normalize(["advance payment", "pay before booking", "when do I pay", "payment time", "pay online", "advance"])
   },
   {
     question: "Can I talk to someone if I face an issue?",
     answer: "Yes. Contact us at 0331‑2062376 or info@glimmer.com.pk. Providers also receive contact information to help you directly.",
-    keywords: normalize(["talk to support", "speak to agent", "contact someone", "need help", "talk to human"])
+    keywords: normalize(["talk to support", "speak to agent", "contact someone", "need help", "talk to human", "customer support", "helpline number"])
   },
   {
     question: "What payment methods are accepted?",
     answer: "We support a variety of payment methods—credit/debit cards, digital wallets, etc.—for all online orders, including those processed through salon profiles.",
-    keywords: normalize(["payment methods", "how to pay", "payment options", "card or wallet", "accepted payment"])
+    keywords: normalize(["payment methods", "how to pay", "payment options", "card or wallet", "accepted payment", "card payment"])
   },
   {
     question: "How long does shipping take?",
     answer: "Domestic delivery varies depending on product type: Products: 6–8 working days, Ready-to-wear: 7–8 working days, Custom-stitched or stitched items: up to 14 working days.",
-    keywords: normalize(["shipping time", "delivery duration", "how many days", "when will I get", "shipping estimate"])
+    keywords: normalize(["shipping time", "delivery time", "delivery duration", "how many days", "when will I get", "shipping estimate"])
   },
   {
     question: "Is shipping free?",
     answer: "Yes, within Pakistan shipping is free. Rates for overseas delivery are calculated at checkout.",
-    keywords: normalize(["free shipping", "shipping charges", "delivery cost", "is delivery free"])
+    keywords: normalize(["free shipping", "shipping charges", "delivery charges", "delivery cost", "is delivery free"])
   },
   {
     question: "Can I return or cancel an order?",
@@ -93,7 +94,7 @@ const faqs = [
   {
     question: "What are the most popular products right now?",
     answer: "Our top sellers include Rose Beads Wax for sensitive skin and Goat Milk Lotion – Shea Butter, along with top-rated self-care items like Gold Beauty Cream and Sun Block Cream – all known for their quality and customer satisfaction.",
-    keywords: normalize(["top products", "popular items", "best sellers", "trending products"])
+    keywords: normalize(["top products", "popular items", "popular products", "best sellers", "trending products"])
   },
   {
     question: "Which products are best for sensitive skin?",
