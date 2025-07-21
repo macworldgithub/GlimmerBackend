@@ -701,6 +701,7 @@ export class ProductService {
   maxPrice?: number,
   sortBy?: string,
   order?: 'asc' | 'desc',
+  limit?: number,
   projection?: ProductProjection,
 ): Promise<{ products: Product[]; total: number }> {
   try {
@@ -766,6 +767,7 @@ export class ProductService {
       filters,
       sortBy, // Pass sortBy to repository
       order,  // Pass order to repository
+      limit,
     );
 
     const products = await Promise.all(

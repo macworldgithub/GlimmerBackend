@@ -83,8 +83,9 @@ export class ProductRepository {
   filters: Partial<Product> = {},
   sortBy?: string, // Add sortBy parameter
   order?: 'asc' | 'desc', // Add order parameter
+  limit = DEFAULT_DOCUMENTS_LIMITS
 ) {
-  const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
+  const skip = (page_no - 1) * limit;
 
   let sortOptions: any = { createdAt: -1, _id: -1 }; // Default sort with secondary key for stability
 
@@ -113,7 +114,7 @@ export class ProductRepository {
     )
     .sort(sortOptions)
     .skip(skip)
-    .limit(DEFAULT_DOCUMENTS_LIMITS)
+    .limit(limit)
     .exec();
 }
   async delete_product_by_store_id_product_id(_id: Types.ObjectId) {

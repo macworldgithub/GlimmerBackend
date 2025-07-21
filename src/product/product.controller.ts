@@ -191,7 +191,8 @@ async get_all_store_products(
     @Query('minPrice') minPrice?: number,
     @Query('maxPrice') maxPrice?: number,
     @Query('sortBy') sortBy?: string,        
-    @Query('order') order?: 'asc' | 'desc',    
+    @Query('order') order?: 'asc' | 'desc',  
+    @Query('limit') limit?: number  
   
   ) {
     return this.product_service.get_all_products(
@@ -204,6 +205,7 @@ async get_all_store_products(
       maxPrice,
       sortBy,
       order,
+      limit
     );
   }
 
