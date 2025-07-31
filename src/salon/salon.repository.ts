@@ -84,7 +84,13 @@ export class SalonRepository {
       .exec();
   }
 
-  
+  async update_salon_flags(
+  salon_id: string,
+  flags: Partial<Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>>
+): Promise<SalonDocument | null> {
+  return this.salon_model.findByIdAndUpdate(salon_id, flags, { new: true }).exec();
+}
+
 
 
 }

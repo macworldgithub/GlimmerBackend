@@ -253,6 +253,7 @@ import { Types } from 'mongoose';
 import { SalonStatus } from './enums/salon_status.enum';
 import { Roles } from 'src/auth/enums/roles.enum';
 
+
 @Injectable()
 export class SalonService {
   constructor(
@@ -531,4 +532,12 @@ export class SalonService {
       throw new InternalServerErrorException(e);
     }
   }
+ async updateSalonFlags(
+  salon_id: string,
+  flags: Partial<Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>>
+) {
+  return this.salon_repository.update_salon_flags(salon_id, flags);
+}
+
+
 }

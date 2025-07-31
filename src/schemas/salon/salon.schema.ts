@@ -77,6 +77,3 @@ export const SalonSchema = SchemaFactory.createForClass(Salon);
 export type SalonProjection = {
   [key in keyof Salon]?: 0 | 1;
 };
-// export class UpdateSaloonDto extends PartialType(
-//   OmitType(CreateSalonDto, ['password' as const]),
-// ) {}

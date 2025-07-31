@@ -164,16 +164,28 @@ import {
   Put,
   Query,
   Req,
-  UploadedFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags, ApiBody } from '@nestjs/swagger';
-import { CreateSalonDto, UpdateSaloonDto, UpdateSalonStatusDto } from 'src/salon/dto/salon.dto';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiBody,
+} from '@nestjs/swagger';
+import {
+  CreateSalonDto,
+  UpdateSaloonDto,
+  UpdateSalonStatusDto,
+} from 'src/salon/dto/salon.dto';
 import { SalonService } from './salon.service';
-import { FileSizeValidationPipe, SingleImageSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
+import {
+  FileSizeValidationPipe,
+} from 'src/commons/pipes/file_size_validation.pipe';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -199,10 +211,15 @@ export class SalonController {
   )
   @ApiConsumes('multipart/form-data')
   @UseGuards(AuthGuard, RolesGuard)
-  @Role(RolesEnum.SALON) // Only SALON role for update_salon
+  @Role(RolesEnum.SALON)
   @Put('/update')
   @ApiOperation({ summary: 'Update a salon by authenticated user' })
-  @ApiQuery({ name: 'salon_id', type: String, required: false, description: 'Salon ID (not allowed for SALON role)' })
+  @ApiQuery({
+    name: 'salon_id',
+    type: String,
+    required: false,
+    description: 'Salon ID (not allowed for SALON role)',
+  })
   async update_salon(
     @Body() updateSalonDto: UpdateSaloonDto,
     @Req() req: AuthPayloadRequest,
@@ -244,8 +261,15 @@ export class SalonController {
   @UseGuards(AuthGuard, MultiRolesGuard)
   @Roles([RolesEnum.SALON, RolesEnum.SUPERADMIN])
   @Delete('/delete')
-  @ApiOperation({ summary: 'Delete a salon by authenticated user or superadmin' })
-  @ApiQuery({ name: 'salon_id', type: String, required: false, description: 'Salon ID (required for SUPERADMIN)' })
+  @ApiOperation({
+    summary: 'Delete a salon by authenticated user or superadmin',
+  })
+  @ApiQuery({
+    name: 'salon_id',
+    type: String,
+    required: false,
+    description: 'Salon ID (required for SUPERADMIN)',
+  })
   async delete_salon(
     @Req() req: AuthPayloadRequest,
     @Query('salon_id') salon_id?: string,
@@ -258,17 +282,55 @@ export class SalonController {
   @UseGuards(AuthGuard, MultiRolesGuard)
   @Roles([RolesEnum.SALON, RolesEnum.SUPERADMIN])
   @Patch('/update_status')
-  @ApiOperation({ summary: 'Update the status of the authenticated user\'s salon or by superadmin' })
+  @ApiOperation({
+    summary:
+      "Update the status of the authenticated user's salon or by superadmin",
+  })
   @ApiBody({
     type: UpdateSalonStatusDto,
     description: 'New status for the salon',
   })
-  @ApiQuery({ name: 'salon_id', type: String, required: false, description: 'Salon ID (required for SUPERADMIN)' })
+  @ApiQuery({
+    name: 'salon_id',
+    type: String,
+    required: false,
+    description: 'Salon ID (required for SUPERADMIN)',
+  })
   async update_salon_status(
     @Body() updateSalonStatusDto: UpdateSalonStatusDto,
     @Req() req: AuthPayloadRequest,
     @Query('salon_id') salon_id?: string,
   ) {
-    return this.salon_service.updateSalonStatus(updateSalonStatusDto.status, req.user, salon_id);
+    return this.salon_service.updateSalonStatus(
+      updateSalonStatusDto.status,
+      req.user,
+      salon_id,
+    );
+  }
+
+  // ✅ ADD THIS BLOCK FOR FLAG UPDATES
+  @Patch('/update-flags')
+  @ApiOperation({
+    summary: 'Update salon flags (newToGlimmer, trendingSalon, recommendedSalon)',
+  })
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, MultiRolesGuard)
+  @Roles([RolesEnum.SUPERADMIN])
+  @ApiQuery({
+    name: 'salon_id',
+    type: String,
+    required: true,
+    description: 'Salon ID (required)',
+  })
+  async updateSalonFlags(
+    @Query('salon_id') salon_id: string,
+    @Body()
+    body: {
+      newToGlimmer?: boolean;
+      trendingSalon?: boolean;
+      recommendedSalon?: boolean;
+    },
+  ) {
+    return this.salon_service.updateSalonFlags(salon_id, body);
   }
 }
