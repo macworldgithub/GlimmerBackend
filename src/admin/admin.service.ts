@@ -683,8 +683,7 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
     if (wantAll) {
       const [newToGlimmer, trendingSalon, recommendedSalon] = await Promise.all(
         [
-         fetchAndTransform({ highlightCategory: 'new-to-glimmer' }),
-
+          fetchAndTransform({ newToGlimmer: true }),
           fetchAndTransform({ trendingSalon: true }),
           fetchAndTransform({ recommendedSalon: true }),
         ],
