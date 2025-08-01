@@ -1,3 +1,172 @@
+// import { Injectable } from '@nestjs/common';
+// import { InjectModel } from '@nestjs/mongoose';
+// import { Model } from 'mongoose';
+// import { CreateOrderDto } from 'src/order/dtos/req_dtos/order';
+// import { Order, OrderDocument } from 'src/schemas/ecommerce/order.schema';
+// import {
+//   Transaction,
+//   TransactionDocument,
+// } from 'src/schemas/transactions/transaction.schema';
+// import { HttpService } from '@nestjs/axios';
+// import { ConfigService } from '@nestjs/config';
+
+// @Injectable()
+// export class AlfalahService {
+//   private readonly host: any;
+//   private readonly merchantId: any;
+//   private readonly password: any;
+
+//   constructor(
+//     private readonly config: ConfigService,
+
+//     private readonly http: HttpService,
+//     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
+//     @InjectModel(Transaction.name)
+//     private readonly transactionModel: Model<TransactionDocument>,
+//   ) {
+//     this.host = this.config.get<string>('GATEWAY_HOST');
+//     this.merchantId = this.config.get<string>('MERCHANT_ID');
+//     this.password = this.config.get<string>('API_PASSWORD');
+//   }
+
+//   async createOrderAndInitiateAlfalahPayment(orderDto: any) {
+//     const {
+//       customerEmail,
+//       discountedTotal,
+//       customerName,
+//       ShippingInfo,
+//       productList,
+//       total,
+//     } = orderDto;
+
+//     // Step 1: Generate gateway orderId
+//     const gatewayOrderId = `ORDER-${Date.now()}`;
+
+//     // Step 2: Create DB transaction
+//     const transaction = await this.transactionModel.create({
+//       transactionId: gatewayOrderId, // or generateTransactionId() if needed separately
+//       customerEmail,
+//       amount: discountedTotal.toString(),
+//       currency: 'PKR',
+//       status: 'Pending',
+//       paymentGateway: 'Bank Alfalah',
+//       gatewayOrderId,
+//     });
+
+//     // Step 3: Create DB order
+//     const order = await this.orderModel.create({
+//       ShippingInfo,
+//       customerName,
+//       customerEmail,
+//       productList,
+//       total,
+//       discountedTotal,
+//       transaction: transaction._id,
+//       gatewayOrderId,
+//     });
+//     console.log("order",order)
+//     // Step 4: Prepare Alfalah session request
+//     const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/session`;
+
+//     const body = {
+//       apiOperation: 'INITIATE_CHECKOUT',
+//       interaction: {
+//         operation: 'PURCHASE',
+//         returnUrl: `https://www.api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
+//         merchant: {
+//           name: 'Glimmer Store',
+//           url: 'https://www.glimmer.com.pk',
+//         },
+//       },
+//       order: {
+//         currency: 'PKR',
+//         amount: discountedTotal.toFixed(2),
+//         id: order._id,
+//         description: 'Glimmer product purchase',
+//       },
+//     };
+
+//     const auth = Buffer.from(
+//       `merchant.${this.merchantId}:${this.password}`,
+//     ).toString('base64'); 
+//     console.log("auth",auth)
+//     console.log("Now calling:",url)
+//     const { data } = await this.http.axiosRef.post(url, body, {
+//       headers: {
+//         Authorization: `Basic ${auth}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
+//     console.log(data)
+//     // Step 5: Return session info to frontend
+//     return {
+//       sessionId: data.session.id,
+//       gatewayOrderId,
+//       message: 'Redirect to Bank Alfalah checkout page',
+//     };
+//   }
+
+//   async verifyAndFinalize(OrderId: string) {
+//     const order = await this.orderModel
+//       .findById(OrderId) // or .findOne({ _id: OrderId })
+//       .populate('transaction');
+
+//     if (!order || !order.transaction) {
+//       return { success: false, reason: 'Order or transaction not found' };
+//     }
+
+//     const transaction = order.transaction;
+
+//     const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/order/${OrderId}`;
+//     const auth = Buffer.from(
+//       `merchant.${this.merchantId}:${this.password}`,
+//     ).toString('base64');
+
+//     try {
+//       const { data } = await this.http.axiosRef.get(url, {
+//         headers: { Authorization: `Basic ${auth}` },
+//       });
+
+//       const tx = data?.transaction?.[0];
+
+//       if (!tx) {
+//         return {
+//           success: false,
+//           reason: 'No transaction data returned from gateway',
+//         };
+//       }
+
+//       const isApproved = tx.response?.gatewayCode === 'APPROVED';
+
+//       if (isApproved) {
+//         const realTransactionId = tx.transaction?.id || 'UNKNOWN';
+
+//         //@ts-ignore
+//         await this.transactionModel.findByIdAndUpdate(transaction._id, {
+//           status: 'Success',
+//           realTransactionId,
+//           transactionId: realTransactionId,
+//         });
+
+//         return { success: true, order, transaction };
+//       } else {
+//         await Promise.all([
+//           this.orderModel.findByIdAndDelete(order._id),
+//           //@ts-ignore
+//           this.transactionModel.findByIdAndDelete(transaction._id),
+//         ]);
+
+//         return { success: false, reason: 'Payment not approved' };
+//       }
+//     } catch (error: any) {
+//       return {
+//         success: false,
+//         reason: 'Payment verification failed',
+//         error: error.message || 'Unknown error',
+//       };
+//     }
+//   }
+// }
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -9,24 +178,50 @@ import {
 } from 'src/schemas/transactions/transaction.schema';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { firstValueFrom } from 'rxjs';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AlfalahService {
-  private readonly host: any;
-  private readonly merchantId: any;
-  private readonly password: any;
+  private readonly host: string;
+  private readonly merchantId: string;
+  private readonly key1: string;
+  private readonly key2: string;
+  private readonly merchantConfig: any;
 
   constructor(
     private readonly config: ConfigService,
-
     private readonly http: HttpService,
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
   ) {
-    this.host = this.config.get<string>('GATEWAY_HOST');
-    this.merchantId = this.config.get<string>('MERCHANT_ID');
-    this.password = this.config.get<string>('API_PASSWORD');
+    this.host = this.config.get<string>('GATEWAY_HOST')!;
+this.merchantId = this.config.get<string>('MERCHANT_ID')!;
+this.key1 = this.config.get<string>('KEY1')!;
+this.key2 = this.config.get<string>('KEY2')!;
+
+    this.merchantConfig = {
+      HS_ChannelId: '1001',
+      HS_MerchantId: this.merchantId,
+      HS_StoreId: '219388',
+      HS_ReturnURL: 'https://glimmer.com.pk',
+      HS_MerchantHash: 'OUU362MB1upgLnmraQiccsEIyBwunn1+IcQVepQAuBI=',
+      HS_MerchantUsername: 'owovuj',
+      HS_MerchantPassword: 'aCsEece69v5vFzk4yqF7CA==',
+    };
+  }
+
+  private encryptAES(mapString: string): string {
+    try {
+      const cipher = crypto.createCipheriv('aes-128-cbc', this.key1, this.key2);
+      let encrypted = cipher.update(mapString, 'utf8', 'base64');
+      encrypted += cipher.final('base64');
+      return encrypted;
+    } catch (err) {
+      console.error('Encryption error:');
+      throw err;
+    }
   }
 
   async createOrderAndInitiateAlfalahPayment(orderDto: any) {
@@ -44,7 +239,7 @@ export class AlfalahService {
 
     // Step 2: Create DB transaction
     const transaction = await this.transactionModel.create({
-      transactionId: gatewayOrderId, // or generateTransactionId() if needed separately
+      transactionId: gatewayOrderId,
       customerEmail,
       amount: discountedTotal.toString(),
       currency: 'PKR',
@@ -65,69 +260,153 @@ export class AlfalahService {
       gatewayOrderId,
     });
 
-    // Step 4: Prepare Alfalah session request
-    const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/session`;
+    // Step 4: Prepare Bank Alfalah handshake request
+    const mapString =
+      `HS_ChannelId=${this.merchantConfig.HS_ChannelId}` +
+      `&HS_IsRedirectionRequest=0` +
+      `&HS_MerchantId=${this.merchantConfig.HS_MerchantId}` +
+      `&HS_StoreId=${this.merchantConfig.HS_StoreId}` +
+      `&HS_ReturnURL=${this.merchantConfig.HS_ReturnURL}` +
+      `&HS_MerchantHash=${this.merchantConfig.HS_MerchantHash}` +
+      `&HS_MerchantUsername=${this.merchantConfig.HS_MerchantUsername}` +
+      `&HS_MerchantPassword=${this.merchantConfig.HS_MerchantPassword}` +
+      `&HS_TransactionReferenceNumber=${gatewayOrderId}`;
 
-    const body = {
-      apiOperation: 'INITIATE_CHECKOUT',
-      interaction: {
-        operation: 'PURCHASE',
-        returnUrl: `https://www.api.glimmer.com.pk/alfalah/callback?orderId=${order._id}`,
-        merchant: {
-          name: 'Glimmer Store',
-          url: 'https://www.glimmer.com.pk',
+    const hashRequest = this.encryptAES(mapString);
+
+    const url = `https://${this.host}/HS/HS/HS`;
+    const handshakeResponse = await firstValueFrom(
+      this.http.post(
+        url,
+        new URLSearchParams({
+          HS_ChannelId: this.merchantConfig.HS_ChannelId,
+          HS_IsRedirectionRequest: '0',
+          HS_MerchantId: this.merchantConfig.HS_MerchantId,
+          HS_StoreId: this.merchantConfig.HS_StoreId,
+          HS_ReturnURL: this.merchantConfig.HS_ReturnURL,
+          HS_MerchantHash: this.merchantConfig.HS_MerchantHash,
+          HS_MerchantUsername: this.merchantConfig.HS_MerchantUsername,
+          HS_MerchantPassword: this.merchantConfig.HS_MerchantPassword,
+          HS_TransactionReferenceNumber: gatewayOrderId,
+          HS_RequestHash: hashRequest,
+        }).toString(),
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         },
-      },
-      order: {
-        currency: 'PKR',
-        amount: discountedTotal.toFixed(2),
-        id: order._id,
-        description: 'Glimmer product purchase',
-      },
-    };
+      ),
+    );
 
-    const auth = Buffer.from(
-      `merchant.${this.merchantId}:${this.password}`,
-    ).toString('base64');
+    const authToken = handshakeResponse.data.AuthToken;
+    if (!authToken) {
+      throw new Error('Failed to retrieve AuthToken from handshake response');
+    }
 
-    const { data } = await this.http.axiosRef.post(url, body, {
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    // Step 5: Prepare SSO form
+    const mapStringSSO =
+      `AuthToken=${authToken}` +
+      `&RequestHash=` +
+      `&ChannelId=${this.merchantConfig.HS_ChannelId}` +
+      `&Currency=PKR` +
+      `&IsBIN=0` +
+      `&ReturnURL=${this.merchantConfig.HS_ReturnURL}` +
+      `&MerchantId=${this.merchantConfig.HS_MerchantId}` +
+      `&StoreId=${this.merchantConfig.HS_StoreId}` +
+      `&MerchantHash=${this.merchantConfig.HS_MerchantHash}` +
+      `&MerchantUsername=${this.merchantConfig.HS_MerchantUsername}` +
+      `&MerchantPassword=${this.merchantConfig.HS_MerchantPassword}` +
+      `&TransactionTypeId=3` +
+      `&TransactionReferenceNumber=${gatewayOrderId}` +
+      `&TransactionAmount=${discountedTotal.toFixed(2)}`;
 
-    // Step 5: Return session info to frontend
-    return {
-      sessionId: data.session.id,
-      gatewayOrderId,
-      message: 'Redirect to Bank Alfalah checkout page',
-    };
+    const requestHashSSO = this.encryptAES(mapStringSSO);
+
+    // Step 6: Return HTML form for auto-submission
+    return `
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Bank Alfalah Payment Redirect</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background-color: #f4f4f4;
+            }
+            .container {
+              text-align: center;
+            }
+            .loader {
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              width: 40px;
+              height: 40px;
+              animation: spin 1s linear infinite;
+              margin: 20px auto;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h2>Initiating Payment...</h2>
+            <p>Please wait while we redirect you to Bank Alfalah's payment page.</p>
+            <div class="loader"></div>
+          </div>
+          <form id="ssoForm" action="https://${this.host}/SSO/SSO/SSO" method="post">
+            <input type="hidden" name="AuthToken" value="${authToken}" />
+            <input type="hidden" name="RequestHash" value="${requestHashSSO}" />
+            <input type="hidden" name="ChannelId" value="${this.merchantConfig.HS_ChannelId}" />
+            <input type="hidden" name="Currency" value="PKR" />
+            <input type="hidden" name="IsBIN" value="0" />
+            <input type="hidden" name="ReturnURL" value="${this.merchantConfig.HS_ReturnURL}" />
+            <input type="hidden" name="MerchantId" value="${this.merchantConfig.HS_MerchantId}" />
+            <input type="hidden" name="StoreId" value="${this.merchantConfig.HS_StoreId}" />
+            <input type="hidden" name="MerchantHash" value="${this.merchantConfig.HS_MerchantHash}" />
+            <input type="hidden" name="MerchantUsername" value="${this.merchantConfig.HS_MerchantUsername}" />
+            <input type="hidden" name="MerchantPassword" value="${this.merchantConfig.HS_MerchantPassword}" />
+            <input type="hidden" name="TransactionTypeId" value="3" />
+            <input type="hidden" name="TransactionReferenceNumber" value="${gatewayOrderId}" />
+            <input type="hidden" name="TransactionAmount" value="${discountedTotal.toFixed(2)}" />
+          </form>
+          <script>document.getElementById("ssoForm").submit();</script>
+        </body>
+      </html>
+    `;
   }
 
   async verifyAndFinalize(OrderId: string) {
     const order = await this.orderModel
-      .findById(OrderId) // or .findOne({ _id: OrderId })
-      .populate('transaction');
+      .findById(OrderId)
+      .populate<{ transaction: TransactionDocument }>('transaction');
 
     if (!order || !order.transaction) {
       return { success: false, reason: 'Order or transaction not found' };
     }
 
-    const transaction = order.transaction;
+    const transaction = order.transaction as TransactionDocument;
 
-    const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantId}/order/${OrderId}`;
+    const url = `https://${this.host}/api/rest/version/72/merchant/${this.merchantConfig.HS_MerchantId}/order/${OrderId}`;
     const auth = Buffer.from(
-      `merchant.${this.merchantId}:${this.password}`,
+      `merchant.${this.merchantConfig.HS_MerchantId}:${this.config.get<string>('API_PASSWORD')}`,
     ).toString('base64');
 
     try {
-      const { data } = await this.http.axiosRef.get(url, {
-        headers: { Authorization: `Basic ${auth}` },
-      });
+      const { data } = await firstValueFrom(
+        this.http.get(url, {
+          headers: { Authorization: `Basic ${auth}` },
+        }),
+      );
 
       const tx = data?.transaction?.[0];
-
       if (!tx) {
         return {
           success: false,
@@ -136,11 +415,8 @@ export class AlfalahService {
       }
 
       const isApproved = tx.response?.gatewayCode === 'APPROVED';
-
       if (isApproved) {
         const realTransactionId = tx.transaction?.id || 'UNKNOWN';
-
-        //@ts-ignore
         await this.transactionModel.findByIdAndUpdate(transaction._id, {
           status: 'Success',
           realTransactionId,
@@ -151,7 +427,6 @@ export class AlfalahService {
       } else {
         await Promise.all([
           this.orderModel.findByIdAndDelete(order._id),
-          //@ts-ignore
           this.transactionModel.findByIdAndDelete(transaction._id),
         ]);
 
