@@ -8,16 +8,20 @@ import {
   TransactionSchema,
 } from 'src/schemas/transactions/transaction.schema';
 import { HttpModule } from '@nestjs/axios';
+import { NotificationModule } from 'src/notification/notification.module';
+
 
 @Module({
   providers: [AlfalahService],
   controllers: [AlfalahController],
+  
 
   imports: [
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
       { name: Transaction.name, schema: TransactionSchema },
     ]),
+    NotificationModule,
       HttpModule,
   ],
 })
