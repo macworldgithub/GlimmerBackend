@@ -9,10 +9,10 @@ import {
 } from 'src/schemas/transactions/transaction.schema';
 import { HttpModule } from '@nestjs/axios';
 import { NotificationModule } from 'src/notification/notification.module';
-
+import { OrderGateway } from 'src/order/order.gateway';
 
 @Module({
-  providers: [AlfalahService],
+  providers: [AlfalahService,OrderGateway],
   controllers: [AlfalahController],
   
 
@@ -23,6 +23,7 @@ import { NotificationModule } from 'src/notification/notification.module';
     ]),
     NotificationModule,
       HttpModule,
+      
   ],
 })
 export class AlfalahModule {}
