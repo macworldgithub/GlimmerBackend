@@ -176,6 +176,8 @@ import {
   Transaction,
   TransactionDocument,
 } from 'src/schemas/transactions/transaction.schema';
+import { NotificationService } from 'src/notification/notification.service';
+import { OrderGateway } from 'src/order/order.gateway';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -192,6 +194,8 @@ export class AlfalahService {
   constructor(
     private readonly config: ConfigService,
     private readonly http: HttpService,
+     private readonly notificationService: NotificationService,
+        private readonly orderGateway: OrderGateway,
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
@@ -319,7 +323,17 @@ this.key2 = this.config.get<string>('KEY2')!;
       `&TransactionAmount=${discountedTotal.toFixed(2)}`;
 
     const requestHashSSO = this.encryptAES(mapStringSSO);
+    //Notification sending code
+     const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
+    const userId = order.productList?.[0]?.storeId;
 
+    if (!userId) {
+      console.warn('No storeId found in order.productList');
+    }
+
+    await this.notificationService.create(userId, message, order);
+
+    this.orderGateway.sendOrderNotification(order);
     // Step 6: Return HTML form for auto-submission
     return `
       <html>
