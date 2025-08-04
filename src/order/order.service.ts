@@ -79,6 +79,7 @@ export class OrderService {
     });
 
     const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
+    console.log(message)
     const userId = order.productList?.[0]?.storeId;
 
     if (!userId) {

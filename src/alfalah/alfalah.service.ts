@@ -330,11 +330,12 @@ this.key2 = this.config.get<string>('KEY2')!;
     if (!userId) {
       console.warn('No storeId found in order.productList');
     }
-
+    console.log('sending notification')
     await this.notificationService.create(userId, message, order);
 
     this.orderGateway.sendOrderNotification(order);
     // Step 6: Return HTML form for auto-submission
+    console.log('notification sent')
     return `
       <html>
         <head>

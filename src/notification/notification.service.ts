@@ -13,6 +13,7 @@ export class NotificationService {
   ) {}
 
   async create(userId: string, message: string, data: any): Promise<Notification> {
+    console.log('testing')
     const notification = new this.notificationModel({ userId, message, data });
     return notification.save();
   }
