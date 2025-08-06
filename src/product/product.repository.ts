@@ -52,7 +52,7 @@ export class ProductRepository {
       },
       projection,
     )
-    .sort({ created_at: -1 })
+.sort({ created_at: -1, _id: -1 })
     .skip(skip)
     .limit(DEFAULT_DOCUMENTS_LIMITS)
     .exec();
