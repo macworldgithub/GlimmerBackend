@@ -6,6 +6,7 @@ import {
   SalonService,
   SalonServiceSchema,
 } from 'src/schemas/salon/salon_service.schema';
+import { S3Service } from 'src/aws/s3.service';
 import {
   SalonServiceCategories,
   SalonServiceCategoriesSchema,
@@ -21,6 +22,7 @@ export class SalonServicesRepository {
 
     @InjectModel(SalonServiceCategories.name)
     private readonly salonServiceCategoriesModel: Model<SalonServiceCategories>,
+    private readonly s3Service: S3Service,
   ) {}
 
   async create(
@@ -259,83 +261,187 @@ async applyBulkDiscount(id: string[], discountPercentage: any) {
   //   return this.salonServiceModel.find(query).lean().exec();
   // }
 
+  // async elastic_search(
+  //   nameTerm?: string,
+  //   gender?: string,
+  //   serviceTerm?: string,
+  //   price?: number,
+  // ): Promise<SalonService[]> {
+  //   // Base filter for gender, serviceTerm, and price
+  //   const baseFilter: Record<string, any> = {};
+  //   if (price != null) {
+  //     baseFilter.actualPrice = price;
+  //   }
+  //   if (gender) {
+  //     baseFilter.$or = [
+  //       { subCategoryName: { $regex: `^${gender}$`, $options: 'i' } },
+  //     ];
+  //   }
+  //   if (serviceTerm) {
+  //     baseFilter.subSubCategoryName = { $regex: serviceTerm, $options: 'i' };
+  //   }
+
+  //   // Helper to enrich with categoryName
+  //   const enrichWithCategory = async (services: SalonService[]) => {
+  //     const catIds = [...new Set(services.map((s) => s.categoryId.toString()))];
+  //     const categories = await this.salonServiceCategoriesModel
+  //       .find({ _id: { $in: catIds.map((id) => new Types.ObjectId(id)) } })
+  //       .lean()
+  //       .exec();
+  //     const categoryMap = new Map<string, string>();
+  //     categories.forEach((c) => categoryMap.set(c._id.toString(), c.category));
+  //     return services.map((s) => ({
+  //       ...s,
+  //       categoryName: categoryMap.get(s.categoryId.toString()) || null,
+  //     }));
+  //   };
+
+  //   // If no nameTerm, fetch and enrich
+  //   if (!nameTerm) {
+  //     const services = await this.salonServiceModel
+  //       .find(baseFilter)
+  //       .lean()
+  //       .exec();
+  //     return enrichWithCategory(services);
+  //   }
+
+  //   // Map to dedupe results by _id
+  //   const resultsMap = new Map<string, SalonService>();
+
+  //   // 1) Direct service name matches
+  //   const directMatches = await this.salonServiceModel
+  //     .find({
+  //       ...baseFilter,
+  //       name: { $regex: nameTerm, $options: 'i' },
+  //     })
+  //     .lean()
+  //     .exec();
+  //   directMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
+
+  //   // 2) Category name matches => fetch corresponding services
+  //   const matchedCategories = await this.salonServiceCategoriesModel
+  //     .find({ category: { $regex: nameTerm, $options: 'i' } })
+  //     .lean()
+  //     .exec();
+  //   if (matchedCategories.length) {
+  //     const catIds = matchedCategories.map((c) => c._id);
+  //     const categoryMatches = await this.salonServiceModel
+  //       .find({
+  //         ...baseFilter,
+  //         categoryId: { $in: catIds.map((id) => new Types.ObjectId(id)) },
+  //       })
+  //       .lean()
+  //       .exec();
+  //     categoryMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
+  //   }
+
+  //   // Return combined, deduped, and enriched results
+  //   return enrichWithCategory(Array.from(resultsMap.values()));
+  // }
   async elastic_search(
-    nameTerm?: string,
-    gender?: string,
-    serviceTerm?: string,
-    price?: number,
-  ): Promise<SalonService[]> {
-    // Base filter for gender, serviceTerm, and price
-    const baseFilter: Record<string, any> = {};
-    if (price != null) {
-      baseFilter.actualPrice = price;
-    }
-    if (gender) {
-      baseFilter.$or = [
-        { subCategoryName: { $regex: `^${gender}$`, $options: 'i' } },
-      ];
-    }
-    if (serviceTerm) {
-      baseFilter.subSubCategoryName = { $regex: serviceTerm, $options: 'i' };
-    }
+  nameTerm?: string,
+  gender?: string,
+  serviceTerm?: string,
+  price?: number,
+): Promise<SalonService[]> {
+  // Base filter for gender, serviceTerm, and price
+  const baseFilter: Record<string, any> = {};
+  if (price != null) {
+    baseFilter.actualPrice = price;
+  }
+  if (gender) {
+    baseFilter.$or = [
+      { subCategoryName: { $regex: `^${gender}$`, $options: 'i' } },
+    ];
+  }
+  if (serviceTerm) {
+    baseFilter.subSubCategoryName = { $regex: serviceTerm, $options: 'i' };
+  }
 
-    // Helper to enrich with categoryName
-    const enrichWithCategory = async (services: SalonService[]) => {
-      const catIds = [...new Set(services.map((s) => s.categoryId.toString()))];
-      const categories = await this.salonServiceCategoriesModel
-        .find({ _id: { $in: catIds.map((id) => new Types.ObjectId(id)) } })
-        .lean()
-        .exec();
-      const categoryMap = new Map<string, string>();
-      categories.forEach((c) => categoryMap.set(c._id.toString(), c.category));
-      return services.map((s) => ({
-        ...s,
-        categoryName: categoryMap.get(s.categoryId.toString()) || null,
-      }));
-    };
+  // Helper to enrich with categoryName and generate signed URLs
+  const enrichWithCategoryAndSignedUrls = async (services: SalonService[]) => {
+    // Enrich with categoryName
+    const catIds = [...new Set(services.map((s) => s.categoryId.toString()))];
+    const categories = await this.salonServiceCategoriesModel
+      .find({ _id: { $in: catIds.map((id) => new Types.ObjectId(id)) } })
+      .lean()
+      .exec();
+    const categoryMap = new Map<string, string>();
+    categories.forEach((c) => categoryMap.set(c._id.toString(), c.category));
 
-    // If no nameTerm, fetch and enrich
-    if (!nameTerm) {
-      const services = await this.salonServiceModel
-        .find(baseFilter)
-        .lean()
-        .exec();
-      return enrichWithCategory(services);
-    }
+    // Generate signed URLs for images
+    const enrichedServices = await Promise.all(
+      services.map(async (s) => {
+        let image1 = s.image1;
+        let image2 = s.image2;
+        let image3 = s.image3;
 
-    // Map to dedupe results by _id
-    const resultsMap = new Map<string, SalonService>();
+        // Generate signed URLs for images if they exist
+        if (image1) {
+          image1 = await this.s3Service.get_image_url(image1);
+        }
+        if (image2) {
+          image2 = await this.s3Service.get_image_url(image2);
+        }
+        if (image3) {
+          image3 = await this.s3Service.get_image_url(image3);
+        }
 
-    // 1) Direct service name matches
-    const directMatches = await this.salonServiceModel
+        return {
+          ...s,
+          categoryName: categoryMap.get(s.categoryId.toString()) || null,
+          image1,
+          image2,
+          image3,
+        };
+      }),
+    );
+
+    return enrichedServices;
+  };
+
+  // If no nameTerm, fetch and enrich
+  if (!nameTerm) {
+    const services = await this.salonServiceModel
+      .find(baseFilter)
+      .lean()
+      .exec();
+    return enrichWithCategoryAndSignedUrls(services);
+  }
+
+  // Map to dedupe results by _id
+  const resultsMap = new Map<string, SalonService>();
+
+  // 1) Direct service name matches
+  const directMatches = await this.salonServiceModel
+    .find({
+      ...baseFilter,
+      name: { $regex: nameTerm, $options: 'i' },
+    })
+    .lean()
+    .exec();
+  directMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
+
+  // 2) Category name matches => fetch corresponding services
+  const matchedCategories = await this.salonServiceCategoriesModel
+    .find({ category: { $regex: nameTerm, $options: 'i' } })
+    .lean()
+    .exec();
+  if (matchedCategories.length) {
+    const catIds = matchedCategories.map((c) => c._id);
+    const categoryMatches = await this.salonServiceModel
       .find({
         ...baseFilter,
-        name: { $regex: nameTerm, $options: 'i' },
+        categoryId: { $in: catIds.map((id) => new Types.ObjectId(id)) },
       })
       .lean()
       .exec();
-    directMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
-
-    // 2) Category name matches => fetch corresponding services
-    const matchedCategories = await this.salonServiceCategoriesModel
-      .find({ category: { $regex: nameTerm, $options: 'i' } })
-      .lean()
-      .exec();
-    if (matchedCategories.length) {
-      const catIds = matchedCategories.map((c) => c._id);
-      const categoryMatches = await this.salonServiceModel
-        .find({
-          ...baseFilter,
-          categoryId: { $in: catIds.map((id) => new Types.ObjectId(id)) },
-        })
-        .lean()
-        .exec();
-      categoryMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
-    }
-
-    // Return combined, deduped, and enriched results
-    return enrichWithCategory(Array.from(resultsMap.values()));
+    categoryMatches.forEach((doc) => resultsMap.set(doc._id.toString(), doc));
   }
+
+  // Return combined, deduped, and enriched results with signed URLs
+  return enrichWithCategoryAndSignedUrls(Array.from(resultsMap.values()));
+}
 }
 
 function getSortOptions(sortBy?: string, order: 'asc' | 'desc' = 'desc') {
