@@ -13,7 +13,7 @@ import { SalonServiceSchema } from 'src/schemas/salon/salon_service.schema';
 import { SalonServiceCategories, SalonServiceCategoriesSchema } from 'src/schemas/salon/salon_service_categories.schema';
 import { BookingGateway } from './salon_service_booking_gateway';
 import { NotificationModule } from 'src/notification/notification.module';
-
+import { SalonModule } from 'src/salon/salon.module';
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -25,7 +25,7 @@ import { NotificationModule } from 'src/notification/notification.module';
     MongooseModule.forFeature([
       { name: SalonServiceCategories.name, schema: SalonServiceCategoriesSchema },
     ]),
-    NotificationModule,
+    NotificationModule,SalonModule
   ],
   controllers: [SalonServiceBookingController],
   providers: [
