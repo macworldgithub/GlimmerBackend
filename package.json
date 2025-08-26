@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "update-slugs": "ts-node scripts/update-slugs.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -44,6 +45,7 @@
     "nodemailer": "^6.10.0",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
+    "slugify": "^1.6.6",
     "socket.io": "^4.8.1",
     "uuid": "^11.0.4"
   },

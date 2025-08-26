@@ -82,4 +82,18 @@ export class ProductSubCategoryRepository {
       .session(session)
       .exec();
   }
+  async find_by_slug(slug: string) {
+    return this.product_sub_category_model.findOne({ slug }).exec();
+  }
+
+  async find_by_id(id: Types.ObjectId) {
+    return this.product_sub_category_model.findById(id).exec();
+  }
+
+  async findOne(query: any): Promise<ProductSubCategory | null> {
+    if (query.slug) {
+      query.slug = { $regex: `^${query.slug}$`, $options: 'i' };
+    }
+    return this.product_sub_category_model.findOne(query).exec();
+  }
 }

@@ -13,31 +13,39 @@ import {
 import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
 import { Rating, RatingSchema } from 'src/schemas/ecommerce/rating.schema'; 
 import { RatingRepository } from 'src/product/rating.repository'; 
+import { ProductCategory, ProductCategorySchema } from 'src/schemas/ecommerce/product_category.schema';
+import { ProductItem, ProductItemSchema } from 'src/schemas/ecommerce/product_item.schema';
+import { ProductCategoryRepository } from 'src/product_category/product_category.repository';
+import { ProductItemRepository } from 'src/product_item/product_item.repository';
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-    MongooseModule.forFeature([ { name: ProductSubCategory.name, schema: ProductSubCategorySchema }]),
-    MongooseModule.forFeature([ { name: Rating.name, schema: RatingSchema } ])
-  
+    MongooseModule.forFeature([
+      { name: Product.name, schema: ProductSchema },
+      { name: ProductCategory.name, schema: ProductCategorySchema },
+      { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
+      { name: ProductItem.name, schema: ProductItemSchema },
+      { name: Rating.name, schema: RatingSchema },
+    ]),
   ],
-  // imports: [
-  //   MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-  //   MongooseModule.forFeature([
-  //     { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
-  //     { name: Rating.name, schema: RatingSchema }, // Add Rating schema
-  //   ]),
-  // ],
   providers: [
     ProductService,
     ProductRepository,
+    ProductCategoryRepository,
+    ProductSubCategoryRepository,
+    ProductItemRepository,
     JwtService,
     S3Service,
-    ProductSubCategoryRepository,
-    RatingRepository
+    RatingRepository,
   ],
   controllers: [ProductController],
   exports: [
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
+    ProductService,
+    ProductRepository,
+    ProductCategoryRepository,
+    ProductSubCategoryRepository,
+    ProductItemRepository,
+    RatingRepository,
   ],
 })
 export class ProductModule {}

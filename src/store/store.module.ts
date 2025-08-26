@@ -30,40 +30,30 @@ import {
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     MongooseModule.forFeature([
+      { name: Store.name, schema: StoreSchema },
+      { name: Order.name, schema: OrderSchema },
+      { name: OrderItem.name, schema: OrderItemSchema },
+      { name: StoreOrder.name, schema: StoreOrderSchema },
+      { name: Product.name, schema: ProductSchema },
       { name: ProductSubCategory.name, schema: ProductSubCategorySchema },
     ]),
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-    MongooseModule.forFeature([
-      { name: OrderItem.name, schema: OrderItemSchema },
-    ]),
-    MongooseModule.forFeature([
-      { name: StoreOrder.name, schema: StoreOrderSchema },
-    ]),
-    ProductModule, // Import ProductModule for ProductService
+    ProductModule, // Import ProductModule to provide ProductService and its dependencies
   ],
   controllers: [StoreController],
   providers: [
     StoreService,
     StoreRepository,
+    OrderRepository,
     JwtService,
     S3Service,
-    ProductService,
-    ProductRepository,
-    OrderRepository,
-    ProductSubCategoryRepository,
-    RatingRepository
   ],
   exports: [
-    MongooseModule.forFeature([{ name: Store.name, schema: StoreSchema }]),
-    MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
-    MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     MongooseModule.forFeature([
+      { name: Store.name, schema: StoreSchema },
+      { name: Product.name, schema: ProductSchema },
+      { name: Order.name, schema: OrderSchema },
       { name: OrderItem.name, schema: OrderItemSchema },
-    ]),
-    MongooseModule.forFeature([
       { name: StoreOrder.name, schema: StoreOrderSchema },
     ]),
   ],
