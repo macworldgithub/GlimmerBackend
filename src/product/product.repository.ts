@@ -125,6 +125,9 @@ export class ProductRepository {
         },
         projection,
       )
+      .populate('category', 'name slug')
+      .populate('sub_category', 'name slug') 
+      .populate('item', 'name slug') 
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
