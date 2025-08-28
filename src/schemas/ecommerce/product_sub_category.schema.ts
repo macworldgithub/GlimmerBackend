@@ -22,8 +22,8 @@ export class ProductSubCategory {
   @Prop()
   description?: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
-  product_category: ProductCategory | mongoose.Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'ProductCategory', required: true })
+  product_category: Types.ObjectId;
 }
 
 export const ProductSubCategorySchema =

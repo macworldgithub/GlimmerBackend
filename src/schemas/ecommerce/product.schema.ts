@@ -54,15 +54,13 @@ export class Product {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Store' })
   store: Types.ObjectId;
 
-  // mongo-schema-decorators
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductCategory' })
+  @Prop({ type: Types.ObjectId, ref: 'ProductCategory' })
   category: Types.ObjectId;
 
-  // mongo-schema-decorators
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
+  @Prop({ type: Types.ObjectId, ref: 'ProductSubCategory' })
   sub_category: Types.ObjectId;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductItem' })
+  @Prop({ type: Types.ObjectId, ref: 'ProductItem' })
   item?: Types.ObjectId;
 
   // ✅ Updated type field: Array of objects
@@ -98,7 +96,16 @@ export class Product {
   @Prop({ default: 0 })
   total_ratings: number;
 
-  @Prop({ type: { five: Number, four: Number, three: Number, two: Number, one: Number }, default: { five: 0, four: 0, three: 0, two: 0, one: 0 } })
+  @Prop({
+    type: {
+      five: Number,
+      four: Number,
+      three: Number,
+      two: Number,
+      one: Number,
+    },
+    default: { five: 0, four: 0, three: 0, two: 0, one: 0 },
+  })
   rating_distribution: {
     five: number;
     four: number;
@@ -120,14 +127,30 @@ export class Product {
     this.created_at = product.created_at;
     this.description = product.description;
     this.discounted_price = product.discounted_price;
-    this.category = product.category?.toString();
-    this.sub_category = product.sub_category?.toString();
-    this.item = product.item?.toString();
+    this.category = product.category
+      ? {
+          _id: product.category._id?.toString(),
+          name: product.category.name,
+          slug: product.category.slug,
+        }
+      : undefined;
+    this.sub_category = product.sub_category
+      ? {
+          _id: product.sub_category._id?.toString(),
+          name: product.sub_category.name,
+          slug: product.sub_category.slug,
+        }
+      : undefined;
+    this.item = product.item
+      ? {
+          _id: product.item._id?.toString(),
+          name: product.item.name,
+          slug: product.item.slug,
+        }
+      : undefined;
 
     this.type = product.type ?? null;
     this.size = product.size ?? null;
-
- 
   }
 }
 

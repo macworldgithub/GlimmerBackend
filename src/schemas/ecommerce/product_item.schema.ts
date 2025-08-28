@@ -22,8 +22,8 @@ export class ProductItem {
   @Prop()
   description?: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'ProductSubCategory' })
-  product_sub_category: ProductSubCategory | mongoose.Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'ProductSubCategory', required: true })
+  product_sub_category: Types.ObjectId;
 }
 
 export const ProductItemSchema = SchemaFactory.createForClass(ProductItem);
