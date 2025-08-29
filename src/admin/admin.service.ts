@@ -727,7 +727,7 @@ export class AdminService {
       if (wantAll || filter.includes(key)) {
         const products = await this.productModel
           .find(condition)
-          .sort({ createdAt: -1, _id: -1 }) 
+          .sort({ createdAt: -1, _id: -1 })
           .lean()
           .exec();
 
@@ -816,8 +816,8 @@ export class AdminService {
 
       const subject = `Order Confirmation - Order #${viewModel.order.id}`;
       const templatePath = join(
-        __dirname,
-        '..',
+        process.cwd(),
+        'dist',
         'admin',
         'views',
         'email',
