@@ -76,9 +76,9 @@ export interface SendMailOptions {
 }
 
 interface Booking {
-  id: string;                         // _id
-  date: string;                      // bookingDate
-  time: string;                      // bookingTime
+  id: string; // _id
+  date: string; // bookingDate
+  time: string; // bookingTime
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -313,7 +313,7 @@ export class AdminService {
 
   //   return result;
   // } //Checked
-async getRecommendedProducts(salonId?: string): Promise<any[]> {
+  async getRecommendedProducts(salonId?: string): Promise<any[]> {
     const filter = salonId ? { salonId } : {};
     const recommendedRecords = await this.recommendedProductsModel.find(filter);
 
@@ -328,9 +328,9 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
       const productList = [];
 
       for (const product of record.productList) {
-        const productFromDatabase = await this.productModel.findById(
-          product.productId,
-        ).lean();
+        const productFromDatabase = await this.productModel
+          .findById(product.productId)
+          .lean();
         if (productFromDatabase) {
           if (productFromDatabase.image1) {
             productFromDatabase.image1 = await this.s3_service.get_image_url(
@@ -351,9 +351,12 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
             (item) => item.productId === productFromDatabase._id.toString(),
           );
 
-          const latestSale = product.saleRecords.reduce((latest, current) =>
-            new Date(latest.soldAt) > new Date(current.soldAt) ? latest : current,
-            product.saleRecords[0] || {}
+          const latestSale = product.saleRecords.reduce(
+            (latest, current) =>
+              new Date(latest.soldAt) > new Date(current.soldAt)
+                ? latest
+                : current,
+            product.saleRecords[0] || {},
           );
           const price = latestSale.price || productFromDatabase.base_price || 0;
 
@@ -376,7 +379,7 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
         productList,
       });
     }
-    console.log('hello',result)
+    console.log('hello', result);
     return result;
   }
 
@@ -406,9 +409,9 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
       const productList = [];
 
       for (const product of record.productList) {
-        const productFromDatabase = await this.productModel.findById(
-          product.productId,
-        ).lean();
+        const productFromDatabase = await this.productModel
+          .findById(product.productId)
+          .lean();
         if (productFromDatabase) {
           if (productFromDatabase.image1) {
             productFromDatabase.image1 = await this.s3_service.get_image_url(
@@ -429,9 +432,12 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
             (item) => item.productId === productFromDatabase._id.toString(),
           );
 
-          const latestSale = product.saleRecords.reduce((latest, current) =>
-            new Date(latest.soldAt) > new Date(current.soldAt) ? latest : current,
-            product.saleRecords[0] || {}
+          const latestSale = product.saleRecords.reduce(
+            (latest, current) =>
+              new Date(latest.soldAt) > new Date(current.soldAt)
+                ? latest
+                : current,
+            product.saleRecords[0] || {},
           );
           const price = latestSale.price || productFromDatabase.base_price || 0;
 
@@ -714,16 +720,17 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
     const wantAll = !filter || filter.length === 0;
     const result: Record<string, any[]> = {};
 
-    // helper to fetch + transform one category
     const fetchAndTransform = async (
       key: string,
       condition: Record<string, any>,
     ) => {
       if (wantAll || filter.includes(key)) {
-        // 1. grab plain objects
-        const products = await this.productModel.find(condition).lean().exec();
+        const products = await this.productModel
+          .find(condition)
+          .sort({ createdAt: -1, _id: -1 }) 
+          .lean()
+          .exec();
 
-        // 2. map each to include full URLs
         result[key] = await Promise.all(
           products.map(async (p) => {
             return {
@@ -836,7 +843,7 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
   async sendBookingEmail(opts: SendBookingMailOptions) {
     try {
       const { to, viewModel } = opts;
-  
+
       const subject = `Booking Confirmation - Booking #${viewModel.booking.id}`;
       const templatePath = join(
         __dirname,
@@ -848,14 +855,14 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
       );
       const htmlContent = await ejs.renderFile(templatePath, viewModel);
       const from = this.config.get<string>('SMTP_SUPPORT_USER');
-  
+
       const info = await this.support_glimmer_transporter.sendMail({
         from: `Glimmer ${from}`,
         to,
         subject,
         html: htmlContent,
       });
-  
+
       this.logger.log(`Booking email sent: ${info.messageId}`);
       return { messageId: info.messageId, response: info.response };
     } catch (err) {
@@ -863,4 +870,4 @@ async getRecommendedProducts(salonId?: string): Promise<any[]> {
       throw err;
     }
   }
-}  
+}
