@@ -89,7 +89,7 @@ export class ProductRepository {
   ) {
     const skip = (page_no - 1) * limit;
 
-    let sortOptions: any = { createdAt: -1, _id: -1 }; // Default sort with secondary key for stability
+    let sortOptions: any = { created_at: -1, _id: -1 }; // Default sort with secondary key for stability
 
     if (sortBy === 'price') {
       // Sort by discounted_price or base_price
@@ -104,11 +104,7 @@ export class ProductRepository {
         _id: order === 'desc' ? -1 : 1,
       };
     } else {
-      // When no sortBy, respect the order for createdAt
-      sortOptions = {
-        createdAt: order === 'desc' ? -1 : 1,
-        _id: order === 'desc' ? -1 : 1,
-      };
+      sortOptions = { created_at: order === 'desc' ? -1 : 1, _id: -1 };
     }
 
     console.log('MongoDB query:', {
