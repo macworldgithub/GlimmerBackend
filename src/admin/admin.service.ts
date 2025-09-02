@@ -23,6 +23,9 @@ import { ConfigService } from '@nestjs/config';
 import path, { join } from 'path';
 import ejs = require('ejs');
 import { send } from 'process';
+import { ProductSubCategoryRepository } from 'src/product_sub_category/product_sub_category.repository';
+import { ProductCategoryRepository } from 'src/product_category/product_category.repository';
+import { ProductItemRepository } from 'src/product_item/product_item.repository';
 export type SalonFilter =
   | 'new-to-glimmer'
   | 'trending-salon'
@@ -129,6 +132,10 @@ export class AdminService {
 
     @InjectModel(Salon.name)
     private readonly salonModel: Model<SalonDocument>,
+
+    private sub_category_repository: ProductSubCategoryRepository,
+    private product_category_repository: ProductCategoryRepository,
+    private product_item_repository: ProductItemRepository,
   ) {
     this.support_glimmer_transporter = nodemailer.createTransport({
       host: this.config.get<string>('SMTP_HOST'),
@@ -714,11 +721,47 @@ export class AdminService {
   }
 
   async getProductsHighlights(
-    filterDto: GetProductsFilterDto,
+    filterDto: GetProductsFilterDto & {
+      categorySlug?: string;
+      subCategorySlug?: string;
+      itemSlug?: string;
+    },
   ): Promise<Record<string, any[]>> {
-    const { filter } = filterDto;
+    const { filter, categorySlug, subCategorySlug, itemSlug } = filterDto;
     const wantAll = !filter || filter.length === 0;
     const result: Record<string, any[]> = {};
+
+    const extraFilters: Record<string, any> = {};
+
+    if (categorySlug) {
+      const categoryDoc = await this.product_category_repository.findOne({
+        slug: categorySlug,
+      });
+      if (!categoryDoc) {
+        throw new BadRequestException('Invalid category slug!');
+      }
+      extraFilters.category = categoryDoc._id;
+    }
+
+    if (subCategorySlug) {
+      const subCategoryDoc = await this.sub_category_repository.findOne({
+        slug: subCategorySlug,
+      });
+      if (!subCategoryDoc) {
+        throw new BadRequestException('Invalid sub_category slug!');
+      }
+      extraFilters.sub_category = subCategoryDoc._id;
+    }
+
+    if (itemSlug && itemSlug !== 'all') {
+      const itemDoc = await this.product_item_repository.findOne({
+        slug: itemSlug,
+      });
+      if (!itemDoc) {
+        throw new BadRequestException('Invalid item slug!');
+      }
+      extraFilters.item = itemDoc._id;
+    }
 
     const fetchAndTransform = async (
       key: string,
@@ -726,26 +769,27 @@ export class AdminService {
     ) => {
       if (wantAll || filter.includes(key)) {
         const products = await this.productModel
-          .find(condition)
-          .sort({ createdAt: -1, _id: -1 })
+          .find({ ...condition, ...extraFilters })
+          .sort({ created_at: -1, _id: -1 })
+          .populate('category', 'name slug')
+          .populate('sub_category', 'name slug')
+          .populate('item', 'name slug')
           .lean()
           .exec();
 
         result[key] = await Promise.all(
-          products.map(async (p) => {
-            return {
-              ...p,
-              image1: p.image1
-                ? await this.s3_service.get_image_url(p.image1)
-                : null,
-              image2: p.image2
-                ? await this.s3_service.get_image_url(p.image2)
-                : null,
-              image3: p.image3
-                ? await this.s3_service.get_image_url(p.image3)
-                : null,
-            };
-          }),
+          products.map(async (p) => ({
+            ...p,
+            image1: p.image1
+              ? await this.s3_service.get_image_url(p.image1)
+              : null,
+            image2: p.image2
+              ? await this.s3_service.get_image_url(p.image2)
+              : null,
+            image3: p.image3
+              ? await this.s3_service.get_image_url(p.image3)
+              : null,
+          })),
         );
       }
     };

@@ -45,7 +45,7 @@ import {
     S3Service,
     OrderRepository,
     ProductRepository,
-    AdminService,
+    // AdminService,
     OrderGateway,
   ],
   exports: [
