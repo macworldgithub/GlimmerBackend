@@ -88,42 +88,34 @@ export class ProductRepository {
     limit = DEFAULT_DOCUMENTS_LIMITS,
   ) {
     const skip = (page_no - 1) * limit;
-
-    let sortOptions: any = { created_at: -1, _id: -1 }; // Default sort with secondary key for stability
+    const sortOrder = order ?? 'desc';
+    let sortOptions: any = { created_at: -1, _id: -1 };
 
     if (sortBy === 'price') {
-      // Sort by discounted_price or base_price
       sortOptions = [
-        ['discounted_price', order === 'desc' ? -1 : 1],
-        ['base_price', order === 'desc' ? -1 : 1],
-        ['_id', order === 'desc' ? -1 : 1],
+        ['discounted_price', sortOrder === 'desc' ? -1 : 1],
+        ['base_price', sortOrder === 'desc' ? -1 : 1],
+        ['_id', sortOrder === 'desc' ? -1 : 1],
       ];
     } else if (sortBy) {
       sortOptions = {
-        [sortBy]: order === 'desc' ? -1 : 1,
-        _id: order === 'desc' ? -1 : 1,
+        [sortBy]: sortOrder === 'desc' ? -1 : 1,
+        _id: sortOrder === 'desc' ? -1 : 1,
       };
-    } else {
-      sortOptions = { created_at: order === 'desc' ? -1 : 1, _id: -1 };
     }
 
     console.log('MongoDB query:', {
       filters,
       sortOptions,
       skip,
-      limit: DEFAULT_DOCUMENTS_LIMITS,
+      limit,
     });
 
     return this.product_model
-      .find(
-        {
-          ...filters,
-        },
-        projection,
-      )
+      .find(filters, projection)
       .populate('category', 'name slug')
-      .populate('sub_category', 'name slug') 
-      .populate('item', 'name slug') 
+      .populate('sub_category', 'name slug')
+      .populate('item', 'name slug')
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
