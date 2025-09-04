@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { S3Service } from 'src/aws/s3.service';
-import { SalonServiceBooking, SalonServiceBookingSchema } from 'src/schemas/salon/salon_service_booking.schema';
+import {
+  SalonServiceBooking,
+  SalonServiceBookingSchema,
+} from 'src/schemas/salon/salon_service_booking.schema';
 import { SalonServiceBookingRepository } from './salon_service_booking.repository';
 import { SalonServiceBookingController } from './salon_service_booking.controller';
 import { SalonServiceBookingService } from './salon_service_booking.service';
@@ -10,22 +13,28 @@ import { SalonServicesRepository } from 'src/salon_service/salon_service.reposit
 import { SalonServicesCategoriesRepository } from 'src/salon_service_categories/salon_service_categories.repository';
 import { SalonService } from 'src/salon/salon.service';
 import { SalonServiceSchema } from 'src/schemas/salon/salon_service.schema';
-import { SalonServiceCategories, SalonServiceCategoriesSchema } from 'src/schemas/salon/salon_service_categories.schema';
+import {
+  SalonServiceCategories,
+  SalonServiceCategoriesSchema,
+} from 'src/schemas/salon/salon_service_categories.schema';
 import { BookingGateway } from './salon_service_booking_gateway';
 import { NotificationModule } from 'src/notification/notification.module';
 import { SalonModule } from 'src/salon/salon.module';
+import { BookingTransaction, BookingTransactionSchema } from 'src/schemas/transactions/booking-transaction.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: SalonServiceBooking.name, schema: SalonServiceBookingSchema },
-    ]),
-    MongooseModule.forFeature([
       { name: SalonService.name, schema: SalonServiceSchema },
+      {
+        name: SalonServiceCategories.name,
+        schema: SalonServiceCategoriesSchema,
+      },
+      { name: BookingTransaction.name, schema: BookingTransactionSchema }, // ✅ register here
     ]),
-    MongooseModule.forFeature([
-      { name: SalonServiceCategories.name, schema: SalonServiceCategoriesSchema },
-    ]),
-    NotificationModule,SalonModule
+
+    NotificationModule,
+    SalonModule,
   ],
   controllers: [SalonServiceBookingController],
   providers: [

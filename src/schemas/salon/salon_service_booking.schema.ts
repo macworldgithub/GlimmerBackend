@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HydratedDocument } from 'mongoose';
+import { Document, HydratedDocument, Types } from 'mongoose';
+import { BookingTransaction } from '../transactions/booking-transaction.schema';
 
 export type SalonServiceBookingDocument = HydratedDocument<SalonServiceBooking>;
 
@@ -29,8 +30,8 @@ export class SalonServiceBooking {
   @Prop({ required: true })
   categoryId: string;
 
-  @Prop({ required: true })
-  categoryName: string;
+  @Prop()
+  categoryName?: string;
 
   @Prop()
   subCategoryName?: string;
@@ -52,18 +53,35 @@ export class SalonServiceBooking {
 
   @Prop({ required: true })
   bookingDate: Date;
-  
+
   @Prop({ required: true })
   bookingTime: string;
 
-  @Prop({ required: true, enum: ['Prepaid (Card)', 'Pay at Counter'] })
+  @Prop({ required: true, enum: ['Prepaid (Card)', 'Bank Alfalah'] })
   paymentMethod: string;
 
-  @Prop({ required: true, enum: ['Pending','Rejected', 'Approved', 'Completed','Completed And Paid', 'Did not show up'], default: 'Pending' })
+  @Prop({
+    required: true,
+    enum: [
+      'Pending',
+      'Rejected',
+      'Approved',
+      'Completed',
+      'Completed And Paid',
+      'Did not show up',
+    ],
+    default: 'Pending',
+  })
   bookingStatus: string;
 
   @Prop({ required: false, default: false })
   isPaid: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true })
+  transaction?: BookingTransaction | Types.ObjectId;
+
+  @Prop()
+  notes?: string;
 
   constructor(
     customerName: string,
@@ -77,7 +95,13 @@ export class SalonServiceBooking {
     bookingDate: Date,
     bookingTime: string,
     paymentMethod: 'Prepaid (Card)' | 'Pay at Counter',
-    bookingStatus: 'Pending' | 'Approved' |'Rejected'| 'Completed' |'Completed And Paid'| 'Did not show up' = 'Pending',
+    bookingStatus:
+      | 'Pending'
+      | 'Approved'
+      | 'Rejected'
+      | 'Completed'
+      | 'Completed And Paid'
+      | 'Did not show up' = 'Pending',
     isPaid = false,
     actualPrice: number,
     finalPrice: number,
@@ -86,6 +110,8 @@ export class SalonServiceBooking {
     serviceDescription?: string,
     subCategoryName?: string,
     subSubCategoryName?: string,
+    transaction?: BookingTransaction,
+    notes?: string,
   ) {
     this.customerName = customerName;
     this.customerEmail = customerEmail;
@@ -107,7 +133,10 @@ export class SalonServiceBooking {
     this.serviceDescription = serviceDescription;
     this.subCategoryName = subCategoryName;
     this.subSubCategoryName = subSubCategoryName;
+    this.transaction = transaction;
+    this.notes = notes;
   }
 }
 
-export const SalonServiceBookingSchema = SchemaFactory.createForClass(SalonServiceBooking);
+export const SalonServiceBookingSchema =
+  SchemaFactory.createForClass(SalonServiceBooking);

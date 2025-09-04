@@ -10,9 +10,12 @@ import {
 import { HttpModule } from '@nestjs/axios';
 import { NotificationModule } from 'src/notification/notification.module';
 import { OrderGateway } from 'src/order/order.gateway';
+import { SalonServiceBooking, SalonServiceBookingSchema } from 'src/schemas/salon/salon_service_booking.schema';
+import { BookingTransaction, BookingTransactionSchema } from 'src/schemas/transactions/booking-transaction.schema';
+import { BookingGateway } from 'src/salon_service_booking/salon_service_booking_gateway';
 
 @Module({
-  providers: [AlfalahService,OrderGateway],
+  providers: [AlfalahService,OrderGateway,BookingGateway],
   controllers: [AlfalahController],
   
 
@@ -20,6 +23,8 @@ import { OrderGateway } from 'src/order/order.gateway';
     MongooseModule.forFeature([
       { name: Order.name, schema: OrderSchema },
       { name: Transaction.name, schema: TransactionSchema },
+      { name: SalonServiceBooking.name, schema: SalonServiceBookingSchema },
+      { name: BookingTransaction.name, schema: BookingTransactionSchema }, 
     ]),
     NotificationModule,
       HttpModule,
