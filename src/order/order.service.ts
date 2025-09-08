@@ -4,7 +4,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { OrderReqDto, updateConfirmedOrderStatusDto } from './dtos/req_dtos/order.dto';
+import {
+  OrderReqDto,
+  updateConfirmedOrderStatusDto,
+} from './dtos/req_dtos/order.dto';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { OrderStatus } from './enums/order_status.enum';
 import { OrderRepository } from './order.repository';
@@ -59,7 +62,9 @@ export class OrderService {
   async create_order(
     order_dto: CreateOrderDto,
   ): Promise<{ order: Order; message: string }> {
-    
+    const session = await this.orderModel.db.startSession();
+    session.startTransaction();
+
     const transaction = await this.transactionModel.create({
       transactionId: order_dto.payment?.transactionId || `COD-${Date.now()}`,
       customerEmail: order_dto.customerEmail,
@@ -68,18 +73,46 @@ export class OrderService {
       status: order_dto.payment?.status || 'Pending',
       paymentGateway: order_dto.payment?.gateway || 'COD',
     });
-    const order = await this.orderModel.create({
-      ShippingInfo: order_dto.ShippingInfo,
-      customerName: order_dto.customerName,
-      customerEmail: order_dto.customerEmail,
-      productList: order_dto.productList,
-      total: order_dto.total,
-      discountedTotal: order_dto.discountedTotal,
-      transaction: transaction._id,
-    });
+
+    for (const item of order_dto.productList) {
+      const product = await this.product_repository
+        .get_product_by_id(new Types.ObjectId(item.product._id))
+        .session(session);
+
+      if (!product) {
+        throw new BadRequestException(`Product not found: ${item.product._id}`);
+      }
+
+      if (product.quantity < item.quantity) {
+        throw new BadRequestException(
+          `Product ${product.name} has only ${product.quantity} in stock`,
+        );
+      }
+
+      // reduce stock
+      product.quantity -= item.quantity;
+      await product.save({ session });
+    }
+
+    const [order] = await this.orderModel.create(
+      [
+        {
+          ShippingInfo: order_dto.ShippingInfo,
+          customerName: order_dto.customerName,
+          customerEmail: order_dto.customerEmail,
+          productList: order_dto.productList,
+          total: order_dto.total,
+          discountedTotal: order_dto.discountedTotal,
+          transaction: transaction._id,
+        },
+      ],
+      { session },
+    );
+    await session.commitTransaction();
+    session.endSession();
 
     const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
-    console.log(message)
+    console.log(message);
     const userId = order.productList?.[0]?.storeId;
 
     if (!userId) {
@@ -529,31 +562,43 @@ export class OrderService {
   }
 
   async updateConfirmedOrderStatus(updateData: updateConfirmedOrderStatusDto) {
-    const allowedStatuses = ['In Process', 'Delivered', 'Returned', 'Cancelled'];
-    
+    const allowedStatuses = [
+      'In Process',
+      'Delivered',
+      'Returned',
+      'Cancelled',
+    ];
+
     const order = await this.order_repository.findById(updateData.orderId);
 
-  if (!order) {
-    throw new NotFoundException(`Order with ID ${updateData.orderId} not found.`);
-  }
+    if (!order) {
+      throw new NotFoundException(
+        `Order with ID ${updateData.orderId} not found.`,
+      );
+    }
 
-  if (order.status !== 'Confirmed') {
-    throw new BadRequestException(
-      `Order status can only be updated if it is currently 'Confirmed'. Current status: ${order.status}`,
-    ); 
-  }
+    if (order.status !== 'Confirmed') {
+      throw new BadRequestException(
+        `Order status can only be updated if it is currently 'Confirmed'. Current status: ${order.status}`,
+      );
+    }
 
-  if (!allowedStatuses.includes(updateData.orderStatus)) {
-    throw new BadRequestException(
-      `Invalid status update. Allowed statuses are: ${allowedStatuses.join(', ')}`,
+    if (!allowedStatuses.includes(updateData.orderStatus)) {
+      throw new BadRequestException(
+        `Invalid status update. Allowed statuses are: ${allowedStatuses.join(', ')}`,
+      );
+    }
+    const updatedOrder = await this.order_repository.update(
+      updateData.orderId,
+      {
+        status: updateData.orderStatus,
+      },
     );
-  }
-  const updatedOrder = await this.order_repository.update(updateData.orderId, {
-    status: updateData.orderStatus,
-  });
-  if (!updatedOrder) {
-    throw new NotFoundException(`Order with ID ${updateData.orderId} could not be updated.`);
-  }
+    if (!updatedOrder) {
+      throw new NotFoundException(
+        `Order with ID ${updateData.orderId} could not be updated.`,
+      );
+    }
 
     return updatedOrder;
   }
