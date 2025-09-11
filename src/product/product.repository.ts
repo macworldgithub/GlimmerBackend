@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model, Query, Types } from 'mongoose';
 import { DEFAULT_DOCUMENTS_LIMITS } from 'src/constants/common.constants';
@@ -17,10 +17,22 @@ export class ProductRepository {
   ) {}
 
   async create_product(product_dto: Record<string, any>) {
-    const product = new this.product_model(product_dto);
-    console.log(product);
+    try {
+      const product = new this.product_model(product_dto);
 
-    return product.save();
+      console.log("Saving product:", product);
+
+      const saved = await product.save();
+
+      return saved.toObject();
+    } catch (error) {
+      console.error("Error creating product:", error);
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('Unknown error occurred');
+      }
+    }
   }
 
   get_product_by_id(

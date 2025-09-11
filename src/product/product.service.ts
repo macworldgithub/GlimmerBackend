@@ -1406,4 +1406,62 @@ export class ProductService {
       throw new InternalServerErrorException(e);
     }
   }
+
+  async bulk_create_products(
+    rows: Record<string, string>[],
+    store_payload: AuthPayload,
+  ): Promise<any[]> {
+    const results: any[] = [];
+
+    try {
+      console.log("Store: ", store_payload);
+      for (const row of rows) {
+        // Parse sizes & types
+        const sizes = row.sizes
+          ? row.sizes.split('|').map((s) => s.trim())
+          : [];
+        const types = row.types
+          ? row.types.split('|').map((t) => t.trim())
+          : [];
+
+        // Parse images
+        const imageKeys = row.images
+          ? row.images.split(',').map((img: string) => img.trim())
+          : [];
+
+        const [image1, image2, image3] = [
+          imageKeys[0] || '',
+          imageKeys[1] || '',
+          imageKeys[2] || '',
+        ];
+
+        // Build product DTO
+        const productData = {
+          name: row.name,
+          description: row.description,
+          base_price: parseFloat(row.base_price),
+          discounted_price: parseFloat(row.discounted_price),
+          quantity: parseInt(row.quantity, 10),
+          status: row.status || 'Active',
+          category: new Types.ObjectId(row.category),
+          sub_category: new Types.ObjectId(row.subcategory),
+          item: row.item ? new Types.ObjectId(row.item) : null,
+          size: sizes,
+          type: types,
+          image1,
+          image2,
+          image3,
+          store: new Types.ObjectId(store_payload._id),
+        };
+
+        const created =
+          await this.product_repository.create_product(productData);
+        results.push(created);
+      }
+
+      return results;
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
 }
