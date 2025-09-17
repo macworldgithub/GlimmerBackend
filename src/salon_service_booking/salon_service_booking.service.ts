@@ -112,13 +112,20 @@ export class SalonServiceBookingService {
     };
 
     const savedBooking = await this.bookingRepository.create(newBooking);
-
+    const formattedDate =
+      savedBooking.createdAt?.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) || new Date().toLocaleString('en-US');
     // 5. Send notification
     await this.notificationService.create(
       savedBooking.salonId,
       `A new salon appointment has been booked by ${
         savedBooking.customerName || 'a customer'
-      }. Please review the details. Salon ID: ${savedBooking.salonId}`,
+      } on ${formattedDate}. Please review the details. Salon ID: ${savedBooking.salonId}`,
       savedBooking,
     );
 

@@ -111,7 +111,15 @@ export class OrderService {
     await session.commitTransaction();
     session.endSession();
 
-    const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
+    const formattedDate =
+      order.createdAt?.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) || new Date().toLocaleString('en-US');
+    const message = `A new order has been placed by ${order.customerName} on ${formattedDate}. Please review and process it. Order ID: ${order._id}`;
     console.log(message);
     const userId = order.productList?.[0]?.storeId;
 
@@ -119,7 +127,11 @@ export class OrderService {
       console.warn('No storeId found in order.productList');
     }
 
-    await this.notificationService.create(userId, message, order);
+    await this.notificationService.create(
+      userId,
+      message,
+      order.toObject ? order.toObject() : order,
+    );
 
     this.orderGateway.sendOrderNotification(order);
     return { order: order, message: 'SucessFully Created Order' };
@@ -314,6 +326,8 @@ export class OrderService {
             discountedTotal: 1,
             paymentMethod: 1,
             ShippingInfo: 1,
+            createdAt: 1, 
+            updatedAt: 1,
             productList: {
               $filter: {
                 input: '$productList',

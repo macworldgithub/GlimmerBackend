@@ -338,7 +338,15 @@ export class AlfalahService {
 
     const requestHashSSO = this.encryptAES(mapStringSSO);
     //Notification sending code
-    const message = `A new order has been placed by ${order.customerName}. Please review and process it. Order ID: ${order._id}`;
+    const formattedDate =
+      order.createdAt?.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) || new Date().toLocaleString('en-US');
+    const message = `A new order has been placed by ${order.customerName} on ${formattedDate}. Please review and process it. Order ID: ${order._id}`;
     const userId = order.productList?.[0]?.storeId;
 
     if (!userId) {
@@ -457,7 +465,16 @@ export class AlfalahService {
 
         createdBookings.push(booking);
 
-        const message = `A new order has been placed by ${booking.customerName}. Please review and process it. Order ID: ${booking._id}`;
+        const formattedDate =
+          booking.createdAt?.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }) || new Date().toLocaleString('en-US');
+
+        const message = `A new booking has been placed by ${booking.customerName} on ${formattedDate}. Please review and process it. Booking ID: ${booking._id}`;
         await this.notificationService.create(
           booking.salonId,
           message,
@@ -482,7 +499,16 @@ export class AlfalahService {
 
       createdBookings.push(booking);
 
-      const message = `A new order has been placed by ${booking.customerName}. Please review and process it. Order ID: ${booking._id}`;
+      const formattedDate =
+        booking.createdAt?.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }) || new Date().toLocaleString('en-US');
+
+      const message = `A new booking has been placed by ${booking.customerName} on ${formattedDate}. Please review and process it. Booking ID: ${booking._id}`;
       await this.notificationService.create(booking.salonId, message, booking);
       this.bookingGateway.sendBookingNotification(booking);
     }
