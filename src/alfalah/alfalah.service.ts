@@ -250,6 +250,7 @@ export class AlfalahService {
       ShippingInfo,
       productList,
       total,
+      paymentMethod,
     } = orderDto;
 
     // Step 1: Generate gateway orderId
@@ -276,6 +277,7 @@ export class AlfalahService {
       discountedTotal,
       transaction: transaction._id,
       gatewayOrderId,
+      paymentMethod,
     });
 
     // Step 4: Prepare Bank Alfalah handshake request

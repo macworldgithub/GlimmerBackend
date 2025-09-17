@@ -155,6 +155,9 @@ export class Order {
   @Prop({ type: ShippingInfoSchema, required: true })
   ShippingInfo!: ShippingInfo;
 
+  @Prop({ required: true, enum: ['COD', 'Prepaid (Card)', 'Bank Alfalah'] })
+  paymentMethod!: string;
+
   @Prop()
   createdAt?: Date;
 
