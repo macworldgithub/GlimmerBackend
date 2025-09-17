@@ -31,6 +31,7 @@ import { ProductItemRepository } from 'src/product_item/product_item.repository'
 
 @Injectable()
 export class ProductService {
+  metaService: any;
   constructor(
     private product_repository: ProductRepository,
     private sub_category_repository: ProductSubCategoryRepository,
@@ -118,6 +119,8 @@ export class ProductService {
       if (product.image3) {
         product.image3 = await this.s3_service.get_image_url(product.image3);
       }
+
+      // await this.metaService.sendProductCreated(product);
 
       return new Product(product);
     } catch (e) {
@@ -1414,7 +1417,7 @@ export class ProductService {
     const results: any[] = [];
 
     try {
-      console.log("Store: ", store_payload);
+      console.log('Store: ', store_payload);
       for (const row of rows) {
         // Parse sizes & types
         const sizes = row.sizes

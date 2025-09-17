@@ -35,6 +35,7 @@ import { PostexModule } from './postex/postex.module';
 import { JazzcashModule } from './jazzcash/jazzcash.module';
 import { AlfalahModule } from './alfalah/alfalah.module';
 import { ChatModule } from './chat/chat.module';
+import { MetaModule } from './meta/meta.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { ChatModule } from './chat/chat.module';
     JazzcashModule,
     AlfalahModule,
     ChatModule,
+    MetaModule,
   ],
   controllers: [AppController, SSE, AdminController, SalonController],
   providers: [
