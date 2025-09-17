@@ -83,6 +83,12 @@ export class SalonServiceBooking {
   @Prop()
   notes?: string;
 
+  @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
+
   constructor(
     customerName: string,
     customerEmail: string,
@@ -112,6 +118,8 @@ export class SalonServiceBooking {
     subSubCategoryName?: string,
     transaction?: BookingTransaction,
     notes?: string,
+    createdAt?: Date,
+    updatedAt?: Date,
   ) {
     this.customerName = customerName;
     this.customerEmail = customerEmail;
@@ -135,6 +143,8 @@ export class SalonServiceBooking {
     this.subSubCategoryName = subSubCategoryName;
     this.transaction = transaction;
     this.notes = notes;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 }
 

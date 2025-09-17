@@ -125,7 +125,6 @@ export const CompleteOrderSchema = SchemaFactory.createForClass(CompleteOrder);
 
 @Schema({ timestamps: true })
 export class Order {
-  
   @Prop({ required: true })
   customerName!: string;
 
@@ -141,9 +140,9 @@ export class Order {
   @Prop({ required: true })
   discountedTotal!: number;
   @Prop({ type: [String], default: [] })
-trackingNumbers?: string[];
+  trackingNumbers?: string[];
 
-    @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Transaction', required: true })
   transaction?: Transaction | Types.ObjectId; // ✅ updated type
 
   @Prop({
@@ -155,6 +154,15 @@ trackingNumbers?: string[];
 
   @Prop({ type: ShippingInfoSchema, required: true })
   ShippingInfo!: ShippingInfo;
+
+  @Prop({ required: true, enum: ['COD', 'Prepaid (Card)', 'Bank Alfalah'] })
+  paymentMethod!: string;
+
+  @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
