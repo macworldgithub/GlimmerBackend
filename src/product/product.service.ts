@@ -106,6 +106,7 @@ export class ProductService {
       product_temp.store = new Types.ObjectId(store_payload._id);
       product_temp.category = new Types.ObjectId(product_dto.category);
       product_temp.sub_category = new Types.ObjectId(product_dto.sub_category);
+      product_temp.item = new Types.ObjectId(product_dto.item);
 
       const product =
         await this.product_repository.create_product(product_temp);

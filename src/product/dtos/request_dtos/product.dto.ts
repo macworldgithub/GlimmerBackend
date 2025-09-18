@@ -81,14 +81,13 @@ export class CreateProductDto {
   status: ProductStatus;
 
   @IsMongoId()
-  category: string;
+  category: Types.ObjectId;
 
   @IsMongoId()
-  sub_category: string;
+  sub_category: Types.ObjectId;
 
   @IsString()
-  @IsOptional()
-  item?: string;
+  item: Types.ObjectId;
 
   @IsArray()
   @IsOptional()
@@ -154,7 +153,7 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   })
   @IsOptional()
   @IsMongoId()
-  category?: Types.ObjectId | string;
+  category?: Types.ObjectId;
 
   @ApiPropertyOptional({
     description: 'Updated sub-category ID of the product',
@@ -163,7 +162,7 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   })
   @IsOptional()
   @IsMongoId()
-  sub_category?: Types.ObjectId | string;
+  sub_category?: Types.ObjectId;
 
   @ApiPropertyOptional({
     description: 'Updated item ID of the product',
@@ -172,7 +171,7 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   })
   @IsOptional()
   @IsMongoId()
-  item?: Types.ObjectId | string;
+  item?: Types.ObjectId;
 
   @IsArray()
   @IsOptional()
