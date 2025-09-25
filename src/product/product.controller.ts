@@ -223,6 +223,15 @@ export class ProductController {
   }
 
   @HttpCode(HttpStatus.OK)
+  @Get('get_product_by_slug')
+  get_product_by_slug(@Query('slug') slug: string) {
+    if (!slug) {
+      throw new BadRequestException('Slug is required');
+    }
+    return this.product_service.get_product_by_slug(slug);
+  }
+
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post('submit_rating')

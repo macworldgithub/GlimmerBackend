@@ -34,7 +34,12 @@ export class SalonServicesRepository {
     return newService.save();
   }
 
-  async findAll(filter: any, page: any, sortBy?: string, order: 'asc' | 'desc' = 'desc') {
+  async findAll(
+    filter: any,
+    page: any,
+    sortBy?: string,
+    order: 'asc' | 'desc' = 'desc',
+  ) {
     const limit = 10;
     const skip = (page - 1) * limit;
 
@@ -62,6 +67,10 @@ export class SalonServicesRepository {
       throw new NotFoundException(`Salon Service with ID ${id} not found`);
     }
     return service;
+  }
+
+  async findByServiceSlug(serviceSlug: string): Promise<SalonService | null> {
+    return this.salonServiceModel.findOne({ slug: serviceSlug, status: true });
   }
 
   async update(id: string, updateSalonServiceDto: any): Promise<SalonService> {
@@ -111,55 +120,64 @@ export class SalonServicesRepository {
       .exec();
     return service;
   }
-async applyDiscount(id: string, discountPercentage: any) {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new BadRequestException(`Invalid service ID: ${id}`);
-  }
+  async applyDiscount(id: string, discountPercentage: any) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException(`Invalid service ID: ${id}`);
+    }
 
-  console.log("Applying discount:", { id, discountPercentage });
-  const service = await this.salonServiceModel
-    .findByIdAndUpdate(
-      id,
-      {
-        discountPercentage: parseFloat(discountPercentage),
-        hasDiscount: true,
-      },
-      { new: true }
-    )
-    .exec();
-
-  if (!service) {
-    throw new NotFoundException(`Salon Service with ID ${id} not found`);
-  }
-
-  return service;
-}
-
-async applyBulkDiscount(id: string[], discountPercentage: any) {
-  const invalidIds = id.filter(id => !Types.ObjectId.isValid(id));
-  if (invalidIds.length > 0) {
-    throw new BadRequestException(`Invalid service IDs: ${invalidIds.join(", ")}`);
-  }
-
-  console.log("Applying bulk discount to IDs:", id, "Discount:", discountPercentage);
-  const result = await this.salonServiceModel
-    .updateMany(
-      { _id: { $in: id } },
-      {
-        $set: {
-          discountPercentage: discountPercentage,
+    console.log('Applying discount:', { id, discountPercentage });
+    const service = await this.salonServiceModel
+      .findByIdAndUpdate(
+        id,
+        {
+          discountPercentage: parseFloat(discountPercentage),
           hasDiscount: true,
         },
-      }
-    )
-    .exec();
+        { new: true },
+      )
+      .exec();
 
-  if (result.modifiedCount === 0) {
-    throw new NotFoundException(`No services found with IDs: ${id.join(", ")}`);
+    if (!service) {
+      throw new NotFoundException(`Salon Service with ID ${id} not found`);
+    }
+
+    return service;
   }
 
-  return { message: `Updated ${result.modifiedCount} services`, result };
-}
+  async applyBulkDiscount(id: string[], discountPercentage: any) {
+    const invalidIds = id.filter((id) => !Types.ObjectId.isValid(id));
+    if (invalidIds.length > 0) {
+      throw new BadRequestException(
+        `Invalid service IDs: ${invalidIds.join(', ')}`,
+      );
+    }
+
+    console.log(
+      'Applying bulk discount to IDs:',
+      id,
+      'Discount:',
+      discountPercentage,
+    );
+    const result = await this.salonServiceModel
+      .updateMany(
+        { _id: { $in: id } },
+        {
+          $set: {
+            discountPercentage: discountPercentage,
+            hasDiscount: true,
+          },
+        },
+      )
+      .exec();
+
+    if (result.modifiedCount === 0) {
+      throw new NotFoundException(
+        `No services found with IDs: ${id.join(', ')}`,
+      );
+    }
+
+    return { message: `Updated ${result.modifiedCount} services`, result };
+  }
   // async applyBulkDiscount(id: string[], discountPercentage: any) {
   //   const service = await this.salonServiceModel
   //     .updateMany(
@@ -340,7 +358,7 @@ async applyBulkDiscount(id: string[], discountPercentage: any) {
   //   // Return combined, deduped, and enriched results
   //   return enrichWithCategory(Array.from(resultsMap.values()));
   // }
- async elastic_search(
+  async elastic_search(
     nameTerm?: string,
     gender?: string,
     serviceTerm?: string,
@@ -361,7 +379,9 @@ async applyBulkDiscount(id: string[], discountPercentage: any) {
     }
 
     // Helper to enrich with categoryName, salonName, and signed URLs
-    const enrichWithCategoryAndSignedUrls = async (services: SalonService[]) => {
+    const enrichWithCategoryAndSignedUrls = async (
+      services: SalonService[],
+    ) => {
       // Enrich with categoryName
       const catIds = [...new Set(services.map((s) => s.categoryId.toString()))];
       const categories = await this.salonServiceCategoriesModel

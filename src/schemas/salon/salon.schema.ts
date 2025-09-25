@@ -12,6 +12,9 @@ export class Salon {
   @Prop({ type: String, required: true })
   salon_name: string;
 
+  @Prop({ unique: true })
+  slug: string;
+
   @Prop({ type: String, required: true, unique: true, index: true })
   email: string;
 
@@ -57,6 +60,7 @@ export class Salon {
   constructor(obj: Salon) {
     this._id = obj._id.toString();
     this.salon_name = obj.salon_name;
+    this.slug = obj.slug;
     this.email = obj.email;
     this.password = obj.password;
     this.contact_number = obj.contact_number;
@@ -70,7 +74,6 @@ export class Salon {
     this.image4 = obj.image4;
   }
 }
-
 
 export const SalonSchema = SchemaFactory.createForClass(Salon);
 

@@ -27,10 +27,7 @@ export class SalonRepository {
     return this.salon_model.findOne({ email }, projection).exec();
   }
 
-  async get_salon_by_id(
-    _id: any,
-    projection?: SalonProjection,
-  ) {
+  async get_salon_by_id(_id: any, projection?: SalonProjection) {
     return this.salon_model.findOne({ _id }, projection).lean().exec();
   }
 
@@ -40,22 +37,22 @@ export class SalonRepository {
     projection?: SalonProjection,
   ) {
     const skip = (page_no - 1) * DEFAULT_DOCUMENTS_LIMITS;
-  
-    const query = this.salon_model.find(filter); 
-  
+
+    const query = this.salon_model.find(filter);
+
     if (projection) {
       query.select(projection); // Optional field selection
     }
-  
+
     const salons = await query
       .lean()
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(DEFAULT_DOCUMENTS_LIMITS)
       .exec();
-  
-    const total = await this.salon_model.countDocuments(filter); 
-  
+
+    const total = await this.salon_model.countDocuments(filter);
+
     return { total, salons };
   }
 
@@ -85,12 +82,17 @@ export class SalonRepository {
   }
 
   async update_salon_flags(
-  salon_id: string,
-  flags: Partial<Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>>
-): Promise<SalonDocument | null> {
-  return this.salon_model.findByIdAndUpdate(salon_id, flags, { new: true }).exec();
-}
+    salon_id: string,
+    flags: Partial<
+      Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>
+    >,
+  ): Promise<SalonDocument | null> {
+    return this.salon_model
+      .findByIdAndUpdate(salon_id, flags, { new: true })
+      .exec();
+  }
 
-
-
+  get_salon_by_slug(slug: string): Promise<SalonDocument | null> {
+    return this.salon_model.findOne({ slug }).exec();
+  }
 }

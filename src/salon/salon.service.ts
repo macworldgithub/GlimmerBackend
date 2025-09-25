@@ -159,7 +159,7 @@
 //     console.log(ser)
 //     return ser;
 //   }
-  
+
 //   async deleteSalon(targetSalonId: string) {
 //     try {
 //       const salon = await this.salon_repository.get_salon_by_id(targetSalonId);
@@ -253,7 +253,6 @@ import { Types } from 'mongoose';
 import { SalonStatus } from './enums/salon_status.enum';
 import { Roles } from 'src/auth/enums/roles.enum';
 
-
 @Injectable()
 export class SalonService {
   constructor(
@@ -284,7 +283,9 @@ export class SalonService {
         targetSalonId = salon_id;
       } else if (role === Roles.SALON) {
         if (salon_id) {
-          throw new BadRequestException('salon_id is not allowed for SALON role');
+          throw new BadRequestException(
+            'salon_id is not allowed for SALON role',
+          );
         }
         targetSalonId = salon_payload._id;
       } else {
@@ -305,34 +306,22 @@ export class SalonService {
       const path = SalonService.GET_SALON_IMAGE_PATH(targetSalonId);
       if (update_salon_Dto.image1) {
         update_obj.image1 = (
-          await this.s3_service.upload_file(
-            update_salon_Dto.image1,
-            path,
-          )
+          await this.s3_service.upload_file(update_salon_Dto.image1, path)
         ).Key;
       }
       if (update_salon_Dto.image2) {
         update_obj.image2 = (
-          await this.s3_service.upload_file(
-            update_salon_Dto.image2,
-            path,
-          )
+          await this.s3_service.upload_file(update_salon_Dto.image2, path)
         ).Key;
       }
       if (update_salon_Dto.image3) {
         update_obj.image3 = (
-          await this.s3_service.upload_file(
-            update_salon_Dto.image3,
-            path,
-          )
+          await this.s3_service.upload_file(update_salon_Dto.image3, path)
         ).Key;
       }
       if (update_salon_Dto.image4) {
         update_obj.image4 = (
-          await this.s3_service.upload_file(
-            update_salon_Dto.image4,
-            path,
-          )
+          await this.s3_service.upload_file(update_salon_Dto.image4, path)
         ).Key;
       }
       console.log(update_obj, 'update_obj');
@@ -434,7 +423,9 @@ export class SalonService {
         targetSalonId = salon_id;
       } else if (role === Roles.SALON) {
         if (salon_id) {
-          throw new BadRequestException('salon_id is not allowed for SALON role');
+          throw new BadRequestException(
+            'salon_id is not allowed for SALON role',
+          );
         }
         targetSalonId = salon_payload._id;
       } else {
@@ -446,9 +437,12 @@ export class SalonService {
         throw new NotFoundException('Salon not found');
       }
 
-      const imageKeys = [salon.image1, salon.image2, salon.image3, salon.image4].filter(
-        (image): image is string => !!image,
-      );
+      const imageKeys = [
+        salon.image1,
+        salon.image2,
+        salon.image3,
+        salon.image4,
+      ].filter((image): image is string => !!image);
       console.log('Image keys:', imageKeys);
       if (imageKeys.length > 0) {
         const imageUrls = await Promise.all(
@@ -474,7 +468,11 @@ export class SalonService {
     }
   }
 
-  async updateSalonStatus(status: SalonStatus, salon_payload: AuthPayload, salon_id?: string): Promise<Salon> {
+  async updateSalonStatus(
+    status: SalonStatus,
+    salon_payload: AuthPayload,
+    salon_id?: string,
+  ): Promise<Salon> {
     try {
       const role = salon_payload.role;
       let targetSalonId: string;
@@ -489,7 +487,9 @@ export class SalonService {
         targetSalonId = salon_id;
       } else if (role === Roles.SALON) {
         if (salon_id) {
-          throw new BadRequestException('salon_id is not allowed for SALON role');
+          throw new BadRequestException(
+            'salon_id is not allowed for SALON role',
+          );
         }
         targetSalonId = salon_payload._id;
       } else {
@@ -514,16 +514,24 @@ export class SalonService {
       }
 
       if (updatedSalon.image1) {
-        updatedSalon.image1 = await this.s3_service.get_image_url(updatedSalon.image1);
+        updatedSalon.image1 = await this.s3_service.get_image_url(
+          updatedSalon.image1,
+        );
       }
       if (updatedSalon.image2) {
-        updatedSalon.image2 = await this.s3_service.get_image_url(updatedSalon.image2);
+        updatedSalon.image2 = await this.s3_service.get_image_url(
+          updatedSalon.image2,
+        );
       }
       if (updatedSalon.image3) {
-        updatedSalon.image3 = await this.s3_service.get_image_url(updatedSalon.image3);
+        updatedSalon.image3 = await this.s3_service.get_image_url(
+          updatedSalon.image3,
+        );
       }
       if (updatedSalon.image4) {
-        updatedSalon.image4 = await this.s3_service.get_image_url(updatedSalon.image4);
+        updatedSalon.image4 = await this.s3_service.get_image_url(
+          updatedSalon.image4,
+        );
       }
 
       return new Salon(updatedSalon);
@@ -532,12 +540,37 @@ export class SalonService {
       throw new InternalServerErrorException(e);
     }
   }
- async updateSalonFlags(
-  salon_id: string,
-  flags: Partial<Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>>
-) {
-  return this.salon_repository.update_salon_flags(salon_id, flags);
-}
+  async updateSalonFlags(
+    salon_id: string,
+    flags: Partial<
+      Pick<Salon, 'newToGlimmer' | 'trendingSalon' | 'recommendedSalon'>
+    >,
+  ) {
+    return this.salon_repository.update_salon_flags(salon_id, flags);
+  }
 
+  
+  async get_salon_by_slug(slug: string): Promise<Salon> {
+    try {
+      const salon = await this.salon_repository.get_salon_by_slug(slug);
 
+      if (!salon) {
+        throw new BadRequestException('Salon does not exist');
+      }
+
+      // Fetch S3 URLs if exist
+      if (salon.image1)
+        salon.image1 = await this.s3_service.get_image_url(salon.image1);
+      if (salon.image2)
+        salon.image2 = await this.s3_service.get_image_url(salon.image2);
+      if (salon.image3)
+        salon.image3 = await this.s3_service.get_image_url(salon.image3);
+      if (salon.image4)
+        salon.image4 = await this.s3_service.get_image_url(salon.image4);
+
+      return new Salon(salon);
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
+  }
 }

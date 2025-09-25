@@ -20,13 +20,13 @@ export class ProductRepository {
     try {
       const product = new this.product_model(product_dto);
 
-      console.log("Saving product:", product);
+      console.log('Saving product:', product);
 
       const saved = await product.save();
 
       return saved.toObject();
     } catch (error) {
-      console.error("Error creating product:", error);
+      console.error('Error creating product:', error);
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       } else {
@@ -40,6 +40,13 @@ export class ProductRepository {
     projection?: ProductProjection,
   ): Query<ProductDocument | null, ProductDocument> {
     return this.product_model.findOne({ _id }, projection);
+  }
+
+  get_product_by_slug(
+    slug: string,
+    projection?: any,
+  ): Query<ProductDocument | null, ProductDocument> {
+    return this.product_model.findOne({ slug }, projection);
   }
 
   async get_product_by_store_id_product_id(

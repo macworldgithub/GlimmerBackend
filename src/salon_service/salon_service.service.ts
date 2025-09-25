@@ -19,6 +19,7 @@ import { Salon, SalonSchema } from 'src/schemas/salon/salon.schema';
 import { AuthPayload } from 'src/auth/payloads/auth.payload';
 import { ProductFiles } from 'src/product/types/update_product.type';
 import { SalonRepository } from 'src/salon/salon.repository';
+import slugify from 'slugify';
 
 @Injectable()
 export class SalonServicesService {
@@ -39,7 +40,12 @@ export class SalonServicesService {
       salon_payload._id,
     );
     let salon_service_temp: any = structuredClone(createSalonServiceDto);
-
+    if (salon_service_temp.name) {
+      salon_service_temp.slug = slugify(salon_service_temp.name, {
+        lower: true,
+        strict: true,
+      });
+    }
     if (createSalonServiceDto.image1) {
       salon_service_temp.image1 = (
         await this.s3_service.upload_file(createSalonServiceDto.image1, path)
@@ -101,7 +107,12 @@ export class SalonServicesService {
     const sortBy = query.sortBy;
     const order: 'asc' | 'desc' = query.order === 'asc' ? 'asc' : 'desc';
 
-    let ser = await this.salonServicesRepository.findAll(filter, page, sortBy, order);
+    let ser = await this.salonServicesRepository.findAll(
+      filter,
+      page,
+      sortBy,
+      order,
+    );
     ser.services = await Promise.all(
       ser.services.map(async (e) => {
         if (e.image1) {
@@ -132,7 +143,7 @@ export class SalonServicesService {
     if (query.salonId) {
       filter.salonId = query.salonId;
     }
-    console.log(salon_payload?._id)
+    console.log(salon_payload?._id);
     if (salon_payload?._id) {
       filter.salonId = salon_payload._id;
     }
@@ -321,5 +332,9 @@ export class SalonServicesService {
       serviceTerm,
       price,
     );
+  }
+
+  async getServiceBySlug(serviceSlug: string): Promise<SalonService | null> {
+    return this.salonServicesRepository.findByServiceSlug(serviceSlug);
   }
 }

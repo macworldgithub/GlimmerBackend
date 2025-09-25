@@ -35,7 +35,7 @@
 // export class SalonController {
 //   constructor(private salon_service: SalonService) {}
 //   @ApiBearerAuth()
-//   @HttpCode(HttpStatus.OK) 
+//   @HttpCode(HttpStatus.OK)
 //   @UseInterceptors(
 //         FileFieldsInterceptor([
 //           { name: 'image1', maxCount: 1 },
@@ -74,7 +74,7 @@
 //   async get_all_salon(@Query() query: any) {
 //     return this.salon_service.getAllSalon(query);
 //   }
-  
+
 //   @HttpCode(HttpStatus.OK)
 //   @Get('/get-salon-by-id')
 //   @ApiOperation({ summary: 'Get a siingle salon by id' })
@@ -183,9 +183,7 @@ import {
   UpdateSalonStatusDto,
 } from 'src/salon/dto/salon.dto';
 import { SalonService } from './salon.service';
-import {
-  FileSizeValidationPipe,
-} from 'src/commons/pipes/file_size_validation.pipe';
+import { FileSizeValidationPipe } from 'src/commons/pipes/file_size_validation.pipe';
 import { AuthPayloadRequest } from 'src/product/interfaces/auth_payload_request.interface';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -311,7 +309,8 @@ export class SalonController {
   // ✅ ADD THIS BLOCK FOR FLAG UPDATES
   @Patch('/update-flags')
   @ApiOperation({
-    summary: 'Update salon flags (newToGlimmer, trendingSalon, recommendedSalon)',
+    summary:
+      'Update salon flags (newToGlimmer, trendingSalon, recommendedSalon)',
   })
   @ApiBearerAuth()
   @UseGuards(AuthGuard, MultiRolesGuard)
@@ -332,5 +331,10 @@ export class SalonController {
     },
   ) {
     return this.salon_service.updateSalonFlags(salon_id, body);
+  }
+
+  @Get('get_salon_by_slug')
+  async getSalonBySlug(@Query('slug') slug: string) {
+    return this.salon_service.get_salon_by_slug(slug);
   }
 }

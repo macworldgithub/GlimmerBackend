@@ -28,6 +28,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { SubmitRatingDto } from './dtos/request_dtos/rating.dto';
 import { ProductCategoryRepository } from 'src/product_category/product_category.repository';
 import { ProductItemRepository } from 'src/product_item/product_item.repository';
+import slugify from 'slugify';
 
 @Injectable()
 export class ProductService {
@@ -69,6 +70,7 @@ export class ProductService {
     store_payload: AuthPayload,
   ) {
     try {
+      const slug = slugify(product_dto.name, { lower: true, strict: true });
       // Extract and parse size and type fields dynamically
       product_dto.size = this.extractDynamicFields(requestBody, 'size');
       product_dto.type = this.extractDynamicFields(requestBody, 'type');
@@ -86,6 +88,8 @@ export class ProductService {
 
       const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
       let product_temp: any = structuredClone(product_dto);
+
+      product_temp.slug = slug;
 
       if (product_dto.image1) {
         product_temp.image1 = (
@@ -449,6 +453,11 @@ export class ProductService {
     requestBody: any,
   ): Promise<Product> {
     try {
+      let slug: string | undefined = undefined;
+      if (update_product_dto.name) {
+        slug = slugify(update_product_dto.name, { lower: true, strict: true });
+        update_product_dto.slug = slug; // store it in dto so it updates DB
+      }
       update_product_dto.size = this.extractDynamicFields(requestBody, 'size');
       update_product_dto.type = this.extractDynamicFields(requestBody, 'type');
 
@@ -478,6 +487,7 @@ export class ProductService {
       const path = ProductService.GET_PRODUCT_IMAGE_PATH(store_payload._id);
 
       let product_temp: any = structuredClone(update_product_dto);
+      product_temp.slug = slug;
       console.log(files, 'files', update_product_dto);
 
       if (files?.image1?.length) {
@@ -872,6 +882,41 @@ export class ProductService {
       throw new InternalServerErrorException(e);
     }
   }
+
+  async get_product_by_slug(slug: string): Promise<Product> {
+    try {
+      const populatedProduct = await this.product_repository
+        .get_product_by_slug(slug)
+        .populate('category', '_id name slug')
+        .populate('sub_category', '_id name slug')
+        .populate('item', '_id name slug')
+        .exec();
+
+      if (!populatedProduct) {
+        throw new BadRequestException('Product does not exist');
+      }
+
+      // Fetch S3 images
+      await this.populateImages(populatedProduct);
+
+      return new Product(populatedProduct);
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
+  }
+
+  private async populateImages(product: any) {
+    if (product.image1) {
+      product.image1 = await this.s3_service.get_image_url(product.image1);
+    }
+    if (product.image2) {
+      product.image2 = await this.s3_service.get_image_url(product.image2);
+    }
+    if (product.image3) {
+      product.image3 = await this.s3_service.get_image_url(product.image3);
+    }
+  }
+
   async submit_product_rating(
     product_id: string,
     user_id: string,

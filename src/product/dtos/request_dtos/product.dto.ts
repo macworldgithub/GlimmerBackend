@@ -21,6 +21,10 @@ export class CreateProductDto {
   @IsString()
   name: string;
 
+  @IsString()
+  @IsOptional()
+  slug?: string;   
+
   // req-dto-decorators
   @IsInt()
   @Min(0)
@@ -121,6 +125,10 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   constructor(ob: UpdateProductDto) {
     super(ob);
   }
+
+  @IsString()
+  @IsOptional()
+  slug?: string;
 
   @ApiPropertyOptional({
     description: 'Updated first image file of the product',

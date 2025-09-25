@@ -35,6 +35,7 @@ import { CreateSalonDto } from 'src/salon/dto/salon.dto';
 import { Salon, SalonDocument } from 'src/schemas/salon/salon.schema';
 import { SalonService } from 'src/salon/salon.service';
 import mongoose from 'mongoose';
+import slugify from 'slugify';
 
 @Injectable()
 export class AuthService {
@@ -62,13 +63,13 @@ export class AuthService {
 
       // Hash the password
       create_salon_dto.password = await hashPassword(create_salon_dto.password);
- 
+
       const temp_id = new mongoose.Types.ObjectId();
       const path = SalonService.GET_SALON_IMAGE_PATH(
         //@ts-ignore
         temp_id.toString(),
       );
- 
+
       let salon_temp:any = structuredClone(create_salon_dto);
       if (create_salon_dto.image1) {
         salon_temp.image1 = (
@@ -90,13 +91,16 @@ export class AuthService {
           await this.s3_service.upload_file(create_salon_dto.image4, path)
         ).Key;
       }
-      
 
-      const inserted_salon: SalonDocument =
-      await this.salon_repository.create_salon({
-        ...salon_temp,
-        _id: temp_id, 
+      salon_temp.slug = slugify(create_salon_dto.salon_name, {
+        lower: true,
+        strict: true,
       });
+      const inserted_salon: SalonDocument =
+        await this.salon_repository.create_salon({
+          ...salon_temp,
+          _id: temp_id,
+        });
       if (!inserted_salon._id) {
         throw new InternalServerErrorException();
       }
@@ -126,7 +130,7 @@ export class AuthService {
         role: Roles.SALON,
       });
 
-     
+
       //@ts-ignore
       return { salon: new Salon(inserted_salon), token, role: Roles.SALON };
     } catch (e) {
@@ -160,7 +164,7 @@ export class AuthService {
         email: salon.email,
         role: Roles.SALON,
       };
-     
+
       if (salon.image1) {
         salon.image1 = await this.s3_service.get_image_url(salon.image1);
       }

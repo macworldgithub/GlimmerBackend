@@ -8,25 +8,27 @@ export class SalonService {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ unique: true, index: true })
+  slug!: string;
+
   @Prop({ required: true })
   categoryId: string;
   @Prop({ required: true })
   salonId: string;
-  
 
   @Prop()
   subCategoryName?: string;
 
   @Prop()
   subSubCategoryName?: string;
-@Prop({ required: false, default: '' })
-image1?: string;
+  @Prop({ required: false, default: '' })
+  image1?: string;
 
-@Prop({ required: false, default: '' })
-image2?: string;
+  @Prop({ required: false, default: '' })
+  image2?: string;
 
-@Prop({ required: false, default: '' })
-image3?: string;
+  @Prop({ required: false, default: '' })
+  image3?: string;
   @Prop()
   description?: string;
 

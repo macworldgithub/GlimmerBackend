@@ -16,6 +16,7 @@ import {
   Req,
   UsePipes,
   ValidationPipe,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -56,28 +57,35 @@ export class SalonServicesController {
   @Role(Roles.SALON)
   @Post('createService')
   @UseInterceptors(
-      FileFieldsInterceptor([
-        { name: 'image1', maxCount: 1 },
-        { name: 'image2', maxCount: 1 },
-        { name: 'image3', maxCount: 1 },
-      ]),
-    )
-     @ApiConsumes('multipart/form-data')
+    FileFieldsInterceptor([
+      { name: 'image1', maxCount: 1 },
+      { name: 'image2', maxCount: 1 },
+      { name: 'image3', maxCount: 1 },
+    ]),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new salon service' })
-  create(@Body() createSalonServiceDto: CreateSalonServiceDto,
-  @UploadedFiles(new FileSizeValidationPipe())
-      files: {
-        image1?: Express.Multer.File[];
-        image2?: Express.Multer.File[];
-        image3?: Express.Multer.File[];
-      },
+  create(
+    @Body() createSalonServiceDto: CreateSalonServiceDto,
+    @UploadedFiles(new FileSizeValidationPipe())
+    files: {
+      image1?: Express.Multer.File[];
+      image2?: Express.Multer.File[];
+      image3?: Express.Multer.File[];
+    },
     @Req() req: AuthPayloadRequest,
-    ) {
-        createSalonServiceDto.image1 = files.image1?.length ? files.image1[0] : undefined;
-        createSalonServiceDto.image2 = files.image2?.length ? files.image2[0] : undefined;
-        createSalonServiceDto.image3 = files.image3?.length ? files.image3[0] : undefined;
+  ) {
+    createSalonServiceDto.image1 = files.image1?.length
+      ? files.image1[0]
+      : undefined;
+    createSalonServiceDto.image2 = files.image2?.length
+      ? files.image2[0]
+      : undefined;
+    createSalonServiceDto.image3 = files.image3?.length
+      ? files.image3[0]
+      : undefined;
 
-    return this.salonServicesService.create(createSalonServiceDto,req.user);
+    return this.salonServicesService.create(createSalonServiceDto, req.user);
   }
 
   @Get('getAllActiveServicesForWebiste')
@@ -104,8 +112,8 @@ export class SalonServicesController {
   @ApiQuery({ name: 'subCategoryName', type: String, required: false })
   @ApiQuery({ name: 'subSubCategoryName', type: String, required: false })
   @ApiQuery({ name: 'name', type: String, required: false })
-  getAllServicesForSalon(@Query() query: any,@Req() req: AuthPayloadRequest,) {
-    return this.salonServicesService.findAllServices(query,req.user);
+  getAllServicesForSalon(@Query() query: any, @Req() req: AuthPayloadRequest) {
+    return this.salonServicesService.findAllServices(query, req.user);
   }
 
   @HttpCode(HttpStatus.OK)
@@ -153,19 +161,24 @@ export class SalonServicesController {
       { name: 'image3', maxCount: 1 },
     ]),
   )
-   @ApiConsumes('multipart/form-data')
+  @ApiConsumes('multipart/form-data')
   @Put('updateServiceById')
   @ApiOperation({ summary: 'Update an existing salon service' })
-  update(@Body() updateSalonServiceDto: UpdateSalonServiceDto,@UploadedFiles(new FileSizeValidationPipe())
-  files: {
-    image1?: Express.Multer.File[];
-    image2?: Express.Multer.File[];
-    image3?: Express.Multer.File[];
-  },
-@Req() req: AuthPayloadRequest,
-) {
-  
-    return this.salonServicesService.update(updateSalonServiceDto,files,req.user);
+  update(
+    @Body() updateSalonServiceDto: UpdateSalonServiceDto,
+    @UploadedFiles(new FileSizeValidationPipe())
+    files: {
+      image1?: Express.Multer.File[];
+      image2?: Express.Multer.File[];
+      image3?: Express.Multer.File[];
+    },
+    @Req() req: AuthPayloadRequest,
+  ) {
+    return this.salonServicesService.update(
+      updateSalonServiceDto,
+      files,
+      req.user,
+    );
   }
 
   @HttpCode(HttpStatus.OK)
@@ -228,18 +241,23 @@ export class SalonServicesController {
     return this.salonServicesService.remove(id);
   }
 
-
-
   @Get('search')
   @UsePipes(new ValidationPipe({ transform: true }))
-  async search(
-    @Query() query: SearchSalonServiceDto,
-  ): Promise<SalonService[]> {
+  async search(@Query() query: SearchSalonServiceDto): Promise<SalonService[]> {
     return this.salonServicesService.elasticSearch(
       query.nameTerm,
       query.gender,
       query.serviceTerm,
-      query.price
+      query.price,
     );
+  }
+
+  @ApiOperation({ summary: 'Get salon service by service slug' })
+  @Get('get_service_by_slug')
+  async getServiceBySlug(@Query('slug') slug: string) {
+    const service = await this.salonServicesService.getServiceBySlug(slug);
+    if (!service)
+      throw new NotFoundException(`Service with slug ${slug} not found`);
+    return service;
   }
 }

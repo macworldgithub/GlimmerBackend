@@ -14,6 +14,9 @@ export class Product {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ unique: true })
+  slug: string;
+
   // mongo-schema-decorators
   @Prop({ required: true })
   quantity: number;
@@ -117,6 +120,7 @@ export class Product {
     if (!product) return;
     this._id = product._id?.toString();
     this.name = product.name;
+    this.slug = product.slug;
     this.store = product.store?.toString();
     this.status = product.status;
     this.image1 = product.image1;
