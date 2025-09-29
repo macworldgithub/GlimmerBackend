@@ -21,15 +21,14 @@ export class S3Service extends AwsService {
     this.bucketName = process.env.AWS_BUCKET_NAME || 'your-bucket-name';
   }
 
-  async uploadFiles(files: Express.Multer.File[], isVideo: boolean = false): Promise<string[]> {
+  async uploadFiles(files: Express.Multer.File[], path: string): Promise<string[]> {
     const filePaths: string[] = [];
 
     for (const file of files) {
       try {
-        const fileExtension = isVideo ? file.mimetype.split('/')[1] : 'webp';
-        const fileKey = `${isVideo ? 'videos' : 'cars'}/${uuid()}.${fileExtension}`;
+        const fileKey = `${path}/${uuid()}_${file.originalname}`;
         
-        const buffer = isVideo ? file.buffer : await sharp(file.buffer)
+        const buffer = await sharp(file.buffer)
           .toFormat('webp')
           .toBuffer();
 
@@ -37,7 +36,7 @@ export class S3Service extends AwsService {
           Bucket: this.bucketName,
           Key: fileKey,
           Body: buffer,
-          ContentType: isVideo ? file.mimetype : 'image/webp',
+          ContentType: 'image/webp',
         };
 
         await this.s3.upload(uploadParams).promise();
