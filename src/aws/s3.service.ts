@@ -21,32 +21,20 @@ export class S3Service extends AwsService {
     this.bucketName = process.env.AWS_BUCKET_NAME || 'your-bucket-name';
   }
 
-  async uploadFiles(files: Express.Multer.File[], path: string): Promise<string[]> {
-    const filePaths: string[] = [];
+  async upload_file(
+    file: Express.Multer.File,
+    path: string,
+  ): Promise<AWS.S3.ManagedUpload.SendData> {
+    const fileKey = `${path}/${uuid()}_${file.originalname}`;
+    const buffer = sharp(file.buffer).toFormat('webp').toBuffer();
+    const params: AWS.S3.PutObjectRequest = {
+      Bucket: this.bucketName,
+      Key: fileKey,
+      Body: buffer,
+      ContentType: file.mimetype,
+    };
 
-    for (const file of files) {
-      try {
-        const fileKey = `${path}/${uuid()}_${file.originalname}`;
-        
-        const buffer = await sharp(file.buffer)
-          .toFormat('webp')
-          .toBuffer();
-
-        const uploadParams: AWS.S3.PutObjectRequest = {
-          Bucket: this.bucketName,
-          Key: fileKey,
-          Body: buffer,
-          ContentType: 'image/webp',
-        };
-
-        await this.s3.upload(uploadParams).promise();
-        filePaths.push(fileKey);
-      } catch (error:any) {
-        console.error(`Error uploading file to S3: ${error.message}`);
-      }
-    }
-
-    return filePaths;
+    return this.s3.upload(params).promise();
   }
 
   async upload_file_by_key(
