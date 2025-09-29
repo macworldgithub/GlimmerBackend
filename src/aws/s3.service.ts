@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { AwsService } from './aws.service';
 import * as AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
-import sharp from 'sharp';
 
 @Injectable()
 export class S3Service extends AwsService {
@@ -21,33 +20,20 @@ export class S3Service extends AwsService {
     this.bucketName = process.env.AWS_BUCKET_NAME || 'your-bucket-name';
   }
 
-  async uploadFiles(files: Express.Multer.File[], isVideo: boolean = false): Promise<string[]> {
-    const filePaths: string[] = [];
+  async upload_file(
+    file: Express.Multer.File,
+    path: string,
+  ): Promise<AWS.S3.ManagedUpload.SendData> {
+    const fileKey = `${path}/${uuid()}_${file.originalname}`;
 
-    for (const file of files) {
-      try {
-        const fileExtension = isVideo ? file.mimetype.split('/')[1] : 'webp';
-        const fileKey = `${isVideo ? 'videos' : 'cars'}/${uuid()}.${fileExtension}`;
-        
-        const buffer = isVideo ? file.buffer : await sharp(file.buffer)
-          .toFormat('webp')
-          .toBuffer();
+    const params: AWS.S3.PutObjectRequest = {
+      Bucket: this.bucketName,
+      Key: fileKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
 
-        const uploadParams: AWS.S3.PutObjectRequest = {
-          Bucket: this.bucketName,
-          Key: fileKey,
-          Body: buffer,
-          ContentType: isVideo ? file.mimetype : 'image/webp',
-        };
-
-        await this.s3.upload(uploadParams).promise();
-        filePaths.push(fileKey);
-      } catch (error:any) {
-        console.error(`Error uploading file to S3: ${error.message}`);
-      }
-    }
-
-    return filePaths;
+    return this.s3.upload(params).promise();
   }
 
   async upload_file_by_key(
